@@ -45,6 +45,11 @@ function wplongpv_scripts() {
 add_action( 'wp_enqueue_scripts', 'wplongpv_scripts' );
 
 /**
+ * Functions Write log.
+ */
+require get_template_directory() . '/inc/write-log.php';
+
+/**
  * Functions security theme by hooking into WordPress.
  */
 require get_template_directory() . '/inc/security.php';
