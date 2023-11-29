@@ -1,0 +1,246 @@
+.footer_new{
+    padding: 32px 0px;
+    background-color: #053977;
+
+    .footer_logo{
+        text-align: center;
+
+        img{
+            width: auto;
+            max-width: 100% !important;
+            height: auto;
+        }
+    }
+
+    .footer_title_site{
+        padding-top: 20px;
+        font-size: 20px;
+        color: #FFFFFF;
+        text-transform: uppercase;
+        font-size: 20px;
+        line-height: 29px;
+
+        @include media-breakpoint-up(lg) {
+            padding-top: 16px;
+            font-size: 24px;
+            line-height: 35px;
+        }
+    }
+
+    .footer_contact{
+        padding-top: 20px;
+
+        @include media-breakpoint-up(lg) {
+            text-align: center;
+            padding-top: 16px;
+        }
+
+        .item {
+            display: flex;
+            font-size: 20px;
+            padding-top: 16px;
+
+            @include media-breakpoint-up(lg) {
+                padding-top: 0px;
+            }
+
+            .icon {
+                margin-right: 16px;
+            }
+
+            p{
+                padding: 0px;
+                margin: 0px;
+                color: #FFFFFF;
+            }
+        }
+
+        .address{
+            padding-top: 16px;
+            color: #FFFFFF;
+        }
+    }
+
+    .footer_copyright{
+        font-size: 12px;
+        text-align: center;
+        color: #999CA1;
+        padding-top: 24px;
+
+        @include media-breakpoint-up(lg) {
+            padding-top: 16px;
+        }
+    }
+
+    .editor_contact{
+        color: #FFFFFF;
+    }
+}
+
+
+
+#footer{
+    background-color: #053977;
+    padding-top: 40px;
+    padding-bottom: 16px;
+
+    @include media-breakpoint-up(lg) {
+        padding-top: 150px;
+    }
+
+    .copyright{
+        color: #999CA1;
+        font-size: 12px;
+        margin-top: 48px;
+        text-align: center;
+
+        @include media-breakpoint-up(lg) {
+            margin-top: 64px;
+            text-align: start;
+        }
+    }
+
+    overflow: hidden;
+    position: relative;
+
+    .bg{
+        position: absolute;
+        bottom: -40%;
+        right: -150px;
+        width: 60%;
+        height: auto;
+        z-index: 0;
+        display: none;
+
+        @include media-breakpoint-up(lg) {
+            display: block;
+        }
+    }
+}
+
+#contact-us{
+    .branch-info{
+        .title-branch{
+            color: #FDB447;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 8px;
+
+            @include media-breakpoint-up(lg) {
+                font-size: 24px;
+            }
+        }
+
+        .info{
+            margin: 0px;
+            padding: 0px;
+            list-style-type: none;
+
+            .item {
+                display: flex;
+                margin-bottom: 16px;
+
+                .icon{
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-right: 16px;
+                    margin-top: 3px;
+                }
+
+                a{
+                    text-decoration: none;
+                    transition: all 0.5s;
+                    &:hover{
+                        transition: all 0.5s;
+                        color: #FDB447;
+                    }
+                }
+            }
+
+            .editor_contact{
+                color: #FFFFFF !important;
+                
+                & > * {
+                    margin: 0px;
+                    padding: 0px;
+                }
+            }
+        }
+    }
+}
+
+#contact-us-form{
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 16px;
+
+    @include media-breakpoint-up(lg) {
+        padding: 32px;
+        padding-bottom: 16px;
+    }
+
+    br{
+        display: none !important;
+    }
+
+    .wpcf7-spinner{
+        margin: 16px 0px 0px;
+    }
+
+    .wpcf7-response-output{
+        margin: 0px;
+        color: #010715;
+    }
+
+    .button-group{
+        display: block !important;
+        text-align: center;
+        @include media-breakpoint-up(md) {
+            text-align: start;
+        }
+    }
+
+    .input-group{
+        display: block;
+        margin-bottom: 24px;
+
+        label {
+            color: #010715;
+            font-weight: 500;
+            font-size: 20px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        span{
+            color: #FF0000;
+        }
+
+        input, textarea{
+            width: 100%;
+            background: #FFFFFF;
+            border: 1px solid #CCCDD0;
+            border-radius: 8px;
+            height: 48px;
+            outline: none;
+            color: #010715;
+            padding: 8px 16px;
+        }
+
+        textarea{
+            height: 140px;
+            resize: none;
+        }
+    }
+}
+
+#sosial-group{
+    display: flex;
+
+    .item{
+        margin-right: 24px;
+    }
+}

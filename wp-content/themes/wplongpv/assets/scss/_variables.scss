@@ -1,0 +1,33 @@
+// Bootstrap overrides
+
+//grid breakpoints
+$grid-breakpoints    : (
+  xs                 : 0,
+  sm                 : 576px,
+  md                 : 768px,
+  lg                 : 992px,
+  xl                 : 1200px,
+  xxl                : 1440px
+); //to get value using map-get($grid-breakpoints, "lg")
+// Grid containers
+//
+// Define the maximum width of `.container` for different screen sizes.
+
+$container-max-widths: (
+  sm                 : 540px,
+  md                 : 720px,
+  lg                 : 960px,
+  xl                 : 1140px,
+  xxl                : 1320px
+);
+
+//base color
+$primary                    : #03264F; //1
+$secondary                  : #32312f; //2
+$success                    : #134A84; //3
+$info                       : #21BDCA; //4
+$warning                    : #343A40; //5
+$danger                     : #F1F1F2; //6
+$light                      : #F0F0F0;
+$dark                       : #464646;
+$muted                      : #C4C4C4;
