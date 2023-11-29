@@ -81,6 +81,12 @@ $table_prefix = 'wp_';
  */
 define( 'WP_DEBUG', false );
 
+// Security
+define('DISABLE_WP_CRON', true);
+define('AUTOMATIC_UPDATER_DISABLED', true);
+define('WP_AUTO_UPDATE_CORE', false );
+define('DISALLOW_FILE_MODS', true );
+
 /* Add any custom values between this line and the "stop editing" line. */
 
 
