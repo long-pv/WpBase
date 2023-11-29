@@ -162,5 +162,13 @@ function add_featured_image_instruction($html)
         $html .= '<p>Recommended size: 300x300</p>';
     }
 
+    // List of other post types
+    if (get_post_type() === 'resources') {
+        $html .= '<p>Recommended size: 300x300</p>';
+    }
+    if (get_post_type() === 'project') {
+        $html .= '<p>Recommended size: 300x300</p>';
+    }
+
     return $html;
 }
