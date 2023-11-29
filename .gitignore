@@ -1,7 +1,10 @@
 # root wordpress
 .htaccess
+# find folder -type f -name "*.txt" -exec rm {} \;
 *.txt
+# find folder -type f -name "*.md" -exec rm {} \;
 *.md
+# find folder -type f -name "*.html" -exec rm {} \;
 *.html
 wp-config.php
 
