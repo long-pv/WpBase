@@ -6,6 +6,11 @@
 *.md
 # find folder -type f -name "*.html" -exec rm {} \;
 *.html
+# find folder -type f -name "*.DS" -exec rm {} \;
+*.DS
+# find folder -type f -name "*.lock" -exec rm {} \;
+*.lock
+# wp-config.php
 wp-config.php
 
 # wp-content
