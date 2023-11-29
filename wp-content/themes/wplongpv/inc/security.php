@@ -1,0 +1,153 @@
+<?php
+/**
+ * Plugin Name: Security setup
+ * Description: Some basic security settings.
+ * Version: 1.0.0
+ * Author: Longpv
+ * License: GPLv2
+ */
+
+// remove wp_version
+function vf_remove_wp_version_strings($src)
+{
+    global $wp_version;
+    parse_str(parse_url($src, PHP_URL_QUERY), $query);
+    if (!empty($query['ver']) && $query['ver'] === $wp_version) {
+        $src = remove_query_arg('ver', $src);
+    }
+    return $src;
+}
+add_filter('script_loader_src', 'vf_remove_wp_version_strings');
+add_filter('style_loader_src', 'vf_remove_wp_version_strings');
+
+// Hide WP version strings from generator meta tag
+function vf_remove_version()
+{
+    return '';
+}
+add_filter('the_generator', 'vf_remove_version');
+
+// Change default login error
+function vf_login_errors()
+{
+    return 'Invalid user!';
+}
+add_filter('login_errors', 'vf_login_errors');
+
+// Disable XML-RPC
+add_filter('xmlrpc_enabled', '__return_false');
+
+// hide admin of comments
+add_action('admin_init', function () {
+    remove_menu_page('edit-comments.php');
+});
+
+// hide menu sidebar
+add_action('admin_head', 'hide_custom_sidebar');
+function hide_custom_sidebar()
+{
+    echo '<style>
+  #wp-admin-bar-comments, #wp-admin-bar-wp-logo, #wp-admin-bar-languages{
+    display: none !important;  
+  }
+
+  /*
+  #toplevel_page_wp_file_manager{
+    display: none !important;  
+  }
+  */
+
+  #commentstatusdiv, #authordiv, #slugdiv, #commentsdiv, #trackbacksdiv {
+    display: none !important;  
+  }
+</style>';
+}
+
+// add css style.css default
+function add_custom_css()
+{
+    wp_add_inline_style('custom-style', '#wp-admin-bar-comments, #wp-admin-bar-customize, #wp-admin-bar-wp-logo, #wp-admin-bar-languages{display: none !important;}');
+}
+add_action('wp_enqueue_scripts', 'add_custom_css');
+
+// hide seo readability filters
+function hide_seo_readability_filters()
+{
+    echo '<style>
+    #wpseo-filter, #wpseo-readability-filter {
+        display: none !important;
+    }
+  </style>';
+}
+add_action('admin_head-edit.php', 'hide_seo_readability_filters');
+
+// change logo, link logo page login
+function custom_login_logo()
+{
+    echo '<style type="text/css">
+    h1 a {
+      background-image: url(' . get_template_directory_uri() . '/assets/images/logo.svg) !important;
+      height: 80px !important;
+      width: 100% !important;
+      background-size: auto !important;
+    }
+  </style>';
+}
+add_action('login_head', 'custom_login_logo');
+
+// Change the url on the login page to the home page
+function custom_login_url($url)
+{
+    $link = get_home_url();
+    return $link;
+}
+add_filter('login_headerurl', 'custom_login_url');
+
+// upload size limit 2MB
+add_filter('upload_size_limit', 'PBP_increase_upload');
+function PBP_increase_upload($bytes)
+{
+    return 524288 * 4;
+}
+
+// Remove wp's default comment function
+function disable_comments_and_pings_post_type()
+{
+    remove_post_type_support('post', 'comments');
+    remove_post_type_support('post', 'trackbacks');
+}
+add_action('init', 'disable_comments_and_pings_post_type');
+
+// Set cookie timeout 14 day
+add_filter('auth_cookie_expiration', 'cl_expiration_filter', 99, 3);
+function cl_expiration_filter($seconds, $user_id, $remember)
+{
+
+    if ($remember) {
+        $expiration = 14 * 24 * 60 * 60;
+    } else {
+        $expiration = 30 * 60;
+    }
+
+    if (PHP_INT_MAX - time() < $expiration) {
+        $expiration = PHP_INT_MAX - time() - 5;
+    }
+
+    return $expiration;
+}
+
+// Limit the type of files uploaded through the form
+function restrict_file_types($mimes)
+{
+    $allowed_mime_types = array(
+        'jpg|jpeg|jpe' => 'image/jpeg',
+        'png' => 'image/png',
+        'pdf' => 'application/pdf',
+        'mp4' => 'video/mp4',
+    );
+
+    $mimes = array_intersect($allowed_mime_types, $mimes);
+
+    return $mimes;
+}
+add_filter('upload_mimes', 'restrict_file_types');
