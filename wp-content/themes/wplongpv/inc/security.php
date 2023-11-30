@@ -142,8 +142,12 @@ function restrict_file_types($mimes)
     $allowed_mime_types = array(
         'jpg|jpeg|jpe' => 'image/jpeg',
         'png' => 'image/png',
-        'pdf' => 'application/pdf',
-        'mp4' => 'video/mp4',
+        // 'pdf' => 'application/pdf',
+        // 'mp4' => 'video/mp4',
+        // 'doc' => 'application/msword',
+        // 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        // 'csv' => 'text/csv',
+        // 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
 
     $mimes = array_intersect($allowed_mime_types, $mimes);
