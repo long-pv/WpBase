@@ -142,12 +142,12 @@ function restrict_file_types($mimes)
     $allowed_mime_types = array(
         'jpg|jpeg|jpe' => 'image/jpeg',
         'png' => 'image/png',
-        // 'pdf' => 'application/pdf',
-        // 'mp4' => 'video/mp4',
-        // 'doc' => 'application/msword',
-        // 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        // 'csv' => 'text/csv',
-        // 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'pdf' => 'application/pdf',
+        'mp4' => 'video/mp4',
+        'doc' => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'csv' => 'text/csv',
+        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
 
     $mimes = array_intersect($allowed_mime_types, $mimes);
@@ -159,7 +159,7 @@ add_filter('upload_mimes', 'restrict_file_types');
 /**
  * Add Recommended size image to Featured Image Box    
  */
-add_filter( 'admin_post_thumbnail_html', 'add_featured_image_instruction');
+add_filter('admin_post_thumbnail_html', 'add_featured_image_instruction');
 function add_featured_image_instruction($html)
 {
     if (get_post_type() === 'post') {
@@ -175,4 +175,23 @@ function add_featured_image_instruction($html)
     }
 
     return $html;
+}
+
+/**
+ * The function "write_log" is used to write debug logs to a file in PHP.
+ */
+function write_log($log = null, $title = 'Debug')
+{
+    if ($log) {
+        if (is_array($log) || is_object($log)) {
+            $log = print_r($log, true);
+        }
+
+        $timestamp = date('Y-m-d H:i:s');
+        $text = '[' . $timestamp . '] : ' . $title . ' - Log: ' . $log . "\n";
+        $log_file = WP_CONTENT_DIR . '/debug.log';
+        $file_handle = fopen($log_file, 'a');
+        fwrite($file_handle, $text);
+        fclose($file_handle);
+    }
 }

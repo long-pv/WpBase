@@ -12,6 +12,11 @@ if ( ! defined( '_S_VERSION' ) ) {
 	define( '_S_VERSION', '1.0.0' );
 }
 
+/**
+ * get currernt lang.
+ */
+define('LANG', function_exists('pll_current_language') ? pll_current_language('slug') : 'en');
+
 // Sets up theme defaults and registers support for various WordPress features.
 function wplongpv_setup() {
 	// theme support post
@@ -43,11 +48,6 @@ function wplongpv_scripts() {
 	
 }
 add_action( 'wp_enqueue_scripts', 'wplongpv_scripts' );
-
-/**
- * Functions Write log.
- */
-require get_template_directory() . '/inc/write-log.php';
 
 /**
  * Functions security theme by hooking into WordPress.
