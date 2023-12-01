@@ -1,14 +1,19 @@
+# go-live security
+# find folder -type f -name "*.txt" -exec rm {} \;
+# find folder -type f -name "*.md" -exec rm {} \;
+# find folder -type f -name "*.html" -exec rm {} \;
+# find folder -type f -name "*.DS" -exec rm {} \;
+# find folder -type f -name "*.lock" -exec rm {} \;
+# find folder -type f -name "LICENSE" -exec rm {} \
+# find folder/wp-content/uploads -type f ! -name "index.php" -exec rm -f {} +
+# rm -rf folder/wp-content/backups-dup-lite
+
 # root wordpress
 .htaccess
-# find folder -type f -name "*.txt" -exec rm {} \;
 *.txt
-# find folder -type f -name "*.md" -exec rm {} \;
 *.md
-# find folder -type f -name "*.html" -exec rm {} \;
 *.html
-# find folder -type f -name "*.DS" -exec rm {} \;
 *.DS
-# find folder -type f -name "*.lock" -exec rm {} \;
 *.lock
 # wp-config.php
 wp-config.php
