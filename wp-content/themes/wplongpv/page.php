@@ -12,8 +12,9 @@
  * @package wplongpv
  */
 
+// header template
 get_header();
-?>
-
-<?php
+// flexible content
+get_template_part('template-parts/content-flexible');
+// footer template
 get_footer();
