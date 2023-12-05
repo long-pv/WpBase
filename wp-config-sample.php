@@ -81,6 +81,9 @@ $table_prefix = 'cl_';
  */
 define( 'WP_DEBUG', false );
 
+// macOS compatibility
+define('FS_METHOD', 'direct');
+
 // Security
 define('DISABLE_WP_CRON', true);
 define('AUTOMATIC_UPDATER_DISABLED', true);
