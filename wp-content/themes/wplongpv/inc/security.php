@@ -47,11 +47,9 @@ function hide_custom_sidebar() {
     display: none !important;  
   }
 
-  /*
-  #toplevel_page_wp_file_manager{
-    display: none !important;  
+  .pw-weak {
+    display: none !important;
   }
-  */
 
   #commentstatusdiv, #authordiv, #slugdiv, #commentsdiv, #trackbacksdiv {
     display: none !important;  
@@ -179,6 +177,19 @@ function clear_tags_from_title($title) {
     $title = strip_tags($title);
 
     return $title;
+}
+
+// Remove check to allow weak passwords
+add_action('admin_footer', 'custom_admin_footer_script');
+function custom_admin_footer_script()
+{
+    ?>
+    <script>
+        jQuery(document).ready(function ($) {
+            $(".pw-weak").remove();
+        });
+    </script>
+    <?php
 }
 
 /**
