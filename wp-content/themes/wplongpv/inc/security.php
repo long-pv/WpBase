@@ -199,6 +199,7 @@ add_action('send_headers', 'add_cors_http_header');
 function add_cors_http_header()
 {
     header("Access-Control-Allow-Origin: *");
+    header("X-Powered-By: None");
 }
 
 /**
