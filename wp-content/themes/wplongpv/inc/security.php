@@ -192,6 +192,15 @@ function custom_admin_footer_script()
     <?php
 }
 
+
+// Block CORS in WordPress
+add_action('send_headers', 'add_cors_http_header');
+
+function add_cors_http_header()
+{
+    header("Access-Control-Allow-Origin: *");
+}
+
 /**
  * The function "write_log" is used to write debug logs to a file in PHP.
  */
