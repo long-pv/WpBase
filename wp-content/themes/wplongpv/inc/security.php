@@ -173,6 +173,14 @@ function custom_login_redirect() {
     }
 }
 
+// Apply a filter to the title before saving
+add_filter('title_save_pre', 'clear_tags_from_title');
+function clear_tags_from_title($title) {
+    $title = strip_tags($title);
+
+    return $title;
+}
+
 /**
  * The function "write_log" is used to write debug logs to a file in PHP.
  */
