@@ -162,7 +162,7 @@ function add_featured_image_instruction($html) {
     return $html;
 }
 
-// redirect wp-admin and wp-login.php to the homepage
+// redirect wp-admin and wp-register.php to the homepage
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect() {
     if(!is_user_logged_in() && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
