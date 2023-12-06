@@ -8,7 +8,7 @@
 /**
  * Setup theme setting page
  */
-if (function_exists('acf_add_options_page')) {
+if(function_exists('acf_add_options_page')) {
     $name_option = 'Theme Setting';
     acf_add_options_page(
         array(
@@ -21,24 +21,46 @@ if (function_exists('acf_add_options_page')) {
     );
 }
 
+/**
+ * The function "write_log" is used to write debug logs to a file in PHP.
+ */
+function write_log($log = null, $title = 'Debug') {
+    if($log) {
+        if(is_array($log) || is_object($log)) {
+            $log = print_r($log, true);
+        }
+
+        $timestamp = date('Y-m-d H:i:s');
+        $text = '['.$timestamp.'] : '.$title.' - Log: '.$log."\n";
+        $log_file = WP_CONTENT_DIR.'/debug.log';
+        $file_handle = fopen($log_file, 'a');
+        fwrite($file_handle, $text);
+        fclose($file_handle);
+    }
+}
+
 // Replacing underscores and dashes with spaces, capitalizing the first letter of each word, and removing spaces.
-function custom_name_block($input)
-{
+function custom_name_block($input) {
     $normalized = str_replace(['_', '-'], ' ', $input);
     $ucwords = ucwords($normalized);
     $formatted = str_replace(' ', '', $ucwords);
 
-    return 'section' . $formatted;
+    return 'section'.$formatted;
 }
 
 // retrieves the URL of the featured image of a post
-function custom_post_image($post_id)
-{
-    $image = get_template_directory_uri() . '/assets/images/no_image.png';
+function custom_post_image($post_id) {
+    $image = get_template_directory_uri().'/assets/images/no_image.png';
 
-    if (has_post_thumbnail($post_id)) {
+    if(has_post_thumbnail($post_id)) {
         $image = get_the_post_thumbnail_url($post_id);
     }
 
     echo $image;
 }
+
+// remove post type menu
+// add_action('admin_menu', 'remove_default_post_type_menu');
+// function remove_default_post_type_menu() {
+//     remove_menu_page('edit.php');
+// }

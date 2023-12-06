@@ -165,7 +165,7 @@ function add_featured_image_instruction($html) {
 // redirect wp-admin and wp-register.php to the homepage
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect() {
-    if(!is_user_logged_in() && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
+    if(!is_user_logged_in() && (strpos($_SERVER['REQUEST_URI'], 'wp-json') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
         wp_redirect(home_url());
         exit();
     }
@@ -176,7 +176,7 @@ add_filter('title_save_pre', 'clear_tags_from_title');
 function clear_tags_from_title($title) {
     $title = strip_tags($title);
 
-    return $title;
+    return htmlentities($title);
 }
 
 // Remove check to allow weak passwords
@@ -192,30 +192,10 @@ function custom_admin_footer_script()
     <?php
 }
 
-
 // Block CORS in WordPress
 add_action('send_headers', 'add_cors_http_header');
-
 function add_cors_http_header()
 {
     header("Access-Control-Allow-Origin: *");
     header("X-Powered-By: None");
-}
-
-/**
- * The function "write_log" is used to write debug logs to a file in PHP.
- */
-function write_log($log = null, $title = 'Debug') {
-    if($log) {
-        if(is_array($log) || is_object($log)) {
-            $log = print_r($log, true);
-        }
-
-        $timestamp = date('Y-m-d H:i:s');
-        $text = '['.$timestamp.'] : '.$title.' - Log: '.$log."\n";
-        $log_file = WP_CONTENT_DIR.'/debug.log';
-        $file_handle = fopen($log_file, 'a');
-        fwrite($file_handle, $text);
-        fclose($file_handle);
-    }
 }
