@@ -73,3 +73,8 @@ require get_template_directory() . '/inc/template-functions.php';
  * Functions block
  */
 require get_template_directory() . '/inc/custom-functions.php';
+
+/**
+ * Functions block
+ */
+require get_template_directory() . '/inc/cpt-custom-role.php';
