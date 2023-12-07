@@ -22,8 +22,10 @@ function register_cpt_post_types()
         // New addition here
     ];
 
-    foreach ($post_type_register as $post_type => $data) {
-        register_cpt($post_type, $data);
+    if(!empty($post_type_register)){
+        foreach ($post_type_register as $post_type => $data) {
+            register_cpt($post_type, $data);
+        }
     }
 }
 add_action('init', 'register_cpt_post_types');
@@ -50,7 +52,7 @@ function register_cpt($post_type, $data = [])
         'rewrite' => array('slug' => $post_type, 'with_front' => true),
         'query_var' => true,
         'menu_icon' => 'dashicons-admin-post',
-        'supports' => array('title'),
+        'supports' => array('title', 'editor', 'thumbnail'),
         'capability_type' => 'post',
         // 'capabilities' => array(
         //     'create_posts' => 'create_' . $post_type,
