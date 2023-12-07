@@ -186,11 +186,10 @@ function custom_login_redirect()
 }
 
 // common clear tags html
-function text_clear_tag_html($text)
+function clear_tag_html($text)
 {
     if ($text) {
-        $text = strip_tags($text, '<br>');
-        $text = htmlentities($text);
+        $text = htmlentities(strip_tags($text, '<br>'));
     }
 
     return $text;
@@ -199,16 +198,10 @@ function text_clear_tag_html($text)
 // Apply a filter to the field value before saving
 function custom_modify_text_field($value, $post_id, $field)
 {
-    $field_type = [
-        'url',
-        'text',
-        'email'
-    ];
-
-    if (in_array($field['type'], $field_type)) {
-        $value = text_clear_tag_html($value);
-    } else if ($field['type'] == 'textarea') {
-        $value = strip_tags($value, '<br>');
+    if ($field['type'] && in_array($field['type'], ['text', 'url', 'email'])) {
+        $value = clear_tag_html($value);
+    } else {
+        $value = str_replace(['<script>', '</script>', 'alert', '$('], '', $value);
     }
 
     return $value;
@@ -216,10 +209,10 @@ function custom_modify_text_field($value, $post_id, $field)
 add_filter('acf/update_value', 'custom_modify_text_field', 10, 3);
 
 // Apply a filter to the title before saving
-add_filter('title_save_pre', 'clear_tags_from_title');
-function clear_tags_from_title($title)
+add_filter('title_save_pre', 'clear_tag_html_post_title');
+function clear_tag_html_post_title($title)
 {
-    return text_clear_tag_html($title);
+    return clear_tag_html($title);
 }
 
 // Remove check to allow weak passwords
