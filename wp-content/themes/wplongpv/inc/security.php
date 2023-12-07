@@ -179,7 +179,7 @@ function add_featured_image_instruction($html)
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
 {
-    if (!is_user_logged_in() && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
+    if (!is_user_logged_in() && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false || (strpos($_SERVER['REQUEST_URI'], '/wp-json') !== false && strpos($_SERVER['REQUEST_URI'], 'json/wp') === false))) {
         wp_redirect(home_url());
         exit();
     }
