@@ -47,12 +47,14 @@ function custom_name_block($input)
 }
 
 // retrieves the URL of the featured image of a post
-function custom_post_image($post_id)
+function custom_img($post_id = null, $img_url = null)
 {
-    $image = get_template_directory_uri() . '/assets/images/no_image.png';
-
-    if (has_post_thumbnail($post_id)) {
+    if ($post_id && has_post_thumbnail($post_id)) {
         $image = get_the_post_thumbnail_url($post_id);
+    } elseif ($img_url) {
+        $image = $img_url;
+    } else {
+        $image = get_template_directory_uri() . '/assets/images/no_image.png';
     }
 
     echo $image;
