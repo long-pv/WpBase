@@ -5,6 +5,7 @@
 # find folder -type f -name "*.DS" -exec rm {} \;
 # find folder -type f -name "*.lock" -exec rm {} \;
 # find folder -type f -name "LICENSE" -exec rm {} \
+# => find folder -type f \( -name "*.txt" -o -name "*.md" -o -name "*.html" -o -name "*.DS" -o -name "*.lock" -o -name "LICENSE" \) -exec rm {} \;
 # find folder/wp-content/uploads -type f ! -name "index.php" -exec rm -f {} +
 # rm -rf folder/wp-content/backups-dup-lite
 
