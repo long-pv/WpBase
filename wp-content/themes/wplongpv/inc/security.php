@@ -191,7 +191,7 @@ function custom_modify_text_field($value, $post_id, $field)
     if ($field['type'] && in_array($field['type'], ['text', 'url', 'email'])) {
         $value = strip_tags($value);
     } else {
-        $value = str_replace(['<script>', '</script>', 'alert', '$('], '', $value);
+        $value = str_replace(['<script>', '</script>', 'alert', '$(', '&lt;script&gt;', '&lt;/script&gt'], '', $value);
     }
 
     return $value;
