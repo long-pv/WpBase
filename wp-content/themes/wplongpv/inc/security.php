@@ -185,21 +185,11 @@ function custom_login_redirect()
     }
 }
 
-// common clear tags html
-function clear_tag_html($text)
-{
-    if ($text) {
-        $text = htmlentities(strip_tags($text, '<br>'));
-    }
-
-    return $text;
-}
-
 // Apply a filter to the field value before saving
 function custom_modify_text_field($value, $post_id, $field)
 {
     if ($field['type'] && in_array($field['type'], ['text', 'url', 'email'])) {
-        $value = clear_tag_html($value);
+        $value = strip_tags($value);
     } else {
         $value = str_replace(['<script>', '</script>', 'alert', '$('], '', $value);
     }
@@ -212,7 +202,7 @@ add_filter('acf/update_value', 'custom_modify_text_field', 10, 3);
 add_filter('title_save_pre', 'clear_tag_html_post_title');
 function clear_tag_html_post_title($title)
 {
-    return clear_tag_html($title);
+    return strip_tags($title);
 }
 
 // Remove check to allow weak passwords
