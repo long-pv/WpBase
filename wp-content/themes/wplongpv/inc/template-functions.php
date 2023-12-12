@@ -46,6 +46,67 @@ function custom_name_block($input)
     return 'section' . $formatted;
 }
 
+// remove post type menu
+// add_action('admin_menu', 'remove_default_post_type_menu');
+// function remove_default_post_type_menu() {
+//     remove_menu_page('edit.php');
+// }
+
+// function common call api request
+// function custom_api_request($path, $method = 'GET', $body_args = null, $headers = [])
+// {
+//     if (!defined('API_SERVER_URL')) {
+//         return false;
+//     }
+
+//     $url = API_SERVER_URL . $path;
+
+//     $args = array(
+//         'method' => $method,
+//     );
+
+//     // Check is has token
+//     $token = $_COOKIE['token_login'] ?? '';
+
+//     // Check is $headers
+//     if ($headers) {
+//         $args['headers'] = $headers;
+//     }
+
+//     // Check has $token
+//     if ($token) {
+//         $args['headers']['Authorization'] = 'Bearer ' . $token;
+//     }
+
+//     // Check has body request
+//     if ($body_args) {
+//         $args['body'] = $body_args;
+//     }
+
+//     // Call api request
+//     $response = wp_remote_request($url, $args);
+//     $body = wp_remote_retrieve_body($response);
+//     $response_code = wp_remote_retrieve_response_code($response);
+
+//     if ($response_code == 200) {
+//         return json_decode($body);
+//     }
+
+//     return false;
+// }
+
+// custom text title by character
+function custom_title($text = '', $character = true)
+{
+    if ($character) {
+        $text = preg_replace('/\[{(.*?)}\]/', '<span class="character">$1</span>', $text);
+    } else {
+        $text = str_replace(['[', ']', '{', '}'], '', $text);
+    }
+
+    return $text;
+}
+
 // retrieves the URL of the featured image of a post
 function custom_img($post_id = null, $img_url = null)
 {
@@ -58,65 +119,4 @@ function custom_img($post_id = null, $img_url = null)
     }
 
     echo $image;
-}
-
-// remove post type menu
-// add_action('admin_menu', 'remove_default_post_type_menu');
-// function remove_default_post_type_menu() {
-//     remove_menu_page('edit.php');
-// }
-
-// function common call api request
-function custom_api_request($path, $method = 'GET', $body_args = null, $headers = [])
-{
-    if (!defined('API_SERVER_URL')) {
-        return false;
-    }
-
-    $url = API_SERVER_URL . $path;
-
-    $args = array(
-        'method' => $method,
-    );
-
-    // Check is has token
-    $token = $_COOKIE['token_login'] ?? '';
-
-    // Check is $headers
-    if ($headers) {
-        $args['headers'] = $headers;
-    }
-
-    // Check has $token
-    if ($token) {
-        $args['headers']['Authorization'] = 'Bearer ' . $token;
-    }
-
-    // Check has body request
-    if ($body_args) {
-        $args['body'] = $body_args;
-    }
-
-    // Call api request
-    $response = wp_remote_request($url, $args);
-    $body = wp_remote_retrieve_body($response);
-    $response_code = wp_remote_retrieve_response_code($response);
-
-    if ($response_code == 200) {
-        return json_decode($body);
-    }
-
-    return false;
-}
-
-// custom text title by character
-function custom_title($text = '', $character = true)
-{
-    if ($character) {
-        $text = preg_replace('/\[{(.*?)}\]/', '<span class="character">$1</span>', $text);
-    } else {
-        $text = str_replace(['[', ']', '{', '}'], '', $text);
-    }
-
-    return $text;
 }
