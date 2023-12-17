@@ -1,16 +1,19 @@
 <?php
 // Get values
-$title = $args['flexible']['title'] ?? '';
-$content = $args['flexible']['content'] ?? '';
+$block_info = $args['flexible']['block_info'] ?? [];
+$tex1 = 'Vestibulum sit amet malesuada elit.';
+$tex2 = 'Morbi porta ullamcorper pulvinar.';
+$arr = ['Sed eget est', 'mollis nulla'];
+$url = '';
 
-// Validate data
-$validate = 'true';
-$validate .= $title ? '-true' : '-false';
-$validate .= $content ? '-true' : '-false';
+$test_or = validate_data([$tex1, $tex2, $arr, $url]);
+$test_and = validate_data([$tex1, $tex2, $arr, $url], 'and');
 
-// Build UI
-if (strpos($validate, 'false'))
+if (!validate_data([$tex1, $tex2, $arr, $url]))
     return;
 ?>
-
-<!-- html code -->
+<div class="container">
+    <!-- block info -->
+    <?php echo block_info($block_info); ?>
+    <!-- html code -->
+</div>
