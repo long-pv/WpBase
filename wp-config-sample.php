@@ -65,7 +65,7 @@ define( 'NONCE_SALT',       'put your unique phrase here' );
  * You can have multiple installations in one database if you give each
  * a unique prefix. Only numbers, letters, and underscores please!
  */
-$table_prefix = 'cl_';
+$table_prefix = 'wp_';
 
 /**
  * For developers: WordPress debugging mode.
@@ -80,15 +80,6 @@ $table_prefix = 'cl_';
  * @link https://wordpress.org/documentation/article/debugging-in-wordpress/
  */
 define( 'WP_DEBUG', false );
-
-// macOS compatibility
-define('FS_METHOD', 'direct');
-
-// Security
-define('DISABLE_WP_CRON', true);
-define('AUTOMATIC_UPDATER_DISABLED', true);
-define('WP_AUTO_UPDATE_CORE', false );
-define('DISALLOW_FILE_MODS', true );
 
 /* Add any custom values between this line and the "stop editing" line. */
 

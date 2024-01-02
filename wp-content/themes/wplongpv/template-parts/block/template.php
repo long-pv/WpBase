@@ -1,19 +1,34 @@
 <?php
 // Get values
 $block_info = $args['flexible']['block_info'] ?? [];
-$tex1 = 'Vestibulum sit amet malesuada elit.';
-$tex2 = 'Morbi porta ullamcorper pulvinar.';
-$arr = ['Sed eget est', 'mollis nulla'];
-$url = '';
+$title = $args['flexible']['block_content']['title'] ?? '';
+$content = $args['flexible']['block_content']['content'] ?? '';
+$button_cta = $args['flexible']['block_content']['button_cta'] ?? [];
 
-$test_or = validate_data([$tex1, $tex2, $arr, $url]);
-$test_and = validate_data([$tex1, $tex2, $arr, $url], 'and');
-
-if (!validate_data([$tex1, $tex2, $arr, $url]))
-    return;
+// Build UI
 ?>
 <div class="container">
-    <!-- block info -->
-    <?php echo block_info($block_info); ?>
-    <!-- html code -->
+    <div class="cta space section__bgImg--left">
+        <div class="row">
+            <div class="col-lg-6">
+                <?php if ($title):
+                    echo custom_editor($title, 'cta__title');
+                endif; ?>
+            </div>
+            <div class="col-lg-6">
+                <?php if ($content):
+                    echo custom_editor($content, 'cta__content');
+                endif; ?>
+                <?php if ($button_cta): ?>
+                    <div class="cta__btnWrap">
+                        <?php
+                        foreach ($button_cta as $button):
+                            echo custom_btn_link($button['link'], 'btnCTA');
+                        endforeach;
+                        ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 </div>

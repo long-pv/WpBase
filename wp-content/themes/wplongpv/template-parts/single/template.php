@@ -1,8 +1,12 @@
-<div class="post">
-    <a href="<?php the_permalink(); ?>">
-        <img src="<?php custom_post_image(get_the_ID()); ?>" alt="<?php the_title(); ?>">
-        <h3>
+<div class="postNews">
+    <?php
+    $link = ['url' => get_the_permalink(), 'target' => '', 'title' => get_the_title()];
+    echo custom_img_link($link, get_the_post_thumbnail_url());
+    ?>
+
+    <h3 class="h5 postNews__title">
+        <a href="<?php the_permalink(); ?>" class="postNews__link line-2">
             <?php the_title(); ?>
-        </h3>
-    </a>
+        </a>
+    </h3>
 </div>

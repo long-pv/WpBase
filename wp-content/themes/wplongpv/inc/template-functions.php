@@ -46,55 +46,6 @@ function custom_name_block($input)
     return 'section' . $formatted;
 }
 
-// remove post type menu
-// add_action('admin_menu', 'remove_default_post_type_menu');
-// function remove_default_post_type_menu() {
-//     remove_menu_page('edit.php');
-// }
-
-// function common call api request
-// function custom_api_request($path, $method = 'GET', $body_args = null, $headers = [])
-// {
-//     if (!defined('API_SERVER_URL')) {
-//         return false;
-//     }
-
-//     $url = API_SERVER_URL . $path;
-
-//     $args = array(
-//         'method' => $method,
-//     );
-
-//     // Check is has token
-//     $token = $_COOKIE['token_login'] ?? '';
-
-//     // Check is $headers
-//     if ($headers) {
-//         $args['headers'] = $headers;
-//     }
-
-//     // Check has $token
-//     if ($token) {
-//         $args['headers']['Authorization'] = 'Bearer ' . $token;
-//     }
-
-//     // Check has body request
-//     if ($body_args) {
-//         $args['body'] = $body_args;
-//     }
-
-//     // Call api request
-//     $response = wp_remote_request($url, $args);
-//     $body = wp_remote_retrieve_body($response);
-//     $response_code = wp_remote_retrieve_response_code($response);
-
-//     if ($response_code == 200) {
-//         return json_decode($body);
-//     }
-
-//     return false;
-// }
-
 // custom text title by character
 function custom_title($text = '', $character = true)
 {
@@ -107,22 +58,8 @@ function custom_title($text = '', $character = true)
     return $text;
 }
 
-// retrieves the URL of the featured image of a post
-function custom_img($post_id = null, $img_url = null)
-{
-    if ($post_id && has_post_thumbnail($post_id)) {
-        $image = get_the_post_thumbnail_url($post_id);
-    } elseif ($img_url) {
-        $image = $img_url;
-    } else {
-        $image = get_template_directory_uri() . '/assets/images/no_image.png';
-    }
-
-    echo $image;
-}
-
 // block info general information
-function block_info($data_block = [])
+function block_info($data_block = null)
 {
     $html = '';
 
@@ -130,40 +67,26 @@ function block_info($data_block = [])
         $data = [
             'title' => $data_block['title'] ?? null,
             'desc' => $data_block['description'] ?? null,
-            'link' => $data_block['link'] ?? [],
-            'layout' => $data_block['display_type'] ?? 'default',
+            'link' => $data_block['link'] ?? null,
         ];
 
+        $layout = $data_block['display_type'] ?? 'left';
+
         // render html the section
-        $html = '<div class="secHeading' . (($data['layout'] == 'center') ? ' secHeading--center ' : '') . '">';
-        $html .= $data['layout'] == 'center' ? '<div class="container"><div class="row no-gutters justify-content-center"><div class="col-lg-8">' : '';
-        $html .= $data['title'] ? '<h2 class="secTitle secHeading__title">' . custom_title($data['title']) . '</h2>' : '';
-        $html .= $data['desc'] ? '<p class="secHeading__desc">' . $data['desc'] . '</p>' : '';
-        $html .= custom_btn_link($data['link'], 'secHeading__link', true);
-        $html .= $data['layout'] == 'center' ? '</div></div></div>' : '';
-        $html .= '</div>';
+        if ($data['title'] || $data['desc'] || $data['link']) {
+            $html .= ($layout == 'center') ? '<div class="row no-gutters justify-content-center"><div class="col-lg-8">' : '';
+            $html .= '<div class="secHeading' . (($layout == 'center') ? ' secHeading--center ' : '') . '">';
+            $html .= $data['title'] ? '<h2 class="secTitle secHeading__title">' . custom_title($data['title']) . '</h2>' : '';
+            $html .= $data['desc'] ? '<div class="editor secHeading__desc">' . $data['desc'] . '</div>' : '';
+            $html .= ($layout == 'left') ? custom_btn_link($data['link'], 'secHeading__link', true) : '';
+            $html .= '</div>';
+            $html .= ($layout == 'center') ? '</div></div>' : '';
+        }
     }
 
     return $html;
 }
 // end block info
-
-// validate list data
-function validate_data($data = [], $comparison = 'OR')
-{
-    $validate = '';
-    $comparison = strtoupper($comparison);
-
-    if ($data) {
-        foreach ($data as $field) {
-            $validate .= $field ? '-true' : '-false';
-        }
-    }
-
-    $check = strpos($validate, $comparison === "AND" ? 'false' : 'true');
-
-    return $check ? (($comparison === "AND") ? false : true) : (($comparison === "AND") ? true : false);
-}
 
 // block editor general
 function custom_editor($content = null, $class = null)
@@ -172,15 +95,15 @@ function custom_editor($content = null, $class = null)
 }
 
 // block btn link general
-function custom_btn_link($link = [], $class = null, $block = false)
+function custom_btn_link($link = null, $class = null, $block = false)
 {
     $html = '';
 
     if ($link) {
         // validate link
-        $url = ($link && $link['url']) ? $link['url'] : 'javascript:void(0);';
-        $title = ($link && $link['title']) ? $link['title'] : __('See more', 'clvinuni');
-        $target = ($link && $link['target']) ? $link['target'] : '_self';
+        $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
+        $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
+        $target = !empty($link['target']) ? $link['target'] : '_self';
         $class_link = !$block ? ($class ? $class : '') : '';
 
         // renter html
@@ -195,20 +118,81 @@ function custom_btn_link($link = [], $class = null, $block = false)
 }
 
 // block image link general
-function custom_img_link($link = [], $image = null, $class = null, $alt = null)
+function custom_img_link($link = null, $image = null, $class = null, $alt = null)
 {
     $html = '';
 
-    // validate link
-    $url = ($link && $link['url']) ? $link['url'] : 'javascript:void(0);';
-    $title = ($link && $link['title']) ? $link['title'] : __('See more', 'clvinuni');
-    $target = ($link && $link['target']) ? $link['target'] : '_self';
-    $class_block = ($link && $link['url']) ? ($class ? $class : '') : 'cursor-default';
+    if ($image) {
+        // validate link
+        $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
+        $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
+        $target = !empty($link['target']) ? $link['target'] : '_self';
+        $class_img = empty($link['url']) ? ' imgGroup--noEffect cursor-default ' : '';
+        $class_img .= $class ?: '';
 
-    // renter html
-    $html .= '<a class="imgGroup ' . $class_block . '" href="' . $url . '" target="' . $target . '">';
-    $html .= '<img width="300" height="300" src="' . custom_img(null, $image) . '" alt="' . ($alt ?: $title) . '">';
-    $html .= '</a>';
+        // renter html
+        $html .= '<a class="imgGroup ' . $class_img . '" href="' . $url . '" target="' . $target . '">';
+        $html .= '<img width="300" height="300" src="' . $image . '" alt="' . ($alt ?: $title) . '">';
+        $html .= '</a>';
+    }
 
     return $html;
+}
+
+// Count the elements that exist in the array to use check
+function custom_count_array($array = [], $keys = [], $requireAll = true)
+{
+    $count = 0;
+
+    foreach ($array as $item) {
+        $hasValues = $requireAll;
+
+        foreach ($keys as $key) {
+            if ($requireAll) {
+                if (empty($item[$key])) {
+                    $hasValues = false;
+                    break;
+                }
+            } else {
+                if (!empty($item[$key])) {
+                    $hasValues = true;
+                    break;
+                }
+            }
+        }
+
+        if ($hasValues) {
+            $count++;
+        }
+    }
+
+    return $count;
+}
+
+function hexToRgb($hex)
+{
+    $hex = str_replace("#", "", $hex);
+
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+
+    return $r . ', ' . $g . ', ' . $b;
+}
+
+function custom_root_style($fieldKey = null, $variableName = null, $urlType = false)
+{
+    $fieldValue = get_field($fieldKey, 'option') ?? null;
+    $style = '';
+
+    if ($fieldValue) {
+        $style .= '<style>:root {';
+        $style .= '--' . $variableName . ':';
+        $style .= $urlType ? 'url("' : '';
+        $style .= $fieldValue;
+        $style .= $urlType ? '")' : '';
+        $style .= ';}</style>';
+    }
+
+    return $style;
 }

@@ -46,38 +46,8 @@ add_action('admin_init', function () {
 add_action('admin_head', 'hide_custom_sidebar');
 function hide_custom_sidebar()
 {
-    echo '<style>
-  #wp-admin-bar-comments, #wp-admin-bar-wp-logo, #wp-admin-bar-languages{
-    display: none !important;  
-  }
-
-  .pw-weak {
-    display: none !important;
-  }
-
-  #commentstatusdiv, #authordiv, #slugdiv, #commentsdiv, #trackbacksdiv {
-    display: none !important;  
-  }
-</style>';
+    echo '<style>#commentstatusdiv, #authordiv, #slugdiv, #commentsdiv, #trackbacksdiv, #wp-admin-bar-comments, #wp-admin-bar-wp-logo, #wp-admin-bar-customize,  #wp-admin-bar-wp-logo, .pw-weak { display: none !important; }</style>';
 }
-
-// add css style.css default
-function add_custom_css()
-{
-    wp_add_inline_style('custom-style', '#wp-admin-bar-comments, #wp-admin-bar-customize, #wp-admin-bar-wp-logo, #wp-admin-bar-languages{display: none !important;}');
-}
-add_action('wp_enqueue_scripts', 'add_custom_css');
-
-// hide seo readability filters
-function hide_seo_readability_filters()
-{
-    echo '<style>
-    #wpseo-filter, #wpseo-readability-filter {
-        display: none !important;
-    }
-  </style>';
-}
-add_action('admin_head-edit.php', 'hide_seo_readability_filters');
 
 // change logo, link logo page login
 function custom_login_logo()
@@ -179,7 +149,7 @@ function add_featured_image_instruction($html)
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
 {
-    if (!is_user_logged_in() && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false || (strpos($_SERVER['REQUEST_URI'], '/wp-json') !== false && strpos($_SERVER['REQUEST_URI'], 'json/wp') === false))) {
+    if (!is_user_logged_in() && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
         wp_redirect(home_url());
         exit();
     }
