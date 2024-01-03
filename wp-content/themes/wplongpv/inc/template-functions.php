@@ -196,3 +196,43 @@ function custom_root_style($fieldKey = null, $variableName = null, $urlType = fa
 
     return $style;
 }
+
+// custom block accordion
+function custom_accordion($accordion = [])
+{
+    ob_start();
+    if ($accordion):
+        $key_id = mt_rand(100, 999);
+        $accordionId = 'accordion-' . $key_id;
+        ?>
+        <div class="accordion" id="<?php echo $accordionId; ?>">
+            <?php
+            foreach ($accordion as $index => $item):
+                if ($item['question'] && $item['answer']):
+                    $collapse = 'collapse-' . $key_id . '-' . $index;
+                    $labelledby = 'accordionHeader-' . $key_id . '-' . $index;
+                    $buttonAttr = 'class="accordion__btn" type="button" data-toggle="collapse" data-target="#' . $collapse . '" aria-expanded="false" aria-controls="' . $collapse . '"';
+                    $collapseAttr = 'id="' . $collapse . '" class="collapse" aria-labelledby="' . $labelledby . '" data-parent="#' . $accordionId . '"';
+                    ?>
+                    <div class="accordion__item">
+                        <div class="accordion__header" id="<?php echo $labelledby; ?>">
+                            <button <?php echo $buttonAttr; ?>>
+                                <?php echo $item['question']; ?>
+                            </button>
+                        </div>
+
+                        <div <?php echo $collapseAttr; ?>>
+                            <div class="accordion__body editor">
+                                <?php echo $item['answer']; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php
+                endif;
+            endforeach;
+            ?>
+        </div>
+        <?php
+    endif;
+    return ob_get_clean();
+}
