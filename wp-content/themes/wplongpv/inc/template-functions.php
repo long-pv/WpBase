@@ -236,3 +236,45 @@ function custom_accordion($accordion = [])
     endif;
     return ob_get_clean();
 }
+
+// custom block tabs
+function custom_tabs($tabs = [])
+{
+    ob_start();
+    if ($tabs):
+        ?>
+        <div class="tabs">
+            <ul class="nav nav-tabs tabs__head" role="tablist">
+                <?php
+                foreach ($tabs as $key => $item):
+                    $attr = 'class="nav-link ' . (($key == 0) ? 'active' : '') . '" data-toggle="tab" href="#tabs-' . $key . '" role="tab"';
+                    ?>
+                    <li class="nav-item tabs__headItem">
+                        <a data-mh="tabs__headLink" <?php echo $attr; ?>>
+                            <?php echo $item['title']; ?>
+                        </a>
+                    </li>
+                    <?php
+                endforeach;
+                ?>
+            </ul>
+
+            <div class="tab-content tabs__content">
+                <?php
+                foreach ($tabs as $key => $item):
+                    $attr = 'class="tab-pane tabs__contentItem ' . (($key == 0) ? 'active' : '') . '" id="tabs-' . $key . '" role="tabpanel"';
+                    ?>
+                    <div <?php echo $attr; ?>>
+                        <div class="editor">
+                            <?php echo $item['content']; ?>
+                        </div>
+                    </div>
+                    <?php
+                endforeach;
+                ?>
+            </div>
+        </div>
+        <?php
+    endif;
+    return ob_get_clean();
+}
