@@ -62,7 +62,7 @@ add_action( 'wp_enqueue_scripts', 'wplongpv_scripts' );
 /**
  * Functions security theme by hooking into WordPress.
  */
-require get_template_directory() . '/inc/security.php';
+// require get_template_directory() . '/inc/security.php';
 
 /**
  * Functions which enhance the theme by hooking into WordPress.
@@ -77,4 +77,4 @@ require get_template_directory() . '/inc/custom-functions.php';
 /**
  * Functions block
  */
-require get_template_directory() . '/inc/cpt-custom-role.php';
+// require get_template_directory() . '/inc/cpt-custom-role.php';

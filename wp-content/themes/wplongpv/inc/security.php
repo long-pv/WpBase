@@ -42,27 +42,6 @@ add_action('admin_init', function () {
     remove_menu_page('edit-comments.php');
 });
 
-// hide menu sidebar
-add_action('admin_head', 'hide_custom_sidebar');
-function hide_custom_sidebar()
-{
-    echo '<style>#commentstatusdiv, #authordiv, #slugdiv, #commentsdiv, #trackbacksdiv, #wp-admin-bar-comments, #wp-admin-bar-wp-logo, #wp-admin-bar-customize,  #wp-admin-bar-wp-logo, .pw-weak { display: none !important; }</style>';
-}
-
-// change logo, link logo page login
-function custom_login_logo()
-{
-    echo '<style type="text/css">
-    h1 a {
-      background-image: url(' . get_template_directory_uri() . '/assets/images/logo.svg) !important;
-      height: 80px !important;
-      width: 100% !important;
-      background-size: auto !important;
-    }
-  </style>';
-}
-add_action('login_head', 'custom_login_logo');
-
 // Change the url on the login page to the home page
 function custom_login_url($url)
 {
@@ -124,27 +103,6 @@ function restrict_file_types($mimes)
 }
 add_filter('upload_mimes', 'restrict_file_types');
 
-/**
- * Add Recommended size image to Featured Image Box    
- */
-add_filter('admin_post_thumbnail_html', 'add_featured_image_instruction');
-function add_featured_image_instruction($html)
-{
-    if (get_post_type() === 'post') {
-        $html .= '<p>Recommended size: 300x300</p>';
-    }
-
-    // List of other post types
-    if (get_post_type() === 'resources') {
-        $html .= '<p>Recommended size: 300x300</p>';
-    }
-    if (get_post_type() === 'project') {
-        $html .= '<p>Recommended size: 300x300</p>';
-    }
-
-    return $html;
-}
-
 // redirect wp-admin and wp-register.php to the homepage
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
@@ -158,11 +116,15 @@ function custom_login_redirect()
 // Apply a filter to the field value before saving
 function custom_modify_text_field($value, $post_id, $field)
 {
-    if ($field['type'] && in_array($field['type'], ['text', 'url', 'email'])) {
-        $value = strip_tags($value);
-    } else {
-        $value = str_replace(['<script>', '</script>', 'alert', '$(', '&lt;script&gt;', '&lt;/script&gt'], '', $value);
-    }
+    $special_characters = [
+        '<script>',
+        '</script>',
+        'alert(',
+        '$(',
+        '&lt;script&gt;',
+        '&lt;/script&gt'
+    ];
+    $value = str_replace($special_characters, '', $value);
 
     return $value;
 }
