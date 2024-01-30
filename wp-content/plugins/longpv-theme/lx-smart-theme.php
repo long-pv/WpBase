@@ -17,12 +17,13 @@
 $lx_function_file = [
     'tabs-sidebar',
     'security',
+    'smart-theme'
 ];
 
 $lx_arr_sidebar = [
     'lx-smart-theme',
-    'security',
-    'post-type-image-size',
+    'lx-security',
+    'lx-post-type-image-size',
 ];
 
 foreach ($lx_function_file as $file) {

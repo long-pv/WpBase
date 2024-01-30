@@ -1,11 +1,11 @@
 <?php
-function lx_security()
+function lx_smart_theme()
 {
     ?>
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <h1 class="mb-3">Security</h1>
+                <h1 class="mb-3">Smart theme</h1>
                 <form action="" method="POST">
                     <div class="row g-3">
                         <div class="col-md-6">
