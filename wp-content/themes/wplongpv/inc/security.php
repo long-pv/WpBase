@@ -150,3 +150,12 @@ function add_cors_http_header()
     header("Access-Control-Allow-Origin: *");
     header("X-Powered-By: none");
 }
+
+function disable_plugin_updates($value)
+{
+    if (isset($value->response['advanced-custom-fields-pro/acf.php'])) {
+        unset($value->response['advanced-custom-fields-pro/acf.php']);
+    }
+    return $value;
+}
+add_filter('site_transient_update_plugins', 'disable_plugin_updates');
