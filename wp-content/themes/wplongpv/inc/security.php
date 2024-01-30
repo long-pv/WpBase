@@ -42,6 +42,20 @@ add_action('admin_init', function () {
     remove_menu_page('edit-comments.php');
 });
 
+// change logo, link logo page login
+function custom_login_logo()
+{
+    echo '<style type="text/css">
+    h1 a {
+      background-image: url(' . get_template_directory_uri() . '/assets/images/logo.png) !important;
+      height: 80px !important;
+      width: 100% !important;
+      background-size: auto !important;
+    }
+  </style>';
+}
+add_action('login_head', 'custom_login_logo');
+
 // Change the url on the login page to the home page
 function custom_login_url($url)
 {
@@ -65,24 +79,6 @@ function disable_comments_and_pings_post_type()
 }
 add_action('init', 'disable_comments_and_pings_post_type');
 
-// Set cookie timeout 14 day
-add_filter('auth_cookie_expiration', 'cl_expiration_filter', 99, 3);
-function cl_expiration_filter($seconds, $user_id, $remember)
-{
-
-    if ($remember) {
-        $expiration = 14 * 24 * 60 * 60;
-    } else {
-        $expiration = 30 * 60;
-    }
-
-    if (PHP_INT_MAX - time() < $expiration) {
-        $expiration = PHP_INT_MAX - time() - 5;
-    }
-
-    return $expiration;
-}
-
 // Limit the type of files uploaded through the form
 function restrict_file_types($mimes)
 {
@@ -103,38 +99,35 @@ function restrict_file_types($mimes)
 }
 add_filter('upload_mimes', 'restrict_file_types');
 
+/**
+ * Add Recommended size image to Featured Image Box    
+ */
+//add_filter('admin_post_thumbnail_html', 'add_featured_image_instruction');
+function add_featured_image_instruction($html)
+{
+    if (get_post_type() === 'post') {
+        $html .= '<p>Recommended size: 300x300</p>';
+    }
+
+    // List of other post types
+    if (get_post_type() === 'resources') {
+        $html .= '<p>Recommended size: 300x300</p>';
+    }
+    if (get_post_type() === 'project') {
+        $html .= '<p>Recommended size: 300x300</p>';
+    }
+
+    return $html;
+}
+
 // redirect wp-admin and wp-register.php to the homepage
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
 {
-    if (!is_user_logged_in() && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
+    if (!is_user_logged_in() && !defined('DOING_AJAX') && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
         wp_redirect(home_url());
         exit();
     }
-}
-
-// Apply a filter to the field value before saving
-function custom_modify_text_field($value, $post_id, $field)
-{
-    $special_characters = [
-        '<script>',
-        '</script>',
-        'alert(',
-        '$(',
-        '&lt;script&gt;',
-        '&lt;/script&gt'
-    ];
-    $value = str_replace($special_characters, '', $value);
-
-    return $value;
-}
-add_filter('acf/update_value', 'custom_modify_text_field', 10, 3);
-
-// Apply a filter to the title before saving
-add_filter('title_save_pre', 'clear_tag_html_post_title');
-function clear_tag_html_post_title($title)
-{
-    return strip_tags($title);
 }
 
 // Remove check to allow weak passwords
