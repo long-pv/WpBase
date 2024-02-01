@@ -7,6 +7,20 @@
  * License: GPLv2
  */
 
+// Sidebar setting wp admin
+if (function_exists('acf_add_options_page')) {
+    $name_option = 'Security Setting';
+    acf_add_options_page(
+        array(
+            'page_title' => $name_option,
+            'menu_title' => $name_option,
+            'menu_slug' => 'theme-security-settings',
+            'capability' => 'manage_options',
+            'redirect' => false
+        )
+    );
+}
+
 // remove wp_version
 function vf_remove_wp_version_strings($src)
 {
@@ -39,20 +53,30 @@ add_filter('xmlrpc_enabled', '__return_false');
 
 // hide admin of comments
 add_action('admin_init', function () {
-    remove_menu_page('edit-comments.php');
+    $hide_comment = get_field('hide_comment', 'option') ?? null;
+    if ($hide_comment) {
+        remove_menu_page('edit-comments.php');
+    }
 });
+
+// Remove wp's default comment function
+function disable_comments_and_pings_post_type()
+{
+    $hide_comment = get_field('hide_comment', 'option') ?? null;
+    if ($hide_comment) {
+        remove_post_type_support('post', 'comments');
+        remove_post_type_support('post', 'trackbacks');
+    }
+}
+add_action('init', 'disable_comments_and_pings_post_type');
 
 // change logo, link logo page login
 function custom_login_logo()
 {
-    echo '<style type="text/css">
-    h1 a {
-      background-image: url(' . get_template_directory_uri() . '/assets/images/logo.png) !important;
-      height: 80px !important;
-      width: 100% !important;
-      background-size: auto !important;
+    $logo_page_login = get_field('logo_page_login', 'option') ?? null;
+    if ($logo_page_login) {
+        echo '<style type="text/css">h1 a {background-image: url(' . $logo_page_login . ') !important;height: 90px !important;background-position: center center;width: 100% !important;background-size:contain!important;}</style>';
     }
-  </style>';
 }
 add_action('login_head', 'custom_login_logo');
 
@@ -68,30 +92,41 @@ add_filter('login_headerurl', 'custom_login_url');
 add_filter('upload_size_limit', 'PBP_increase_upload');
 function PBP_increase_upload($bytes)
 {
-    return 524288 * 4;
+    $upload_size_limit = get_field('upload_size_limit', 'option') ?? null;
+    if ($upload_size_limit && intval($upload_size_limit) > 0) {
+        $upload_size_limit = intval($upload_size_limit);
+        $bytes = $upload_size_limit * 1024 * 1024;
+    } else {
+        $bytes = 2 * 1024 * 1024;
+    }
+    return $bytes;
 }
-
-// Remove wp's default comment function
-function disable_comments_and_pings_post_type()
-{
-    remove_post_type_support('post', 'comments');
-    remove_post_type_support('post', 'trackbacks');
-}
-add_action('init', 'disable_comments_and_pings_post_type');
 
 // Limit the type of files uploaded through the form
 function restrict_file_types($mimes)
 {
-    $allowed_mime_types = array(
+    $allowed_mime_types = [
         'jpg|jpeg|jpe' => 'image/jpeg',
         'png' => 'image/png',
-        'pdf' => 'application/pdf',
-        'mp4' => 'video/mp4',
-        'doc' => 'application/msword',
-        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'csv' => 'text/csv',
-        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
+    ];
+
+    $file_uploads_allowed = get_field('file_uploads_allowed', 'option') ?? null;
+    if ($file_uploads_allowed) {
+        if (in_array('pdf', $file_uploads_allowed)) {
+            $allowed_mime_types['pdf'] = 'application/pdf';
+        }
+        if (in_array('mp4', $file_uploads_allowed)) {
+            $allowed_mime_types['mp4'] = 'video/mp4';
+        }
+        if (in_array('word', $file_uploads_allowed)) {
+            $allowed_mime_types['doc'] = 'application/msword';
+            $allowed_mime_types['docx'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        }
+        if (in_array('excel', $file_uploads_allowed)) {
+            $allowed_mime_types['csv'] = 'text/csv';
+            $allowed_mime_types['xlsx'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        }
+    }
 
     $mimes = array_intersect($allowed_mime_types, $mimes);
 
@@ -102,21 +137,18 @@ add_filter('upload_mimes', 'restrict_file_types');
 /**
  * Add Recommended size image to Featured Image Box    
  */
-//add_filter('admin_post_thumbnail_html', 'add_featured_image_instruction');
+add_filter('admin_post_thumbnail_html', 'add_featured_image_instruction');
 function add_featured_image_instruction($html)
 {
-    if (get_post_type() === 'post') {
-        $html .= '<p>Recommended size: 300x300</p>';
+    $size_image_post_type = get_field('size_image_post_type', 'option') ?? null;
+    $post_type = get_post_type();
+    if ($size_image_post_type) {
+        foreach ($size_image_post_type as $item) {
+            if ($item['slug_post_type'] === $post_type) {
+                $html .= '<p>Recommended size: ' . $item['width'] . ' x ' . $item['height'] . '</p>';
+            }
+        }
     }
-
-    // List of other post types
-    if (get_post_type() === 'resources') {
-        $html .= '<p>Recommended size: 300x300</p>';
-    }
-    if (get_post_type() === 'project') {
-        $html .= '<p>Recommended size: 300x300</p>';
-    }
-
     return $html;
 }
 
@@ -124,8 +156,13 @@ function add_featured_image_instruction($html)
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
 {
-    if (!is_user_logged_in() && !defined('DOING_AJAX') && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
+    if (!is_admin() && !defined('DOING_AJAX') && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
         wp_redirect(home_url());
+        exit();
+    }
+    // Particularly, urls containing xmlrpc.php give status 403 
+    if (strpos($_SERVER['REQUEST_URI'], 'xmlrpc.php') !== false) {
+        status_header(403);
         exit();
     }
 }
@@ -151,11 +188,62 @@ function add_cors_http_header()
     header("X-Powered-By: none");
 }
 
-function disable_plugin_updates($value)
+// Apply a filter to the field value before saving
+function custom_modify_text_field($value, $post_id, $field)
 {
-    if (isset($value->response['advanced-custom-fields-pro/acf.php'])) {
-        unset($value->response['advanced-custom-fields-pro/acf.php']);
-    }
+    $special_characters = [
+        '<script>',
+        '</script>',
+        'alert(',
+        '$(',
+        '&lt;script&gt;',
+        '&lt;/script&gt'
+    ];
+    $value = str_replace($special_characters, '', $value);
+
     return $value;
 }
-add_filter('site_transient_update_plugins', 'disable_plugin_updates');
+add_filter('acf/update_value', 'custom_modify_text_field', 10, 3);
+
+// Apply a filter to the title before saving
+add_filter('title_save_pre', 'clear_tag_html_post_title');
+function clear_tag_html_post_title($title)
+{
+    return strip_tags($title);
+}
+
+// Removed scripts imported from editor in admin
+function custom_content_save($content)
+{
+    $special_characters = [
+        '<script>',
+        '</script>',
+        'alert(',
+        '$(',
+        '&lt;script&gt;',
+        '&lt;/script&gt'
+    ];
+    $newContent = str_replace($special_characters, '', $content);
+
+    return $newContent;
+}
+
+// Set cookie timeout
+add_filter('auth_cookie_expiration', 'cl_expiration_filter', 99, 3);
+function cl_expiration_filter($expiration, $user_id, $remember)
+{
+    $enable_time_out = get_field('enable_time_out', 'option') ?? null;
+    if ($enable_time_out) {
+        if ($remember) {
+            $expiration = 14 * 24 * 60 * 60;
+        } else {
+            $expiration = 1 * 60;
+        }
+
+        if (PHP_INT_MAX - time() < $expiration) {
+            $expiration = PHP_INT_MAX - time() - 5;
+        }
+    }
+
+    return $expiration;
+}

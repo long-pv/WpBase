@@ -19,20 +19,6 @@ if (function_exists('acf_add_options_page')) {
     );
 }
 
-// change logo, link logo page login
-function custom_login_logo()
-{
-    echo '<style type="text/css">
-    h1 a {
-      background-image: url(' . get_template_directory_uri() . '/assets/images/logo.svg) !important;
-      height: 80px !important;
-      width: 100% !important;
-      background-size: auto !important;
-    }
-  </style>';
-}
-add_action('login_head', 'custom_login_logo');
-
 // The function "write_log" is used to write debug logs to a file in PHP.
 function write_log($log = null, $title = 'Debug')
 {
