@@ -247,3 +247,21 @@ function cl_expiration_filter($expiration, $user_id, $remember)
 
     return $expiration;
 }
+
+// Load security field when entering the admin screen
+function import_acf_security()
+{
+    $json_file_path = get_template_directory() . '/security/security.json';
+
+    if (file_exists($json_file_path)) {
+        $json_content = file_get_contents($json_file_path);
+        $acf_data = json_decode($json_content, true);
+
+        if ($acf_data) {
+            foreach ($acf_data as $group) {
+                acf_add_local_field_group($group);
+            }
+        }
+    }
+}
+add_action('admin_init', 'import_acf_security');
