@@ -81,6 +81,17 @@ $table_prefix = 'wp_';
  */
 define( 'WP_DEBUG', false );
 
+// macOs
+define('FS_METHOD', 'direct');
+// run terminal folder wordpress => sudo chmod -R 777 wp-content
+
+// config security plugin updates
+define('DISABLE_WP_CRON', true);
+define('AUTOMATIC_UPDATER_DISABLED', true);
+define('WP_AUTO_UPDATE_CORE', false);
+define('DISALLOW_FILE_MODS', true);
+define('DISALLOW_FILE_EDIT', true);
+
 /* Add any custom values between this line and the "stop editing" line. */
 
 
