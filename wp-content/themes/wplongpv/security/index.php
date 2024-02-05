@@ -22,7 +22,7 @@ if (function_exists('acf_add_options_page')) {
 }
 
 // remove wp_version
-function vf_remove_wp_version_strings($src)
+function lx_remove_wp_version_strings($src)
 {
     global $wp_version;
     parse_str(parse_url($src, PHP_URL_QUERY), $query);
@@ -31,22 +31,22 @@ function vf_remove_wp_version_strings($src)
     }
     return $src;
 }
-add_filter('script_loader_src', 'vf_remove_wp_version_strings');
-add_filter('style_loader_src', 'vf_remove_wp_version_strings');
+add_filter('script_loader_src', 'lx_remove_wp_version_strings');
+add_filter('style_loader_src', 'lx_remove_wp_version_strings');
 
 // Hide WP version strings from generator meta tag
-function vf_remove_version()
+function lx_remove_version()
 {
     return '';
 }
-add_filter('the_generator', 'vf_remove_version');
+add_filter('the_generator', 'lx_remove_version');
 
 // Change default login error
-function vf_login_errors()
+function lx_login_errors()
 {
     return 'Invalid user!';
 }
-add_filter('login_errors', 'vf_login_errors');
+add_filter('login_errors', 'lx_login_errors');
 
 // Disable XML-RPC
 add_filter('xmlrpc_enabled', '__return_false');
@@ -156,7 +156,7 @@ function add_featured_image_instruction($html)
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
 {
-    if (!is_admin() && !defined('DOING_AJAX') && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
+    if (!is_user_logged_in() && !is_admin() && !defined('DOING_AJAX') && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
         wp_redirect(home_url());
         exit();
     }
@@ -197,7 +197,8 @@ function custom_modify_text_field($value, $post_id, $field)
         'alert(',
         '$(',
         '&lt;script&gt;',
-        '&lt;/script&gt'
+        '&lt;/script&gt',
+        'document.',
     ];
     $value = str_replace($special_characters, '', $value);
 
@@ -221,12 +222,17 @@ function custom_content_save($content)
         'alert(',
         '$(',
         '&lt;script&gt;',
-        '&lt;/script&gt'
+        '&lt;/script&gt',
+        'document.',
     ];
+
+    $content = preg_replace('/<([^>]+)\bon([^=]*)=[^>]*>/i', '', $content);
+    $content = preg_replace('/&lt;([^&]+)\bon([^=]*)=.*?&gt;/i', '', $content);
     $newContent = str_replace($special_characters, '', $content);
 
     return $newContent;
 }
+add_filter('content_save_pre', 'custom_content_save');
 
 // Set cookie timeout
 add_filter('auth_cookie_expiration', 'cl_expiration_filter', 99, 3);
