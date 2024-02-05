@@ -9,12 +9,12 @@
 
 // Sidebar setting wp admin
 if (function_exists('acf_add_options_page')) {
-    $name_option = 'Security Setting';
+    $name_option = 'Common theme';
     acf_add_options_page(
         array(
             'page_title' => $name_option,
             'menu_title' => $name_option,
-            'menu_slug' => 'theme-security-settings',
+            'menu_slug' => 'theme-common-settings',
             'capability' => 'manage_options',
             'redirect' => false
         )
@@ -243,7 +243,7 @@ function cl_expiration_filter($expiration, $user_id, $remember)
         if ($remember) {
             $expiration = 14 * 24 * 60 * 60;
         } else {
-            $expiration = 1 * 60;
+            $expiration = 30 * 60;
         }
 
         if (PHP_INT_MAX - time() < $expiration) {
@@ -257,10 +257,23 @@ function cl_expiration_filter($expiration, $user_id, $remember)
 // Load security field when entering the admin screen
 function import_acf_security()
 {
-    $json_file_path = get_template_directory() . '/security/security.json';
+    $json_security = get_template_directory() . '/security/security.json';
 
-    if (file_exists($json_file_path)) {
-        $json_content = file_get_contents($json_file_path);
+    if (file_exists($json_security)) {
+        $json_content = file_get_contents($json_security);
+        $acf_data = json_decode($json_content, true);
+
+        if ($acf_data) {
+            foreach ($acf_data as $group) {
+                acf_add_local_field_group($group);
+            }
+        }
+    }
+
+    $json_role = get_template_directory() . '/security/role.json';
+
+    if (file_exists($json_role)) {
+        $json_content = file_get_contents($json_role);
         $acf_data = json_decode($json_content, true);
 
         if ($acf_data) {

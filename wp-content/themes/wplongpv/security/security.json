@@ -215,7 +215,7 @@
                 {
                     "param": "options_page",
                     "operator": "==",
-                    "value": "theme-security-settings"
+                    "value": "theme-common-settings"
                 }
             ]
         ],
