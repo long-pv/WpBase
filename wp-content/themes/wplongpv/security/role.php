@@ -1,6 +1,18 @@
 <?php
 function register_cpt_post_types()
 {
+    // format post type
+    // $post_type = [
+    //     'post_type' => [
+    //         'labels' => [
+    //             'name' => __('Lable', 'wplongpv'),
+    //             'singular_name' => __('Lable', 'wplongpv'),
+    //             'menu_name' => __('Lable', 'wplongpv'),
+    //         ],
+    //         'cap' => false,
+    //         'hierarchical' => true
+    //     ],
+    // ];
     $post_type = get_field('lx_post_type', 'option') ?? null;
 
     if ($post_type && is_array($post_type)) {
@@ -27,6 +39,19 @@ function register_cpt_post_types()
         }
     }
 
+    // format custom taxonomy
+    // $cpt_tax = [
+    //     'taxonomy' => [
+    //         'labels' => [
+    //             "name" => __('Label', 'wplongpv'),
+    //             "singular_name" => __('Label', 'wplongpv'),
+    //         ],
+    //         'cap' => false,
+    //         'post_type' => [
+    //             'key_post_type'
+    //         ]
+    //     ],
+    // ];
     $taxonomy = get_field('lx_taxonomy', 'option') ?? null;
 
     if ($taxonomy && is_array($taxonomy)) {
