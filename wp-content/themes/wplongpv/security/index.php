@@ -66,9 +66,68 @@ function disable_comments_and_pings_post_type()
     if ($hide_comment) {
         remove_post_type_support('post', 'comments');
         remove_post_type_support('post', 'trackbacks');
+        update_option('default_ping_status', 'closed');
+        update_option('default_comment_status', 'closed');
+        update_option('comments_notify', 0);
+        update_option('moderation_notify', 1);
+        update_option('comment_registration', 1);
+        update_option('close_comments_for_old_posts', 1);
+        update_option('require_name_email', 1);
+        update_option('show_comments_cookies_opt_in', 1);
+        update_option('thread_comments', 1);
+        update_option('page_comments', 1);
+        update_option('close_comments_days_old', 1);
+        update_option('default_pingback_flag', 0);
+        update_option('comment_moderation', 1);
+        update_option('comment_previously_approved', 1);
+        update_option('comment_max_links', 1);
+    }
+
+    $enable_cerber_hardening = get_field('enable_cerber_hardening', 'option') ?? null;
+    if ($enable_cerber_hardening) {
+        // cerber-hardening
+        $cerber_hardening = get_option('cerber-hardening');
+
+        if ($cerber_hardening) {
+            $cerber_hardening['stopenum'] = '1';
+            $cerber_hardening['stopenum_oembed'] = '1';
+            $cerber_hardening['stopenum_sitemap'] = '1';
+            $cerber_hardening['nouserpages_bylogin'] = '1';
+            $cerber_hardening['adminphp'] = '1';
+            $cerber_hardening['phpnoupl'] = '1';
+            $cerber_hardening['xmlrpc'] = '1';
+            $cerber_hardening['nofeeds'] = '1';
+            $cerber_hardening['norestuser'] = '1';
+            $cerber_hardening['nophperr'] = '1';
+            $cerber_hardening['norest'] = '1';
+            $cerber_hardening['restauth'] = '1';
+            update_option('cerber-hardening', $cerber_hardening);
+        }
+
+        // cerber main
+        $cerber_main = get_option('cerber-main') ?? null;
+        if($cerber_main) {
+            $cerber_main['limitwhite'] = '1';
+            $cerber_main['loginnowp'] = '1';
+            $cerber_main['nologinhint'] = '1';
+            $cerber_main['nopasshint'] = '1';
+            $cerber_main['noredirect'] = '1';
+            $cerber_main['nonusers'] = '1';
+            $cerber_main['wplogin'] = '1';
+            $cerber_main['proxy'] = '1';
+            $cerber_main['usefile'] = '1';
+            $cerber_main['admin_lang'] = '1';
+
+            if ($cerber_main['loginpath']) {
+                $cerber_main['logindeferred'] = '1';
+            } else {
+                $cerber_main['logindeferred'] = '0';
+            }
+            update_option('cerber-main', $cerber_main);
+        }
     }
 }
-add_action('init', 'disable_comments_and_pings_post_type');
+add_action('admin_init', 'disable_comments_and_pings_post_type');
 
 // change logo, link logo page login
 function custom_login_logo()
