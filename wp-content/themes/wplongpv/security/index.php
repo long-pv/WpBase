@@ -134,7 +134,8 @@ function custom_login_logo()
 {
     $logo_page_login = get_field('logo_page_login', 'option') ?? null;
     if ($logo_page_login) {
-        echo '<style type="text/css">h1 a {background-image: url(' . $logo_page_login . ') !important;height: 90px !important;background-position: center center;width: 100% !important;background-size:contain!important;}</style>';
+        $url_login = wp_get_attachment_url($logo_page_login);
+        echo '<style type="text/css">h1 a {background-image: url(' . $url_login . ') !important;height: 90px !important;background-position: center center;width: 100% !important;background-size:contain!important;}</style>';
     }
 }
 add_action('login_head', 'custom_login_logo');
