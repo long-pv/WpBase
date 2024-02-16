@@ -9,6 +9,11 @@
 # find folder/wp-content/uploads -type f ! -name "index.php" -exec rm -f {} +
 # rm -rf folder/wp-content/backups-dup-lite
 
+# Nếu lỗi gitignore thì đây là cách khắc phục
+# B1: git rm -r --cached .
+# B2: git add .
+# B3: Vào sourcetree để kiểm tra
+
 # root wordpress
 .htaccess
 *.txt
@@ -18,6 +23,7 @@
 *.lock
 # wp-config.php
 wp-config.php
+backup
 
 # wp-content
 wp-content/uploads/
