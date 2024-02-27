@@ -18,9 +18,9 @@
 # B1 : Tạo thư mục
 # mkdir changed_files
 # B2 : Lấy các file đã commit lên từ nhánh đó (vào sourcetree để lấy mã)
-# git diff --name-only KEY_COMMIT^
+# git diff --name-only KEY_COMMIT_NEW^ KEY_COMMIT_OLD
 # B3 : Tạo file hàng loạt
-# git diff --name-only KEY_COMMIT^ | while read -r file; do mkdir -p "changed_files/$(dirname "$file")" && mv "$file" "changed_files/$file" done
+# git diff --name-only KEY_COMMIT^ KEY_COMMIT_OLD | while read -r file; do mkdir -p "changed_files/$(dirname "$file")" && mv "$file" "changed_files/$file"; done
 
 # root wordpress
 .htaccess
