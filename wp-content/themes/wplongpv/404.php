@@ -10,7 +10,18 @@
 get_header();
 ?>
 
-<!-- html 404 -->
+<section class="space page404">
+    <div class="container">
+        <div class=" editor">
+            <h2 style="text-align:center;font-weight:bold;color:#C72127;font-size:80px;line-height:1;">
+                <?php _e('404', 'wplongpv'); ?>
+            </h2>
+            <p style="text-align:center;">
+                <?php _e('Page not found', 'wplongpv'); ?>
+            </p>
+        </div>
+    </div>
+</section>
 
 <?php
 get_footer();

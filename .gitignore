@@ -9,6 +9,7 @@
 # find folder/wp-content/uploads -type f ! -name "index.php" -exec rm -f {} +
 # rm -rf wp-content/backups-dup-lite
 # rm -rf wp-content/languages
+# rm -rf wp-content/themes/{twentytwentyone,twentytwentytwo,twentytwentythree,twentytwentyfour}
 
 # Nếu lỗi gitignore thì đây là cách khắc phục
 # B1: git rm -r --cached .
@@ -28,6 +29,7 @@
 # wp-config.php
 wp-config.php
 backup
+debug.log
 
 # wp-content
 wp-content/uploads/
@@ -39,7 +41,6 @@ wp-content/themes/*/languages/
 wp-content/themes/*/assets/css/
 wp-content/themes/*/js
 wp-content/themes/*/style-rtl.css
-wp-content/ai1wm-backups/
 
 # wp-content / theme
 wp-content/themes/twentytwentyone

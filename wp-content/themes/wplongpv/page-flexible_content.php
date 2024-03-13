@@ -1,5 +1,6 @@
 <?php
 /**
+ * Template name: Page template
  * The template for displaying all pages
  *
  * This is the template that displays all pages by default.
@@ -14,12 +15,7 @@
 
 // header template
 get_header();
-
-// list post
-while (have_posts()):
-    the_post();
-    echo 'Post : ' . get_the_title();
-endwhile;
-
+// flexible content
+get_template_part('template-parts/content-flexible');
 // footer template
 get_footer();

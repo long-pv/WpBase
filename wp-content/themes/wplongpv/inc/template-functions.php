@@ -1,10 +1,4 @@
 <?php
-/**
- * Functions which enhance the theme by hooking into WordPress
- *
- * @package wplongpv
- */
-
 // Setup theme setting page
 if (function_exists('acf_add_options_page')) {
     $name_option = 'Theme Setting';
@@ -18,6 +12,13 @@ if (function_exists('acf_add_options_page')) {
         )
     );
 }
+
+// save ACF local
+function custom_acf_json_save_point($path)
+{
+    return get_template_directory() . '/acf';
+}
+add_filter('acf/settings/save_json', 'custom_acf_json_save_point');
 
 // The function "write_log" is used to write debug logs to a file in PHP.
 function write_log($log = null, $title = 'Debug')
@@ -74,11 +75,11 @@ function block_info($data_block = null)
 
         // render html the section
         if ($data['title'] || $data['desc'] || $data['link']) {
-            $html .= ($layout == 'center') ? '<div class="row no-gutters justify-content-center"><div class="col-lg-8">' : '';
+            $html .= ($layout == 'center') ? '<div class="row no-gutters justify-content-center"><div class="col-lg-10">' : '';
             $html .= '<div class="secHeading' . (($layout == 'center') ? ' secHeading--center ' : '') . '">';
-            $html .= $data['title'] ? '<h2 class="secTitle secHeading__title">' . custom_title($data['title']) . '</h2>' : '';
-            $html .= $data['desc'] ? '<div class="editor secHeading__desc">' . $data['desc'] . '</div>' : '';
-            $html .= ($layout == 'left') ? custom_btn_link($data['link'], 'secHeading__link', true) : '';
+            $html .= $data['title'] ? '<h2 class="secTitle secHeading__title wow fadeInUp" data-wow-duration="1s">' . custom_title($data['title']) . '</h2>' : '';
+            $html .= $data['desc'] ? '<div class="editor secHeading__desc wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s">' . $data['desc'] . '</div>' : '';
+            $html .= ($layout == 'left') ? '<div class="wow fadeInUp" data-wow-duration="1s">' . custom_btn_link($data['link'], 'secHeading__link', true) . '</div>' : '';
             $html .= '</div>';
             $html .= ($layout == 'center') ? '</div></div>' : '';
         }
@@ -87,12 +88,6 @@ function block_info($data_block = null)
     return $html;
 }
 // end block info
-
-// block editor general
-function custom_editor($content = null, $class = null)
-{
-    return $content ? '<div class="editor ' . ($class ?: '') . '">' . $content . '</div>' : '';
-}
 
 // block btn link general
 function custom_btn_link($link = null, $class = null, $block = false)
@@ -107,8 +102,8 @@ function custom_btn_link($link = null, $class = null, $block = false)
         $class_link = !$block ? ($class ? $class : '') : '';
 
         // renter html
-        $html .= $block ? '<div class="' . $class . '">' : '';
-        $html .= '<a href="' . $url . '" target="' . $target . '" class="btnSeeMore ' . $class_link . '">';
+        $html .= $block ? '<div class="wow fadeInUp ' . $class . '" data-wow-duration="1s">' : '';
+        $html .= '<a href="' . $url . '" target="' . $target . '" class="btnSeeMore wow fadeInUp ' . $class_link . '" data-wow-duration="1s">';
         $html .= $title;
         $html .= '</a>';
         $html .= $block ? '</div>' : '';
@@ -169,6 +164,7 @@ function custom_count_array($array = [], $keys = [], $requireAll = true)
     return $count;
 }
 
+// change hex color code to rgba
 function hexToRgb($hex)
 {
     $hex = str_replace("#", "", $hex);
@@ -180,101 +176,96 @@ function hexToRgb($hex)
     return $r . ', ' . $g . ', ' . $b;
 }
 
-function custom_root_style($fieldKey = null, $variableName = null, $urlType = false)
+// Added color selection option
+function custom_color_tinymce($options)
 {
-    $fieldValue = get_field($fieldKey, 'option') ?? null;
-    $style = '';
+    $options['textcolor_map'] = json_encode(
+        array(
+            '134D8B',
+            'Primary',
+            'C72127',
+            'Secondary',
+            '2E2E2E',
+            'Text body'
+        )
+    );
+    return $options;
+}
+add_filter('tiny_mce_before_init', 'custom_color_tinymce');
 
-    if ($fieldValue) {
-        $style .= '<style>:root {';
-        $style .= '--' . $variableName . ':';
-        $style .= $urlType ? 'url("' : '';
-        $style .= $fieldValue;
-        $style .= $urlType ? '")' : '';
-        $style .= ';}</style>';
+// used for fulltext search
+function modify_search_query($query)
+{
+    if ($query->is_search() && !is_admin()) {
+        // get param on url
+        $postTypeSearch = 'all';
+        if (isset($_GET["post_type"])) {
+            $postTypeSearch = $_GET['post_type'];
+        }
+
+        // Returns results according to the desired post types
+        if ($postTypeSearch == 'event') {
+            $query->set('post_type', 'event');
+        } else if ($postTypeSearch == 'post') {
+            $query->set('post_type', 'post');
+        } else if ($postTypeSearch == 'testimonial') {
+            $query->set('post_type', 'testimonial');
+        } else if ($postTypeSearch == 'leader') {
+            $query->set('post_type', 'leader');
+        } else {
+            $query->set('post_type', ['post', 'event', 'leader', 'testimonial']);
+        }
     }
 
-    return $style;
+    return $query;
 }
+add_filter('pre_get_posts', 'modify_search_query', 99, 1);
 
-// custom block accordion
-function custom_accordion($accordion = [])
+// Converts date types into a certain format
+function custom_convert_time($date_time, $format = "d/m/Y")
 {
-    ob_start();
-    if ($accordion):
-        $key_id = mt_rand(100, 999);
-        $accordionId = 'accordion-' . $key_id;
-        ?>
-        <div class="accordion" id="<?php echo $accordionId; ?>">
-            <?php
-            foreach ($accordion as $index => $item):
-                if ($item['question'] && $item['answer']):
-                    $collapse = 'collapse-' . $key_id . '-' . $index;
-                    $labelledby = 'accordionHeader-' . $key_id . '-' . $index;
-                    $buttonAttr = 'class="accordion__btn" type="button" data-toggle="collapse" data-target="#' . $collapse . '" aria-expanded="false" aria-controls="' . $collapse . '"';
-                    $collapseAttr = 'id="' . $collapse . '" class="collapse" aria-labelledby="' . $labelledby . '" data-parent="#' . $accordionId . '"';
-                    ?>
-                    <div class="accordion__item">
-                        <div class="accordion__header" id="<?php echo $labelledby; ?>">
-                            <button <?php echo $buttonAttr; ?>>
-                                <?php echo $item['question']; ?>
-                            </button>
-                        </div>
+    $date_time_object = null;
 
-                        <div <?php echo $collapseAttr; ?>>
-                            <div class="accordion__body editor">
-                                <?php echo $item['answer']; ?>
-                            </div>
-                        </div>
-                    </div>
-                    <?php
-                endif;
-            endforeach;
-            ?>
-        </div>
-        <?php
-    endif;
-    return ob_get_clean();
-}
+    switch (true) {
+        // Format d/m/Y
+        case(strpos($date_time, '/') !== false):
+            $date_time_object = DateTime::createFromFormat('d/m/Y', $date_time);
+            break;
+        // Format Ymd
+        case(strlen($date_time) === 8 && ctype_digit($date_time)):
+            $date_time_object = DateTime::createFromFormat('Ymd', $date_time);
+            break;
+        // Format Y-m-d
+        case(strpos($date_time, '-') !== false):
+            $date_time_object = DateTime::createFromFormat('Y-m-d', $date_time);
+            break;
+        // Format d.m.Y or m.d.Y
+        case(strpos($date_time, '.') !== false):
+            $date_time_object = DateTime::createFromFormat('d.m.Y', $date_time);
+            if (!$date_time_object) {
+                $date_time_object = DateTime::createFromFormat('m.d.Y', $date_time);
+            }
+            break;
+        // Format M j, Y or j M Y
+        case(preg_match('/^(?:\d{1,2}\s)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{4}$/', $date_time)):
+            $date_time_object = DateTime::createFromFormat('M j, Y', $date_time);
+            if (!$date_time_object) {
+                $date_time_object = DateTime::createFromFormat('j M Y', $date_time);
+            }
+            break;
+        // Format j F Y or F j, Y
+        case(preg_match('/^(?:\d{1,2}\s)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}$/', $date_time)):
+            $date_time_object = DateTime::createFromFormat('j F Y', $date_time);
+            if (!$date_time_object) {
+                $date_time_object = DateTime::createFromFormat('F j, Y', $date_time);
+            }
+            break;
+    }
 
-// custom block tabs
-function custom_tabs($tabs = [])
-{
-    ob_start();
-    if ($tabs):
-        ?>
-        <div class="tabs">
-            <ul class="nav nav-tabs tabs__head" role="tablist">
-                <?php
-                foreach ($tabs as $key => $item):
-                    $attr = 'class="nav-link ' . (($key == 0) ? 'active' : '') . '" data-toggle="tab" href="#tabs-' . $key . '" role="tab"';
-                    ?>
-                    <li class="nav-item tabs__headItem">
-                        <a data-mh="tabs__headLink" <?php echo $attr; ?>>
-                            <?php echo $item['title']; ?>
-                        </a>
-                    </li>
-                    <?php
-                endforeach;
-                ?>
-            </ul>
+    // If there's a date object, format it to the desired format
+    if ($date_time_object instanceof DateTime) {
+        return $date_time_object->format($format);
+    }
 
-            <div class="tab-content tabs__content">
-                <?php
-                foreach ($tabs as $key => $item):
-                    $attr = 'class="tab-pane tabs__contentItem ' . (($key == 0) ? 'active' : '') . '" id="tabs-' . $key . '" role="tabpanel"';
-                    ?>
-                    <div <?php echo $attr; ?>>
-                        <div class="editor">
-                            <?php echo $item['content']; ?>
-                        </div>
-                    </div>
-                    <?php
-                endforeach;
-                ?>
-            </div>
-        </div>
-        <?php
-    endif;
-    return ob_get_clean();
+    return false;
 }

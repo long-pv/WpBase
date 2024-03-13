@@ -1,87 +1,37 @@
 <?php
 function register_cpt_post_types()
 {
-    // format post type
-    // $post_type = [
-    //     'post_type' => [
-    //         'labels' => [
-    //             'name' => __('Lable', 'wplongpv'),
-    //             'singular_name' => __('Lable', 'wplongpv'),
-    //             'menu_name' => __('Lable', 'wplongpv'),
-    //         ],
-    //         'cap' => false,
-    //         'hierarchical' => true
-    //     ],
-    // ];
-    $post_type = get_field('lx_post_type', 'option') ?? null;
+    $cpt_list = [
+        'event' => [
+            'labels' => [
+                'name' => __('Event', 'wplongpv'),
+                'singular_name' => __('Event', 'wplongpv'),
+                'menu_name' => __('Event', 'wplongpv'),
+            ],
+            'cap' => false,
+            'hierarchical' => false
+        ],
+    ];
 
-    if ($post_type && is_array($post_type)) {
-        $post_type_arr = [];
+    $cpt_tax = [
+        'event_category' => [
+            'labels' => [
+                "name" => __('Event category', 'wplongpv'),
+                "singular_name" => __('Event category', 'wplongpv'),
+            ],
+            'cap' => false,
+            'post_type' => [
+                'event',
+            ]
+        ],
+    ];
 
-        foreach ($post_type as $item) {
-            $slug = $item['slug'];
-
-            if ($slug) {
-                $post_type_arr[$slug]['labels'] = [
-                    'name' => $item['label'],
-                    'singular_name' => $item['label'],
-                    'menu_name' => $item['label'],
-                ];
-                $post_type_arr[$slug]['cap'] = $item['capability'] ?? false;
-                $post_type_arr[$slug]['hierarchical'] = $item['hierarchical'] ?? false;
-            }
-        }
-
-        if ($post_type_arr) {
-            foreach ($post_type_arr as $post_type => $data) {
-                register_cpt($post_type, $data);
-            }
-        }
+    foreach ($cpt_list as $post_type => $data) {
+        register_cpt($post_type, $data);
     }
 
-    // format custom taxonomy
-    // $cpt_tax = [
-    //     'taxonomy' => [
-    //         'labels' => [
-    //             "name" => __('Label', 'wplongpv'),
-    //             "singular_name" => __('Label', 'wplongpv'),
-    //         ],
-    //         'cap' => false,
-    //         'post_type' => [
-    //             'key_post_type'
-    //         ]
-    //     ],
-    // ];
-    $taxonomy = get_field('lx_taxonomy', 'option') ?? null;
-
-    if ($taxonomy && is_array($taxonomy)) {
-        $taxonomy_arr = [];
-
-        foreach ($taxonomy as $item) {
-            $slug = $item['slug'];
-
-            if ($slug) {
-                $taxonomy_arr[$slug]['labels'] = [
-                    "name" => $item['label'],
-                    "singular_name" => $item['label'],
-                ];
-                $taxonomy_arr[$slug]['cap'] = $item['capability'] ?? false;
-
-                $arr_post_type = [];
-                if ($item['post_type']) {
-                    foreach ($item['post_type'] as $post_type_item) {
-                        $arr_post_type[] = $post_type_item['slug'];
-                    }
-                    $taxonomy_arr[$slug]['post_type'] = $arr_post_type;
-                }
-            }
-        }
-
-        if ($taxonomy_arr) {
-            foreach ($taxonomy_arr as $ctx => $data) {
-                register_ctx($ctx, $data);
-            }
-        }
+    foreach ($cpt_tax as $ctx => $data) {
+        register_ctx($ctx, $data);
     }
 }
 add_action('init', 'register_cpt_post_types');
@@ -104,11 +54,11 @@ function register_cpt($post_type, $data = [])
         'show_in_menu' => true,
         'show_in_nav_menus' => true,
         'delete_with_user' => false,
-        'exclude_from_search' => false,
+        'exclude_from_search' => true,
         'map_meta_cap' => true,
         'hierarchical' => $data['labels'] ?: false,
         'rewrite' => array('slug' => $post_type, 'with_front' => true),
-        'query_var' => $hierarchical,
+        'query_var' => true,
         'menu_icon' => 'dashicons-admin-post',
         'supports' => array('title', 'editor', 'thumbnail', $attributes),
         'capability_type' => 'post',

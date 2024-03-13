@@ -68,22 +68,9 @@ function wplongpv_scripts()
 add_action('wp_enqueue_scripts', 'wplongpv_scripts');
 
 /**
- * Functions security theme by hooking into WordPress.
- */
-require get_template_directory() . '/security/index.php';
-require get_template_directory() . '/security/role.php';
-
-/**
  * Functions which enhance the theme by hooking into WordPress.
  */
 require get_template_directory() . '/inc/template-functions.php';
 
-/**
- * Functions block
- */
-// require get_template_directory() . '/inc/custom-functions.php';
-
-/**
- * Functions block
- */
-// require get_template_directory() . '/inc/cpt-custom-role.php';
+// Create CPT
+require get_template_directory() . '/inc/cpt-custom-role.php';
