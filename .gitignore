@@ -7,7 +7,8 @@
 # find folder -type f -name "LICENSE" -exec rm {} \
 # => find folder -type f \( -name "*.txt" -o -name "*.md" -o -name "*.html" -o -name "*.DS" -o -name "*.lock" -o -name "LICENSE" \) -exec rm {} \;
 # find folder/wp-content/uploads -type f ! -name "index.php" -exec rm -f {} +
-# rm -rf folder/wp-content/backups-dup-lite
+# rm -rf wp-content/backups-dup-lite
+# rm -rf wp-content/languages
 
 # Nếu lỗi gitignore thì đây là cách khắc phục
 # B1: git rm -r --cached .
