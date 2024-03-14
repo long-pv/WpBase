@@ -3,11 +3,7 @@ function register_cpt_post_types()
 {
     $cpt_list = [
         'event' => [
-            'labels' => [
-                'name' => __('Event', 'wplongpv'),
-                'singular_name' => __('Event', 'wplongpv'),
-                'menu_name' => __('Event', 'wplongpv'),
-            ],
+            'labels' => __('Event', 'wplongpv'),
             'cap' => false,
             'hierarchical' => false
         ],
@@ -15,14 +11,9 @@ function register_cpt_post_types()
 
     $cpt_tax = [
         'event_category' => [
-            'labels' => [
-                "name" => __('Event category', 'wplongpv'),
-                "singular_name" => __('Event category', 'wplongpv'),
-            ],
+            'labels' => __('Event category', 'wplongpv'),
             'cap' => false,
-            'post_type' => [
-                'event',
-            ]
+            'post_type' => ['event']
         ],
     ];
 
@@ -41,8 +32,14 @@ function register_cpt($post_type, $data = [])
     $hierarchical = $data['hierarchical'] ?: false;
     $attributes = $hierarchical ? 'page-attributes' : '';
 
+    $labels = [
+        'name' => $data['labels'],
+        'singular_name' => $data['labels'],
+        'menu_name' => $data['labels'],
+    ];
+
     $args = array(
-        'labels' => $data['labels'],
+        'labels' => $labels,
         'description' => '',
         'public' => true,
         'publicly_queryable' => true,
@@ -60,9 +57,14 @@ function register_cpt($post_type, $data = [])
         'rewrite' => array('slug' => $post_type, 'with_front' => true),
         'query_var' => true,
         'menu_icon' => 'dashicons-admin-post',
-        'supports' => array('title', 'editor', 'thumbnail', $attributes),
+        'supports' => array('title', 'editor', 'thumbnail', 'revisions', 'author', $attributes),
         'capability_type' => 'post',
+        'can_export' => true,
     );
+
+    if (!empty($data['tax'])) {
+        $args['taxonomies'] = $data['tax'];
+    }
 
     if (!empty($data['cap'])) {
         $capabilities = [
@@ -86,9 +88,14 @@ function register_cpt($post_type, $data = [])
 
 function register_ctx($ctx, $data)
 {
+    $labels = [
+        'name' => $data['labels'],
+        'singular_name' => $data['labels'],
+    ];
+
     $args = [
         "label" => $ctx,
-        "labels" => $data['labels'],
+        "labels" => $labels,
         "public" => true,
         "publicly_queryable" => true,
         "hierarchical" => true,
@@ -96,12 +103,14 @@ function register_ctx($ctx, $data)
         "show_in_menu" => true,
         "show_in_nav_menus" => true,
         "query_var" => true,
-        "rewrite" => ['slug' => $ctx, 'with_front' => true,],
+        "rewrite" => ['slug' => $ctx, 'with_front' => true],
         "show_admin_column" => true,
         "show_in_rest" => true,
         "rest_base" => "car_model_id",
         "rest_controller_class" => "WP_REST_Terms_Controller",
-        "show_in_quick_edit" => false,
+        "show_in_quick_edit" => true,
+        "show_in_graphql" => false,
+        'show_tagcloud' => true,
     ];
 
     if (!empty($data['cap'])) {
