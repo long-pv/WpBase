@@ -216,9 +216,14 @@ function disable_default_endpoints($endpoints)
         '/wp/v2/categories'
     );
 
-    $allowed_endpoints = array_diff_key($endpoints, array_flip($endpoints_to_remove));
-    if (count($allowed_endpoints) !== count($endpoints)) {
-        wp_die('<h1>403 Forbidden.</h1><a href="' . home_url() . '">Return to home page.</a>', 'Forbidden', array('response' => 403));
+    if (!is_user_logged_in() && !is_admin()) {
+        foreach ($endpoints_to_remove as $rem_endpoint) {
+            foreach ($endpoints as $maybe_endpoint => $object) {
+                if (stripos($maybe_endpoint, $rem_endpoint) !== false) {
+                    unset($endpoints[$maybe_endpoint]);
+                }
+            }
+        }
     }
 
     return $endpoints;
