@@ -7,10 +7,10 @@ function heateorSssMoreSharingPopup(elem, postUrl, postTitle, twitterTitle){
 	concate = '</ul></div><div class="footer-panel"><p></p></div></div>';
 	var heateorSssMoreSharingServices = {	  
 	 facebook: {
-	  	background_color: "#3c589a",
+	  	background_color: "#0765FE",
 		title: "Facebook",
 		redirect_url: "https://www.facebook.com/sharer.php?u=" + postUrl + "&t=" + postTitle + "&v=3",
-		svg: '<svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="-5 -5 42 42"><path d="M17.78 27.5V17.008h3.522l.527-4.09h-4.05v-2.61c0-1.182.33-1.99 2.023-1.99h2.166V4.66c-.375-.05-1.66-.16-3.155-.16-3.123 0-5.26 1.905-5.26 5.405v3.016h-3.53v4.09h3.53V27.5h4.223z" fill="#fff"></path></svg>'
+		svg: '<svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 32 32"><path fill="#fff" d="M28 16c0-6.627-5.373-12-12-12S4 9.373 4 16c0 5.628 3.875 10.35 9.101 11.647v-7.98h-2.474V16H13.1v-1.58c0-4.085 1.849-5.978 5.859-5.978.76 0 2.072.15 2.608.298v3.325c-.283-.03-.775-.045-1.386-.045-1.967 0-2.728.745-2.728 2.683V16h3.92l-.673 3.667h-3.247v8.245C23.395 27.195 28 22.135 28 16Z"></path></svg>'
 	  },
 	  x: {
 	  	background_color: "#2a2a2a",
@@ -31,10 +31,10 @@ function heateorSssMoreSharingPopup(elem, postUrl, postTitle, twitterTitle){
 		svg: '<svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="#fff" fill-rule="evenodd" d="M5.597 4C4.719 4 4 4.719 4 5.599v16.279c0 .878.719 1.597 1.597 1.597h10l1.477 4.53h9.33c.877 0 1.596-.707 1.596-1.573v-16.04c0-.866-.719-1.573-1.597-1.573h-9.93L14.927 4h-9.33Zm15.58 19.475-3.45 3.808h8.676a.88.88 0 0 0 .62-.254.825.825 0 0 0 .256-.597v-16.04a.834.834 0 0 0-.255-.597.881.881 0 0 0-.62-.255h-9.698l1.595 4.968h2.204v-1.52h1.472v1.52h4.532v.94h-.002v-.002h-2.035c-.197 1.252-1.13 2.62-2.048 3.708.685.735 1.618 1.651 2.89 2.806l-.772.772a52.625 52.625 0 0 1-2.818-2.806c-.71.752-1.277 1.24-1.277 1.24l-.375-1.173s.407-.325.943-.873c-1.65-1.933-1.7-2.611-1.7-2.611h1.221s.005.452 1.18 1.844c.665-.796 1.345-1.82 1.653-2.905h-4.766l2.578 8.027h-.005Zm-8.246-9.12c-.06.728-.683 1.807-2.191 1.807-1.306 0-2.364-1.08-2.364-2.41 0-1.329 1.058-2.408 2.364-2.408.743 0 1.238.322 1.522.584l.99-.952a3.632 3.632 0 0 0-2.512-.977 3.753 3.753 0 0 0-3.751 3.752c0 2.07 1.68 3.75 3.751 3.75 2.169 0 3.602-1.521 3.602-3.669a3.3 3.3 0 0 0-.089-.764h-3.51v1.284l2.188.002Z" clip-rule="evenodd"></path></svg>'
 	  },
 	  mastodon: {
-	  	background_color: "#2b90d9",
+	  	background_color: "#6364FF",
 		title: "Mastodon",
 		bookmarklet_url: "https://mastodon.social/share?text=" + postUrl + "&t=" + postTitle + "&v=3",
-		svg: '<svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M27 12c0-5.12-3.35-6.62-3.35-6.62C22 4.56 19.05 4.23 16 4.21c-3 0-5.92.35-7.61 1.12C8.36 5.33 5 6.83 5 12v4c.12 5 .92 9.93 5.54 11.16a17.67 17.67 0 005.44.6 10.88 10.88 0 004.18-.95l-.09-1.95a13.36 13.36 0 01-4.07.54c-2.12-.07-4.37-.23-4.71-2.84a5.58 5.58 0 01-.05-.73 27.46 27.46 0 004.73.63 26.76 26.76 0 004.68-.28c3-.35 5.53-2.17 5.85-3.83A39.25 39.25 0 0027 12zm-3.95 6.59h-2.46v-6c0-1.27-.53-1.91-1.6-1.91s-1.77.76-1.77 2.27v3.29h-2.44v-3.35c0-1.51-.59-2.27-1.77-2.27s-1.6.64-1.6 1.91v6H9v-6.18a4.49 4.49 0 011-3 3.39 3.39 0 012.63-1.12 3.17 3.17 0 012.84 1.44l.61 1 .61-1a3.17 3.17 0 012.84-1.44 3.39 3.39 0 012.63 1.12 4.49 4.49 0 011 3z" fill="#fff"></path></svg>'
+		svg: '<svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="-3.5 -3.5 39 39"><path d="M27 12c0-5.12-3.35-6.62-3.35-6.62C22 4.56 19.05 4.23 16 4.21c-3 0-5.92.35-7.61 1.12C8.36 5.33 5 6.83 5 12v4c.12 5 .92 9.93 5.54 11.16a17.67 17.67 0 005.44.6 10.88 10.88 0 004.18-.95l-.09-1.95a13.36 13.36 0 01-4.07.54c-2.12-.07-4.37-.23-4.71-2.84a5.58 5.58 0 01-.05-.73 27.46 27.46 0 004.73.63 26.76 26.76 0 004.68-.28c3-.35 5.53-2.17 5.85-3.83A39.25 39.25 0 0027 12zm-3.95 6.59h-2.46v-6c0-1.27-.53-1.91-1.6-1.91s-1.77.76-1.77 2.27v3.29h-2.44v-3.35c0-1.51-.59-2.27-1.77-2.27s-1.6.64-1.6 1.91v6H9v-6.18a4.49 4.49 0 011-3 3.39 3.39 0 012.63-1.12 3.17 3.17 0 012.84 1.44l.61 1 .61-1a3.17 3.17 0 012.84-1.44 3.39 3.39 0 012.63 1.12 4.49 4.49 0 011 3z" fill="#fff"></path></svg>'
 	  },
 	  twitter: {
 	  	background_color: "#55acee", 
@@ -65,7 +65,7 @@ function heateorSssMoreSharingPopup(elem, postUrl, postTitle, twitterTitle){
 	  	background_color: "#E50000",
 		title: "Gettr",
 		redirect_url: "https://gettr.com/share?text="+postTitle+"&url="+postUrl,
-		svg: '<svg width="100%" height="100%" viewBox="-178 -102 1380 1380" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="1024" height="1024" rx="240"></rect><path d="M620.01 810.414C548.28 810.414 476.551 810.414 405.435 810.414C407.274 820.836 409.113 831.871 410.952 842.293C426.279 842.293 439.154 853.329 441.606 868.042C450.189 920.154 459.385 971.652 467.968 1023.76C498.008 1023.76 528.049 1023.76 557.476 1023.76C566.059 971.652 575.256 920.154 583.839 868.042C586.291 853.329 599.165 842.293 614.492 842.293C616.331 831.871 618.171 820.836 620.01 810.414C618.171 820.836 616.331 831.871 614.492 842.293Z" fill="#fff"></path><path fill="#fff" d="M789.83 628.333C604.682 628.333 420.148 628.333 235 628.333C235 636.303 235 644.273 235 652.243C344.74 677.992 379.072 718.455 394.399 762.596C472.872 762.596 551.958 762.596 630.431 762.596C645.145 718.455 680.09 677.992 789.83 652.243C789.83 644.273 789.83 636.303 789.83 628.333Z"></path><path fill="#fff" d="M610.2 250.68C640.241 298.499 659.246 345.093 652.502 388.008C640.241 471.999 534.179 529.014 512.722 581.126C435.475 502.039 388.268 448.089 380.911 398.43C369.263 305.243 502.912 229.835 512.722 125C536.631 155.041 543.988 208.378 543.988 238.418C555.637 223.092 562.38 204.086 562.994 184.468C585.677 211.443 593.034 258.037 593.034 292.982C602.843 281.333 609.587 266.62 610.2 250.68Z"></path></svg>'
+		svg: '<svg width="100%" height="100%" viewBox="-178 -102 1380 1380" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M620.01 810.414C548.28 810.414 476.551 810.414 405.435 810.414C407.274 820.836 409.113 831.871 410.952 842.293C426.279 842.293 439.154 853.329 441.606 868.042C450.189 920.154 459.385 971.652 467.968 1023.76C498.008 1023.76 528.049 1023.76 557.476 1023.76C566.059 971.652 575.256 920.154 583.839 868.042C586.291 853.329 599.165 842.293 614.492 842.293C616.331 831.871 618.171 820.836 620.01 810.414C618.171 820.836 616.331 831.871 614.492 842.293Z" fill="#fff"></path><path fill="#fff" d="M789.83 628.333C604.682 628.333 420.148 628.333 235 628.333C235 636.303 235 644.273 235 652.243C344.74 677.992 379.072 718.455 394.399 762.596C472.872 762.596 551.958 762.596 630.431 762.596C645.145 718.455 680.09 677.992 789.83 652.243C789.83 644.273 789.83 636.303 789.83 628.333Z"></path><path fill="#fff" d="M610.2 250.68C640.241 298.499 659.246 345.093 652.502 388.008C640.241 471.999 534.179 529.014 512.722 581.126C435.475 502.039 388.268 448.089 380.911 398.43C369.263 305.243 502.912 229.835 512.722 125C536.631 155.041 543.988 208.378 543.988 238.418C555.637 223.092 562.38 204.086 562.994 184.468C585.677 211.443 593.034 258.037 593.034 292.982C602.843 281.333 609.587 266.62 610.2 250.68Z"></path></svg>'
 	  },
 	  MeWe: {
 	  	background_color: "#007da1",
@@ -620,7 +620,7 @@ function heateorSssMoreSharingPopup(elem, postUrl, postTitle, twitterTitle){
 	  }
 
 	};
-	var heateorSssMoreSharingServicesHtml = '<button id="heateor_sss_sharing_popup_close" class="close-button separated"><img src="'+ heateorSssCloseIconPath +'" /></button><div id="heateor_sss_sharing_more_content" data-href="'+ decodeURIComponent(postUrl) +'"><div class="filter"><input type="text" onkeyup="heateorSssFilterSharing(this.value.trim())" placeholder="Search" class="search"></div><div class="all-services"><ul class="mini">';
+	var heateorSssMoreSharingServicesHtml = '<button id="heateor_sss_sharing_popup_close" class="close-button separated"><img src="'+ heateorSssCloseIconPath +'" /></button><div id="heateor_sss_sharing_more_content" data-href="'+ decodeURIComponent(postUrl) +'"><div class="filter"><svg aria-hidden="true" class="s-input-icon s-input-icon__search svg-icon iconSearch" width="18" height="18" viewBox="0 0 18 18"><path fill="#666" d="m18 16.5-5.14-5.18h-.35a7 7 0 1 0-1.19 1.19v.35L16.5 18l1.5-1.5ZM12 7A5 5 0 1 1 2 7a5 5 0 0 1 10 0Z"></path></svg><input type="text" onkeyup="heateorSssFilterSharing(this.value.trim())" class="search"/></div><div class="all-services"><ul class="mini">';
 	for(var i in heateorSssMoreSharingServices){
 		var tempTitle = heateorSssCapitaliseFirstLetter(heateorSssMoreSharingServices[i].title.replace(/[_. ]/g, ""));
 		heateorSssMoreSharingServicesHtml += '<li><a rel="nofollow" title="'+ heateorSssMoreSharingServices[i].title +'" alt="'+ heateorSssMoreSharingServices[i].title +'" ';
@@ -631,7 +631,7 @@ function heateorSssMoreSharingPopup(elem, postUrl, postTitle, twitterTitle){
 		}else{
 			heateorSssMoreSharingServicesHtml += 'href="javascript:void(0)" ';
 		}
-		heateorSssMoreSharingServicesHtml += '"><span class="heateor_sss_svg heateor_sss_s__default heateor_sss_s_'+ heateorSssMoreSharingServices[i].title.replace(' ', '_').toLowerCase() +'" style="background-color:' + heateorSssMoreSharingServices[i].background_color + ';width:22px;height:22px;display:block;float:left;" title="'+ heateorSssMoreSharingServices[i].title +'">'+ heateorSssMoreSharingServices[i].svg +'</span><span style="display:block;float:left;margin-left:3px;line-height:24px;" class="heateor_sss_more_label_'+ heateorSssMoreSharingServices[i].title.replace(' ', '_').toLowerCase() +'">' + heateorSssMoreSharingServices[i].title + '</span></a></li>';
+		heateorSssMoreSharingServicesHtml += '"><span class="heateor_sss_svg heateor_sss_s__default heateor_sss_s_'+ heateorSssMoreSharingServices[i].title.replace(' ', '_').toLowerCase() +'" style="background-color:' + heateorSssMoreSharingServices[i].background_color + ';width:18px;height:18px;display:block;float:left;" title="'+ heateorSssMoreSharingServices[i].title +'">'+ heateorSssMoreSharingServices[i].svg +'</span><span style="display:block;float:left;margin-left:3px;line-height:24px;" class="heateor_sss_more_label_'+ heateorSssMoreSharingServices[i].title.replace(' ', '_').toLowerCase() +'">' + heateorSssMoreSharingServices[i].title + '</span></a></li>';
 	}
 	heateorSssMoreSharingServicesHtml += concate;
 	
@@ -904,6 +904,10 @@ jQuery(function(){
 			// insert div before </body>
 			jQuery(document.body).append("<div class='heateor_sss_mobile_footer'></div>");
 		}
+	}
+	if(jQuery('div.heateor_sss_bottom_follow').length && (typeof heateorSssMobileStickySharingEnabled == "undefined" || heateorSssMobileStickySharingEnabled == 0 || jQuery('div.heateor_sss_vertical_sharing').length == 0)){
+		// insert div before </body>
+		jQuery(document.body).append("<div class='heateor_sss_mobile_footer'></div>");
 	}
 
 	var heateorSssClipboard = new ClipboardJS('a.heateor_sss_button_copy_link, span.heateor_sss_s_copy_link, span.heateor_sss_s_copy_link svg, span.heateor_sss_more_label_copy_link', {

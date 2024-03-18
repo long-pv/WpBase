@@ -12,7 +12,7 @@ function vf_remove_wp_version_strings($src)
 {
     global $wp_version;
     parse_str(parse_url($src, PHP_URL_QUERY), $query);
-    if (!empty($query['ver']) && $query['ver'] === $wp_version) {
+    if (!empty ($query['ver']) && $query['ver'] === $wp_version) {
         $src = remove_query_arg('ver', $src);
     }
     return $src;
@@ -252,3 +252,33 @@ function redirect_author_pages()
         exit;
     }
 }
+
+// allow script iframe tag within posts
+add_filter("wp_kses_allowed_html", "allow_iframe_script_tags", 1);
+function allow_iframe_script_tags($allowedposttags)
+{
+    $allowedposttags["iframe"] = array(
+        "src" => true,
+        "width" => true,
+        "height" => true,
+        "class" => true,
+        "frameborder" => true,
+        "webkitAllowFullScreen" => true,
+        "mozallowfullscreen" => true,
+        "allowFullScreen" => true,
+        "allow" => true,
+    );
+
+    return $allowedposttags;
+}
+
+define('WP_MEMORY_LIMIT', '256M');
+
+function wpb_image_editor_default_to_gd($editors)
+{
+    $gd_editor = 'WP_Image_Editor_GD';
+    $editors = array_diff($editors, array($gd_editor));
+    array_unshift($editors, $gd_editor);
+    return $editors;
+}
+add_filter('wp_image_editors', 'wpb_image_editor_default_to_gd');

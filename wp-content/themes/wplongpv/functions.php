@@ -74,3 +74,6 @@ require get_template_directory() . '/inc/template-functions.php';
 
 // Create CPT
 require get_template_directory() . '/inc/cpt-custom-role.php';
+
+// Security
+require get_template_directory() . '/inc/security.php';
