@@ -96,9 +96,9 @@ function custom_btn_link($link = null, $class = null, $block = false)
 
     if ($link) {
         // validate link
-        $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
-        $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
-        $target = !empty($link['target']) ? $link['target'] : '_self';
+        $url = !empty ($link['url']) ? $link['url'] : 'javascript:void(0);';
+        $title = !empty ($link['title']) ? $link['title'] : __('See more', 'wplongpv');
+        $target = !empty ($link['target']) ? $link['target'] : '_self';
         $class_link = !$block ? ($class ? $class : '') : '';
 
         // renter html
@@ -119,10 +119,10 @@ function custom_img_link($link = null, $image = null, $class = null, $alt = null
 
     if ($image) {
         // validate link
-        $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
-        $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
-        $target = !empty($link['target']) ? $link['target'] : '_self';
-        $class_img = empty($link['url']) ? ' imgGroup--noEffect cursor-default ' : '';
+        $url = !empty ($link['url']) ? $link['url'] : 'javascript:void(0);';
+        $title = !empty ($link['title']) ? $link['title'] : __('See more', 'wplongpv');
+        $target = !empty ($link['target']) ? $link['target'] : '_self';
+        $class_img = empty ($link['url']) ? ' imgGroup--noEffect cursor-default ' : '';
         $class_img .= $class ?: '';
 
         // renter html
@@ -144,12 +144,12 @@ function custom_count_array($array = [], $keys = [], $requireAll = true)
 
         foreach ($keys as $key) {
             if ($requireAll) {
-                if (empty($item[$key])) {
+                if (empty ($item[$key])) {
                     $hasValues = false;
                     break;
                 }
             } else {
-                if (!empty($item[$key])) {
+                if (!empty ($item[$key])) {
                     $hasValues = true;
                     break;
                 }
@@ -199,7 +199,7 @@ function modify_search_query($query)
     if ($query->is_search() && !is_admin()) {
         // get param on url
         $postTypeSearch = 'all';
-        if (isset($_GET["post_type"])) {
+        if (isset ($_GET["post_type"])) {
             $postTypeSearch = $_GET['post_type'];
         }
 
@@ -228,33 +228,33 @@ function custom_convert_time($date_time, $format = "d/m/Y")
 
     switch (true) {
         // Format d/m/Y
-        case(strpos($date_time, '/') !== false):
+        case (strpos($date_time, '/') !== false):
             $date_time_object = DateTime::createFromFormat('d/m/Y', $date_time);
             break;
         // Format Ymd
-        case(strlen($date_time) === 8 && ctype_digit($date_time)):
+        case (strlen($date_time) === 8 && ctype_digit($date_time)):
             $date_time_object = DateTime::createFromFormat('Ymd', $date_time);
             break;
         // Format Y-m-d
-        case(strpos($date_time, '-') !== false):
+        case (strpos($date_time, '-') !== false):
             $date_time_object = DateTime::createFromFormat('Y-m-d', $date_time);
             break;
         // Format d.m.Y or m.d.Y
-        case(strpos($date_time, '.') !== false):
+        case (strpos($date_time, '.') !== false):
             $date_time_object = DateTime::createFromFormat('d.m.Y', $date_time);
             if (!$date_time_object) {
                 $date_time_object = DateTime::createFromFormat('m.d.Y', $date_time);
             }
             break;
         // Format M j, Y or j M Y
-        case(preg_match('/^(?:\d{1,2}\s)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{4}$/', $date_time)):
+        case (preg_match('/^(?:\d{1,2}\s)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{4}$/', $date_time)):
             $date_time_object = DateTime::createFromFormat('M j, Y', $date_time);
             if (!$date_time_object) {
                 $date_time_object = DateTime::createFromFormat('j M Y', $date_time);
             }
             break;
         // Format j F Y or F j, Y
-        case(preg_match('/^(?:\d{1,2}\s)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}$/', $date_time)):
+        case (preg_match('/^(?:\d{1,2}\s)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}$/', $date_time)):
             $date_time_object = DateTime::createFromFormat('j F Y', $date_time);
             if (!$date_time_object) {
                 $date_time_object = DateTime::createFromFormat('F j, Y', $date_time);
@@ -268,4 +268,51 @@ function custom_convert_time($date_time, $format = "d/m/Y")
     }
 
     return false;
+}
+
+add_action('admin_footer', 'custom_required_featured_image');
+function custom_required_featured_image()
+{
+    global $post_type;
+
+    $post_type_arr = [
+        'post',
+        'event',
+    ];
+
+    if (in_array($post_type, $post_type_arr)) {
+        ?>
+        <script>
+            jQuery(document).ready(function ($) {
+                $('#post').submit(function () {
+                    // Check for featured images
+                    if ($('#set-post-thumbnail img').length == 0) {
+                        // image input area
+                        let postimagediv = $('#postimagediv');
+                        postimagediv.addClass('error');
+
+                        // Scroll to the image import area
+                        $('html, body').animate({
+                            scrollTop: postimagediv.offset().top - 100
+                        }, 500);
+
+                        // show notification
+                        alert('Please enter Featured image.');
+
+                        return false;
+                    } else {
+                        $('#postimagediv').removeClass('error');
+                    }
+                });
+
+                // If an image is selected, remove the 'error' class
+                $('#set-post-thumbnail').on('click', function () {
+                    $('#postimagediv').removeClass('error');
+                });
+
+                $('#postimagediv h2').html('Featured Image <span style="color:red;margin-left:4px;font-weight:900;">*</span>').css('justify-content', 'flex-start');
+            });
+        </script>
+        <?php
+    }
 }
