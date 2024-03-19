@@ -316,3 +316,24 @@ function custom_required_featured_image()
         <?php
     }
 }
+
+/**
+ * Add Recommended size image to Featured Image Box
+ */
+add_filter('admin_post_thumbnail_html', 'add_featured_image_instruction');
+function add_featured_image_instruction($html)
+{
+    $post_type = get_post_type();
+    switch ($post_type) {
+        case 'post':
+            $html .= '<p>Recommended size: 500x310</p>';
+            break;
+        case 'event':
+            $html .= '<p>Recommended size: 500x135</p>';
+            break;
+        default:
+            break;
+    }
+
+    return $html;
+}

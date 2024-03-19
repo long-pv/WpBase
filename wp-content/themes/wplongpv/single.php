@@ -8,6 +8,8 @@
  */
 
 get_header();
+
+wp_breadcrumbs();
 ?>
 
 <?php

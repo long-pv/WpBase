@@ -77,3 +77,6 @@ require get_template_directory() . '/inc/cpt-custom-role.php';
 
 // Security
 require get_template_directory() . '/inc/security.php';
+
+// Breadcrumbs
+require get_template_directory() . '/inc/breadcrumbs.php';
