@@ -74,20 +74,6 @@ function wp_breadcrumbs()
 	}
 } // end wp_breadcrumbs()
 
-// breadcrumbs for each post
-function bread_posts($breadcrumb = [], $delimiter)
-{
-	$string = '';
-	if ($breadcrumb && $breadcrumb->post_title) {
-		$label = custom_title($breadcrumb->post_title, false);
-		$link = $breadcrumb->guid;
-
-		$string = '<a href="' . $link . '">' . $label . '</a>' . $delimiter . ' ';
-	}
-
-	return $string;
-}
-
 // Generate breadcrumbs ancestor page
 function generate_page_parent($parent_id, $delimiter)
 {
