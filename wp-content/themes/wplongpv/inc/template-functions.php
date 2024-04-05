@@ -96,9 +96,9 @@ function custom_btn_link($link = null, $class = null, $block = false)
 
     if ($link) {
         // validate link
-        $url = !empty ($link['url']) ? $link['url'] : 'javascript:void(0);';
-        $title = !empty ($link['title']) ? $link['title'] : __('See more', 'wplongpv');
-        $target = !empty ($link['target']) ? $link['target'] : '_self';
+        $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
+        $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
+        $target = !empty($link['target']) ? $link['target'] : '_self';
         $class_link = !$block ? ($class ? $class : '') : '';
 
         // renter html
@@ -119,10 +119,10 @@ function custom_img_link($link = null, $image = null, $class = null, $alt = null
 
     if ($image) {
         // validate link
-        $url = !empty ($link['url']) ? $link['url'] : 'javascript:void(0);';
-        $title = !empty ($link['title']) ? $link['title'] : __('See more', 'wplongpv');
-        $target = !empty ($link['target']) ? $link['target'] : '_self';
-        $class_img = empty ($link['url']) ? ' imgGroup--noEffect cursor-default ' : '';
+        $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
+        $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
+        $target = !empty($link['target']) ? $link['target'] : '_self';
+        $class_img = empty($link['url']) ? ' imgGroup--noEffect cursor-default ' : '';
         $class_img .= $class ?: '';
 
         // renter html
@@ -144,12 +144,12 @@ function custom_count_array($array = [], $keys = [], $requireAll = true)
 
         foreach ($keys as $key) {
             if ($requireAll) {
-                if (empty ($item[$key])) {
+                if (empty($item[$key])) {
                     $hasValues = false;
                     break;
                 }
             } else {
-                if (!empty ($item[$key])) {
+                if (!empty($item[$key])) {
                     $hasValues = true;
                     break;
                 }
@@ -199,7 +199,7 @@ function modify_search_query($query)
     if ($query->is_search() && !is_admin()) {
         // get param on url
         $postTypeSearch = 'all';
-        if (isset ($_GET["post_type"])) {
+        if (isset($_GET["post_type"])) {
             $postTypeSearch = $_GET['post_type'];
         }
 
@@ -284,12 +284,13 @@ function custom_required_featured_image()
         ?>
         <script>
             jQuery(document).ready(function ($) {
+                $('label[for="postimagediv-hide"]').remove();
+
                 $('#post').submit(function () {
                     // Check for featured images
                     if ($('#set-post-thumbnail img').length == 0) {
                         // image input area
                         let postimagediv = $('#postimagediv');
-                        postimagediv.addClass('error');
 
                         // Scroll to the image import area
                         $('html, body').animate({
@@ -300,8 +301,6 @@ function custom_required_featured_image()
                         alert('Please enter Featured image.');
 
                         return false;
-                    } else {
-                        $('#postimagediv').removeClass('error');
                     }
                 });
 
@@ -309,8 +308,6 @@ function custom_required_featured_image()
                 $('#set-post-thumbnail').on('click', function () {
                     $('#postimagediv').removeClass('error');
                 });
-
-                $('#postimagediv h2').html('Featured Image <span style="color:red;margin-left:4px;font-weight:900;">*</span>').css('justify-content', 'flex-start');
             });
         </script>
         <?php
@@ -337,3 +334,145 @@ function add_featured_image_instruction($html)
 
     return $html;
 }
+
+// dump + die()
+function dd($data)
+{
+    echo '<div style="background-color: #c0c0c0; border: 1px solid #ddd; color: #333; padding: 20px; margin: 20px;">';
+    echo '<div style="font-size: 20px; font-weight: bold; color: #007bff; margin-bottom: 10px;">Debug Data</div>';
+    echo '<div style="font-family: monospace;">';
+    echo '<pre>';
+    var_dump($data);
+    echo '</pre>';
+    echo '</div>';
+    echo '</div>';
+    die();
+}
+
+function the_url_search()
+{
+    $search = get_site_url();
+    if (pll_default_language() !== LANG) {
+        $search = $search . '/' . LANG . '/';
+    }
+
+    echo $search;
+}
+
+// Required to enter category for article
+add_action('admin_footer', 'custom_required_enter_category');
+function custom_required_enter_category()
+{
+    global $post_type;
+    if ($post_type == 'post') {
+        ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function ($) {
+                $('label[for="categorydiv-hide"]').remove();
+
+                $('#post').submit(function () {
+                    if ($('#categorychecklist input[type="checkbox"]:checked').length === 0) {
+                        alert('Please enter category.');
+                        $('html, body').animate({
+                            scrollTop: $('#categorydiv').offset().top - 100
+                        }, 'slow');
+                        return false;
+                    }
+                });
+            });
+        </script>
+        <?php
+    }
+
+    // Check if it is a new post creation page
+    if ($post_type == 'post' && isset($_GET['post']) && $_GET['post'] == 0) {
+        ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function ($) {
+                $('#categorychecklist input[type="checkbox"]').prop('checked', false);
+            });
+        </script>
+        <?php
+    }
+}
+
+function custom_replace_text($text, $arr = null)
+{
+    if ($text && $arr) {
+        $patterns = array_map(function ($key) {
+            return '/\b(' . preg_quote($key, '/') . ')\b/i';
+        }, array_keys($arr));
+
+        $replacements = array_values($arr);
+
+        $text = preg_replace($patterns, $replacements, $text);
+
+        return $text;
+    }
+
+    return false;
+}
+
+function custom_filter_by_post_type($post_type)
+{
+    $taxonomies = get_object_taxonomies($post_type, 'objects');
+    $tax_ignore = [
+        'language',
+        'post_translations',
+    ];
+
+    foreach ($taxonomies as $taxonomy) {
+        if (in_array($taxonomy->name, $tax_ignore)) {
+            continue;
+        }
+
+        $terms = get_terms(
+            array(
+                'taxonomy' => $taxonomy->name,
+                'hide_empty' => true,
+            )
+        );
+
+        if (!empty($terms)) {
+            wp_dropdown_categories(
+                array(
+                    'show_option_all' => __("All {$taxonomy->label}"),
+                    'taxonomy' => $taxonomy->name,
+                    'name' => "{$taxonomy->name}_filter",
+                    'orderby' => 'name',
+                    'selected' => isset($_GET["{$taxonomy->name}_filter"]) ? $_GET["{$taxonomy->name}_filter"] : '',
+                    'show_count' => false,
+                    'hide_empty' => false,
+                )
+            );
+        }
+    }
+}
+add_action('restrict_manage_posts', 'custom_filter_by_post_type');
+
+function custom_filter_by_post_type_query($query)
+{
+    if (is_admin() && $query->is_main_query() && !empty($_GET['post_type'])) {
+        $taxonomies = get_object_taxonomies($_GET['post_type'], 'objects');
+
+        if ($taxonomies) {
+            foreach ($taxonomies as $taxonomy) {
+                if (!empty($_GET["{$taxonomy->name}_filter"])) {
+                    if ($_GET["{$taxonomy->name}_filter"] !== '0') {
+                        $query->set(
+                            'tax_query',
+                            array(
+                                array(
+                                    'taxonomy' => $taxonomy->name,
+                                    'field' => 'term_id',
+                                    'terms' => $_GET["{$taxonomy->name}_filter"],
+                                ),
+                            )
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+add_action('pre_get_posts', 'custom_filter_by_post_type_query');

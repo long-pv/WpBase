@@ -1,15 +1,6 @@
 # go-live security
-# find folder -type f -name "*.txt" -exec rm {} \;
-# find folder -type f -name "*.md" -exec rm {} \;
-# find folder -type f -name "*.html" -exec rm {} \;
-# find folder -type f -name "*.DS" -exec rm {} \;
-# find folder -type f -name "*.lock" -exec rm {} \;
-# find folder -type f -name "LICENSE" -exec rm {} \
-# => find folder -type f \( -name "*.txt" -o -name "*.md" -o -name "*.html" -o -name "*.DS" -o -name "*.lock" -o -name "LICENSE" \) -exec rm {} \;
-# find folder/wp-content/uploads -type f ! -name "index.php" -exec rm -f {} +
-# rm -rf wp-content/backups-dup-lite
-# rm -rf wp-content/languages
-# rm -rf wp-content/themes/{twentytwentyone,twentytwentytwo,twentytwentythree,twentytwentyfour}
+# find folder -type f \( -name "*.txt" -o -name "*.md" -o -name "*.html" -o -name "*.DS" -o -name "*.lock" -o -name "LICENSE" \) -exec rm {} \;
+# git diff --name-only commit_id_new commit_id_old | while read -r file; do mkdir -p "changed_files/$(dirname "$file")" && cp "$file" "changed_files/$file"; done
 
 # Nếu lỗi gitignore thì đây là cách khắc phục
 # B1: git rm -r --cached .
@@ -26,6 +17,8 @@
 *.html
 *.DS
 *.lock
+*.log
+*.wpress
 # wp-config.php
 wp-config.php
 backup
@@ -41,6 +34,7 @@ wp-content/themes/*/languages/
 wp-content/themes/*/assets/css/
 wp-content/themes/*/js
 wp-content/themes/*/style-rtl.css
+wp-content/ai1wm-backups/
 
 # wp-content / theme
 wp-content/themes/twentytwentyone
