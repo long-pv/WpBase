@@ -62,76 +62,92 @@ function custom_title($text = '', $character = true)
 // block info general information
 function block_info($data_block = null)
 {
-    $html = '';
+    ob_start();
 
-    if ($data_block) {
+    if ($data_block):
         $data = [
             'title' => $data_block['title'] ?? null,
             'desc' => $data_block['description'] ?? null,
             'link' => $data_block['link'] ?? null,
         ];
 
-        $layout = $data_block['display_type'] ?? 'left';
-
         // render html the section
-        if ($data['title'] || $data['desc'] || $data['link']) {
-            $html .= ($layout == 'center') ? '<div class="row no-gutters justify-content-center"><div class="col-lg-10">' : '';
-            $html .= '<div class="secHeading' . (($layout == 'center') ? ' secHeading--center ' : '') . '">';
-            $html .= $data['title'] ? '<h2 class="secTitle secHeading__title wow fadeInUp" data-wow-duration="1s">' . custom_title($data['title']) . '</h2>' : '';
-            $html .= $data['desc'] ? '<div class="editor secHeading__desc wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s">' . $data['desc'] . '</div>' : '';
-            $html .= ($layout == 'left') ? '<div class="wow fadeInUp" data-wow-duration="1s">' . custom_btn_link($data['link'], 'secHeading__link', true) . '</div>' : '';
-            $html .= '</div>';
-            $html .= ($layout == 'center') ? '</div></div>' : '';
-        }
-    }
+        if ($data['title'] || $data['desc'] || $data['link']):
+            ?>
+            <div class="secHeading">
+                <?php if ($data['title']): ?>
+                    <h2 class="secTitle secHeading__title">
+                        <?php echo $data['title']; ?>
+                    </h2>
+                <?php endif; ?>
 
-    return $html;
+                <?php if ($data['desc']): ?>
+                    <div class="editor secHeading__desc">
+                        <?php echo $data['desc']; ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php
+                if ($data['link']) {
+                    echo custom_link($data['link'], 'secHeading__link');
+                }
+                ?>
+            </div>
+            <?php
+        endif;
+    endif;
+
+    return ob_get_clean();
 }
 // end block info
 
 // block btn link general
-function custom_btn_link($link = null, $class = null, $block = false)
+function custom_link($link = null, $class = null)
 {
-    $html = '';
+    ob_start();
 
-    if ($link) {
+    if ($link):
         // validate link
-        $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
+        $url = !empty($link['url']) ? $link['url'] : '';
         $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
-        $target = !empty($link['target']) ? $link['target'] : '_self';
-        $class_link = !$block ? ($class ? $class : '') : '';
+        $target = !empty($link['target']) ? $link['target'] : '';
 
-        // renter html
-        $html .= $block ? '<div class="wow fadeInUp ' . $class . '" data-wow-duration="1s">' : '';
-        $html .= '<a href="' . $url . '" target="' . $target . '" class="btnSeeMore wow fadeInUp ' . $class_link . '" data-wow-duration="1s">';
-        $html .= $title;
-        $html .= '</a>';
-        $html .= $block ? '</div>' : '';
-    }
+        if ($url):
+            ?>
+            <div class="<?php echo $class . 'Block'; ?>">
+                <a href="<?php echo $url; ?>" target="<?php echo $target; ?>" class="btnLink <?php echo $class; ?>">
+                    <?php echo $title; ?>
+                </a>
+            </div>
+            <?php
+        endif;
+    endif;
 
-    return $html;
+    return ob_get_clean();
 }
 
 // block image link general
-function custom_img_link($link = null, $image = null, $class = null, $alt = null)
+function custom_img_link($link = null, $image = '', $class = '')
 {
-    $html = '';
+    ob_start();
 
-    if ($image) {
+    if ($image):
         // validate link
         $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
         $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
         $target = !empty($link['target']) ? $link['target'] : '_self';
-        $class_img = empty($link['url']) ? ' imgGroup--noEffect cursor-default ' : '';
-        $class_img .= $class ?: '';
+        $class_img_block = empty($link['url']) ? ' cursor-default ' : '';
+        $class_img_block .= $class ? $class . 'Block' : '';
 
         // renter html
-        $html .= '<a class="imgGroup ' . $class_img . '" href="' . $url . '" target="' . $target . '">';
-        $html .= '<img width="300" height="300" src="' . $image . '" alt="' . ($alt ?: $title) . '">';
-        $html .= '</a>';
-    }
+        ?>
+        <a class="imgGroup <?php echo $class_img_block; ?>" href="<?php echo $url; ?>" target="<?php echo $target; ?>">
+            <img class="<?php echo $class; ?>" width="300" height="300" src="<?php echo $image; ?>" alt="<?php echo $title; ?>">
+        </a>
+        <?php
+    endif;
 
-    return $html;
+    return ob_get_clean();
 }
 
 // Count the elements that exist in the array to use check
