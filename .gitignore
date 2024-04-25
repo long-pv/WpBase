@@ -19,6 +19,8 @@
 *.lock
 *.log
 *.wpress
+*.zip
+*.7z
 # wp-config.php
 wp-config.php
 backup
