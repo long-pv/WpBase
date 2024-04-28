@@ -37,11 +37,6 @@ add_filter('login_errors', 'vf_login_errors');
 // Disable XML-RPC
 add_filter('xmlrpc_enabled', '__return_false');
 
-// hide admin of comments
-add_action('admin_init', function () {
-    remove_menu_page('edit-comments.php');
-});
-
 // upload size limit 2MB
 add_filter('upload_size_limit', 'PBP_increase_upload');
 function PBP_increase_upload($bytes)
@@ -55,6 +50,7 @@ function disable_comments_and_pings_post_type()
     // Remove comments displayed in posts
     remove_post_type_support('post', 'comments');
     remove_post_type_support('post', 'trackbacks');
+    remove_menu_page('edit-comments.php');
 
     // Automatically update status in admin settings
     update_option('default_ping_status', 'closed');
@@ -72,6 +68,66 @@ function disable_comments_and_pings_post_type()
     update_option('comment_moderation', 1);
     update_option('comment_previously_approved', 1);
     update_option('comment_max_links', 1);
+
+    // plugin cerber
+    if (is_plugin_active('wp-cerber/wp-cerber.php')) {
+        // form spam
+        $cerber_antispam_value = get_option('cerber-antispam') ?? [];
+        $cerber_antispam_value['botsreg'] = 1;
+        $cerber_antispam_value['botscomm'] = 1;
+        $cerber_antispam_value['botsany'] = 0;
+        $cerber_antispam_value['botssafe'] = 0;
+        $cerber_antispam_value['botsipwhite'] = 0;
+        $cerber_antispam_value['botsnoauth'] = 0;
+        $cerber_antispam_value['spamcomm'] = 1;
+        $cerber_antispam_value['trashafter-enabled'] = 1;
+        $cerber_antispam_value['trashafter'] = 3;
+        update_option('cerber-antispam', $cerber_antispam_value);
+
+        // Hardening
+        $cerber_hardening_value = get_option('cerber-hardening') ?? [];
+        $cerber_hardening_value['stopenum'] = 1;
+        $cerber_hardening_value['stopenum_oembed'] = 1;
+        $cerber_hardening_value['stopenum_sitemap'] = 1;
+        $cerber_hardening_value['nouserpages_bylogin'] = 1;
+        $cerber_hardening_value['adminphp'] = 1;
+        $cerber_hardening_value['phpnoupl'] = 1;
+        $cerber_hardening_value['nophperr'] = 1;
+        $cerber_hardening_value['xmlrpc'] = 1;
+        $cerber_hardening_value['nofeeds'] = 1;
+        $cerber_hardening_value['norestuser'] = 1;
+        $cerber_hardening_value['norest'] = 1;
+        $cerber_hardening_value['restauth'] = 1;
+        $cerber_hardening_value['restroles'] = ['administrator'];
+        $cerber_hardening_value['restwhite'] = ['oembed', 'wp-site-health', 'contact-form-7'];
+        update_option('cerber-hardening', $cerber_hardening_value);
+
+        // cerber-main
+        $cerber_main_value = get_option('cerber-main') ?? [];
+        $cerber_main_value['limitwhite'] = 0;
+        $cerber_main_value['nologinhint'] = 1;
+        $cerber_main_value['nopasshint'] = 1;
+        $cerber_main_value['nologinlang'] = 1;
+        $cerber_main_value['noredirect'] = 1;
+        $cerber_main_value['subnet'] = 1;
+        $cerber_main_value['proxy'] = 1;
+        $cerber_main_value['cerber_sw_repo'] = 0;
+        $cerber_main_value['citadel_on'] = 1;
+        $cerber_main_value['cinotify'] = 1;
+        $cerber_main_value['cerberlab'] = 1;
+        $cerber_main_value['cerberproto'] = 1;
+        $cerber_main_value['usefile'] = 1;
+        $cerber_main_value['ip_extra'] = 1;
+        $cerber_main_value['dateformat'] = 'd/m/Y g:i:s';
+        $cerber_main_value['plain_date'] = 1;
+        $cerber_main_value['admin_lang'] = 1;
+        $cerber_main_value['top_admin_menu'] = 0;
+        $cerber_main_value['no_white_my_ip'] = 0;
+        update_option('cerber-main', $cerber_main_value);
+    }
+
+    $polylang = get_option('polylang') ?? [];
+    // dd($polylang);
 }
 add_action('admin_init', 'disable_comments_and_pings_post_type');
 
