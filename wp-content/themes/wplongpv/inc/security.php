@@ -126,8 +126,30 @@ function disable_comments_and_pings_post_type()
         update_option('cerber-main', $cerber_main_value);
     }
 
-    $polylang = get_option('polylang') ?? [];
-    // dd($polylang);
+    // plugin polylang
+    if (is_plugin_active('polylang/polylang.php')) {
+        $polylang = get_option('polylang') ?? [];
+        $polylang['redirect_lang'] = 1;
+        $polylang['rewrite'] = 1;
+        $polylang['hide_default'] = 1;
+        $polylang['force_lang'] = 1;
+
+        $post_types = get_post_types(array('_builtin' => false), 'objects');
+        if ($post_types) {
+            foreach ($post_types as $post_type) {
+                $polylang['post_types'][] = $post_type->name;
+            }
+        }
+
+        $taxonomies = get_taxonomies(array('_builtin' => false), 'objects');
+        if ($taxonomies) {
+            foreach ($taxonomies as $taxonomy) {
+                $polylang['taxonomies'][] = $taxonomy->name;
+            }
+        }
+
+        update_option('polylang', $polylang);
+    }
 }
 add_action('admin_init', 'disable_comments_and_pings_post_type');
 
