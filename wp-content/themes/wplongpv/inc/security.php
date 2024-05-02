@@ -381,3 +381,11 @@ function hide_tags()
     register_taxonomy('post_tag', array());
 }
 add_action('init', 'hide_tags');
+
+// remove wp default title
+function remove_wp_default_title($title)
+{
+    return str_replace(array(' &#8212;', ' — WordPress', __('WordPress'), ), array(' ', ''), $title);
+}
+add_filter('login_title', 'remove_wp_default_title');
+add_filter('admin_title', 'remove_wp_default_title');
