@@ -1,6 +1,8 @@
-# go-live security
-# find folder -type f \( -name "*.txt" -o -name "*.md" -o -name "*.html" -o -name "*.DS" -o -name "*.lock" -o -name "LICENSE" \) -exec rm {} \;
-# git diff --name-only commit_id_new commit_id_old | while read -r file; do mkdir -p "changed_files/$(dirname "$file")" && cp "$file" "changed_files/$file"; done
+# https://wordpress.org/download/
+# https://underscores.me/
+
+# xóa các file không cần thiết
+# rm -rf *.txt *.md *.html *.DS *.lock *.log *.wpress *.zip *.7z debug.log wp-content/themes/*/style-rtl.css wp-content/themes/twentytwentyone wp-content/themes/twentytwentytwo wp-content/themes/twentytwentythree wp-content/themes/twentytwentyfour wp-content/themes/*/inc/custom-header.php wp-content/themes/*/inc/customizer.php wp-content/themes/*/inc/jetpack.php wp-content/themes/*/inc/template-tags.php
 
 # Nếu lỗi gitignore thì đây là cách khắc phục
 # B1: git rm -r --cached .
