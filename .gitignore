@@ -12,6 +12,14 @@
 # Lấy tất cả các file thay đổi vào 1 folder để share drive
 # git diff --name-only commit_id_new commit_id_old | while read -r file; do mkdir -p "changed_files/$(dirname "$file")" && cp "$file" "changed_files/$file"; done
 
+# bảo mật wp trong file wp-config.php
+# define('FS_METHOD', 'direct');
+# define('DISABLE_WP_CRON', true);
+# define('AUTOMATIC_UPDATER_DISABLED', true);
+# define('WP_AUTO_UPDATE_CORE', false);
+# define('DISALLOW_FILE_MODS', true);
+# define('DISALLOW_FILE_EDIT', true);
+
 # root wordpress
 .htaccess
 *.txt
