@@ -2,7 +2,7 @@
 # https://underscores.me/
 
 # xóa các file không cần thiết
-# rm -rf *.txt *.md *.html *.DS *.lock *.log *.wpress *.zip *.7z debug.log wp-content/themes/*/style-rtl.css wp-content/themes/twentytwentyone wp-content/themes/twentytwentytwo wp-content/themes/twentytwentythree wp-content/themes/twentytwentyfour wp-content/themes/*/inc/custom-header.php wp-content/themes/*/inc/customizer.php wp-content/themes/*/inc/jetpack.php wp-content/themes/*/inc/template-tags.php
+# find . \( -type d \( -name "twentytwentyone" -o -name "twentytwentytwo" -o -name "twentytwentythree" -o -name "twentytwentyfour" \) -exec rm -rf {} \; \) -o \( -type f \( -name "*.txt" -o -name "*.md" -o -name "*.html" -o -name "*.DS" -o -name "*.lock" -o -name "*.log" -o -name "*.wpress" -o -name "*.zip" -o -name "*.7z" -o -name "debug.log" \) -exec rm -f {} \; \)
 
 # Nếu lỗi gitignore thì đây là cách khắc phục
 # B1: git rm -r --cached .
@@ -31,6 +31,7 @@
 *.wpress
 *.zip
 *.7z
+*/LICENSE
 # wp-config.php
 wp-config.php
 backup
