@@ -351,6 +351,7 @@ if (!defined('WP_POST_REVISIONS')) {
 // allow script iframe tag within posts
 function allow_iframe_script_tags($allowedposttags)
 {
+    // Allow iframe embed tags exclusively
     $allowedposttags["iframe"] = array(
         "src" => true,
         "width" => true,
@@ -362,6 +363,18 @@ function allow_iframe_script_tags($allowedposttags)
         "allowFullScreen" => true,
         "allow" => true,
     );
+
+    // tag's allowable attribute
+    $attr = array(
+        "width" => true,
+        "height" => true,
+        "class" => true,
+    );
+
+    // list of tags saved to db
+    $allowedposttags["center"] = $attr;
+    $allowedposttags["div"] = $attr;
+    $allowedposttags["span"] = $attr;
 
     return $allowedposttags;
 }
