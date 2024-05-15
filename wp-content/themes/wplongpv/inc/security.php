@@ -169,6 +169,7 @@ function restrict_file_types($mimes)
     $allowed_mime_types = array(
         'jpg|jpeg|jpe' => 'image/jpeg',
         'png' => 'image/png',
+        'gif' => 'image/gif',
         'pdf' => 'application/pdf',
         'mp4' => 'video/mp4',
         // 'gif' => 'image/gif',
@@ -365,16 +366,70 @@ function allow_iframe_script_tags($allowedposttags)
     );
 
     // tag's allowable attribute
-    $attr = array(
-        "width" => true,
-        "height" => true,
-        "class" => true,
+    $allowed_atts = array(
+        'type' => array(),
+        'align' => array(),
+        'class' => array(),
+        'id' => array(),
+        'dir' => array(),
+        'lang' => array(),
+        'style' => array(),
+        'xml:lang' => array(),
+        'src' => array(),
+        'alt' => array(),
+        'href' => array(),
+        'rel' => array(),
+        'rev' => array(),
+        'target' => array(),
+        'novalidate' => array(),
+        'value' => array(),
+        'name' => array(),
+        'tabindex' => array(),
+        'action' => array(),
+        'method' => array(),
+        'for' => array(),
+        'width' => array(),
+        'height' => array(),
+        'data' => array(),
+        'title' => array(),
     );
 
     // list of tags saved to db
-    $allowedposttags["center"] = $attr;
-    $allowedposttags["div"] = $attr;
-    $allowedposttags["span"] = $attr;
+    $allowedposttags["center"] = $allowed_atts;
+    $allowedposttags['form'] = $allowed_atts;
+    $allowedposttags['label'] = $allowed_atts;
+    $allowedposttags['input'] = $allowed_atts;
+    $allowedposttags['textarea'] = $allowed_atts;
+    $allowedposttags['iframe'] = $allowed_atts;
+    $allowedposttags['script'] = $allowed_atts;
+    $allowedposttags['style'] = $allowed_atts;
+    $allowedposttags['strong'] = $allowed_atts;
+    $allowedposttags['small'] = $allowed_atts;
+    $allowedposttags['table'] = $allowed_atts;
+    $allowedposttags['span'] = $allowed_atts;
+    $allowedposttags['abbr'] = $allowed_atts;
+    $allowedposttags['code'] = $allowed_atts;
+    $allowedposttags['pre'] = $allowed_atts;
+    $allowedposttags['div'] = $allowed_atts;
+    $allowedposttags['img'] = $allowed_atts;
+    $allowedposttags['h1'] = $allowed_atts;
+    $allowedposttags['h2'] = $allowed_atts;
+    $allowedposttags['h3'] = $allowed_atts;
+    $allowedposttags['h4'] = $allowed_atts;
+    $allowedposttags['h5'] = $allowed_atts;
+    $allowedposttags['h6'] = $allowed_atts;
+    $allowedposttags['ol'] = $allowed_atts;
+    $allowedposttags['ul'] = $allowed_atts;
+    $allowedposttags['li'] = $allowed_atts;
+    $allowedposttags['em'] = $allowed_atts;
+    $allowedposttags['hr'] = $allowed_atts;
+    $allowedposttags['br'] = $allowed_atts;
+    $allowedposttags['tr'] = $allowed_atts;
+    $allowedposttags['td'] = $allowed_atts;
+    $allowedposttags['p'] = $allowed_atts;
+    $allowedposttags['a'] = $allowed_atts;
+    $allowedposttags['b'] = $allowed_atts;
+    $allowedposttags['i'] = $allowed_atts;
 
     return $allowedposttags;
 }
@@ -387,10 +442,21 @@ function hide_tags()
 }
 add_action('init', 'hide_tags');
 
-// remove wp default title
-function remove_wp_default_title($title)
+// setting image in content editor
+function set_image_setting_editor($html, $id, $caption, $title, $align, $url, $size, $alt)
 {
-    return str_replace(array(' &#8212;', ' — WordPress', __('WordPress'), ), array(' ', ''), $title);
+    // Only intervene if it's a photo
+    if (strpos($html, '<img') !== false) {
+        // Title and Nofollow For Links
+        $html = preg_replace('/class="([^"]*)"/', 'class="$1 aligncenter size-full"', $html);
+        if (strpos($html, 'class="') === false) {
+            $html = str_replace('<img', '<img class="aligncenter"', $html);
+        }
+
+        // Change the image URL to "Full Size"
+        $full_image_url = wp_get_attachment_image_src($id, 'full')[0];
+        $html = preg_replace('/src="([^"]*)"/', 'src="' . $full_image_url . '"', $html);
+    }
+    return $html;
 }
-add_filter('login_title', 'remove_wp_default_title');
-add_filter('admin_title', 'remove_wp_default_title');
+add_filter('image_send_to_editor', 'set_image_setting_editor', 10, 8);
