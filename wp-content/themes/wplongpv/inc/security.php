@@ -443,20 +443,28 @@ function hide_tags()
 add_action('init', 'hide_tags');
 
 // setting image in content editor
-function set_image_setting_editor($html, $id, $caption, $title, $align, $url, $size, $alt)
+function set_default_image_settings_on_login($user_login, $user)
 {
-    // Only intervene if it's a photo
-    if (strpos($html, '<img') !== false) {
-        // Title and Nofollow For Links
-        $html = preg_replace('/class="([^"]*)"/', 'class="$1 aligncenter size-full"', $html);
-        if (strpos($html, 'class="') === false) {
-            $html = str_replace('<img', '<img class="aligncenter"', $html);
-        }
+    global $wpdb;
 
-        // Change the image URL to "Full Size"
-        $full_image_url = wp_get_attachment_image_src($id, 'full')[0];
-        $html = preg_replace('/src="([^"]*)"/', 'src="' . $full_image_url . '"', $html);
+    $user_id = $user->ID;
+    $prefix = $wpdb->prefix;
+    $meta_key = $prefix . 'user-settings';
+    $current_settings = get_user_meta($user_id, $meta_key, true);
+
+    if (strpos($current_settings, '&align=') !== false) {
+        $current_settings = preg_replace('/&align=([^"]*)/', '&align=center', $current_settings);
+    } else {
+        $current_settings .= '&align=center';
     }
-    return $html;
+
+    if (strpos($current_settings, '&imgsize=') !== false) {
+        $current_settings = preg_replace('/&imgsize=([^"]*)/', '&imgsize=center', $current_settings);
+    } else {
+        $current_settings .= '&imgsize=center';
+    }
+
+    update_user_meta($user_id, $meta_key, $current_settings);
 }
-add_filter('image_send_to_editor', 'set_image_setting_editor', 10, 8);
+
+add_action('wp_login', 'set_default_image_settings_on_login', 10, 2);
