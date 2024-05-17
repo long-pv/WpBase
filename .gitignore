@@ -49,6 +49,8 @@ wp-content/themes/*/assets/css/
 wp-content/themes/*/js
 wp-content/themes/*/style-rtl.css
 wp-content/ai1wm-backups/
+wp-content/cache/
+wp-content/autoptimize_404_handler.php
 
 # wp-content / theme
 wp-content/themes/twentytwentyone
