@@ -32,6 +32,7 @@
 *.zip
 *.7z
 */LICENSE
+*.sql
 # wp-config.php
 wp-config.php
 backup
