@@ -45,6 +45,7 @@ wp-config.php
 backup
 debug.log
 dup-installer/
+changed_files/
 
 # wp-content
 wp-content/uploads/
