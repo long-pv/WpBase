@@ -1,7 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-22 CERBER TECH INC., https://cerber.tech
-	Copyright (C) 2015-22 Markov Gregory, https://wpcerber.com
+	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -33,6 +32,7 @@ final class CRB_DS {
 	private static $opt_cache = array();
 	private static $no_user_meta_shadow = ''; // Do not return user meta from shadow when meta is updating.
 	//private static $user_metas = array( 'capabilities' );
+	private static $setting_id; // A controlling plugin setting (last used)
 
 	static function enable_shadowing( $type ) {
 
@@ -388,13 +388,13 @@ final class CRB_DS {
 		// Due to lack of a hook in the wp_insert_user() we are forced to check permissions and use wp_delete_user() after the user was created
 		if ( ! is_user_logged_in() ) {
 			if ( ! crb_user_has_role_strict( $set['ds_regs_roles'], $user_id ) ) {
-				CRB_Globals::$act_status = 32;
+				CRB_Globals::set_act_status( 32, 'ds_regs_roles' );
 				self::$user_blocked = true;
 			}
 		}
 		else {
-			if ( ! cerber_user_has_role( $set['ds_add_acc'] ) ) {
-				CRB_Globals::$act_status = 33;
+			if ( ! crb_wp_user_has_role( $set['ds_add_acc'] ) ) {
+				CRB_Globals::set_act_status( 33, 'ds_add_acc' );
 				self::$user_blocked = true;
 			}
 		}
@@ -416,7 +416,7 @@ final class CRB_DS {
 	}
 
 	/**
-	 * Protect user's data from authorized modification
+	 * Protect user's data from non-authorized modification
 	 *
 	 * @param int $user_id
 	 * @param array $data User data from 'wp_pre_insert_user_data' filter
@@ -431,7 +431,7 @@ final class CRB_DS {
 		self::$acc_owner = ( $user_id == $cid );
 		self::$user_blocked = false;
 
-		if ( ! cerber_user_has_role( crb_get_settings( 'ds_edit_acc' ) ) ) {
+		if ( ! crb_wp_user_has_role( crb_get_settings( 'ds_edit_acc' ) ) ) {
 
 			// An exception: password reset requested (since WP 5.3)
 			if ( ! empty( $data['user_activation_key'] ) && cerber_is_http_post() ) {
@@ -453,12 +453,13 @@ final class CRB_DS {
 			}
 
 			self::$user_blocked = true;
+			self::$setting_id = 'ds_edit_acc';
 
 			if ( ! self::$acc_owner ) {
 				// Protect the user's row in the users table
 				add_filter( 'query', 'crb_empty_query', PHP_INT_MAX );
 				add_filter( 'pre_get_col_charset', 'crb_return_wp_error', PHP_INT_MAX );
-				CRB_Globals::$act_status = ( ! $cid ) ? 34 : 33;
+				CRB_Globals::set_act_status( ( ! $cid ) ? 34 : 33, 'ds_edit_acc' );
 				cerber_log( 73 );
 			}
 
@@ -502,7 +503,7 @@ final class CRB_DS {
 		// A user is not permitted to be created or updated?
 		if ( self::$user_blocked ) {
 			if ( self::is_meta_protected( $meta_key ) ) { // User roles are here
-				CRB_Globals::$act_status = ( ! is_user_logged_in() ) ? 34 : 33;
+				CRB_Globals::set_act_status( is_user_logged_in() ? 33 : 34, self::$setting_id );
 				cerber_log( 76 );
 				self::$no_user_meta_shadow = '';
 
@@ -513,7 +514,7 @@ final class CRB_DS {
 		if ( true === self::is_meta_preserve( $meta_key ) ) {
 			$ok = false;
 
-			if ( cerber_user_has_role( crb_get_settings( 'ds_edit_acc' ) ) ) {
+			if ( crb_wp_user_has_role( crb_get_settings( 'ds_edit_acc' ) ) ) {
 				$ok = true;
 			}
 			// Makes sense for user's role meta ONLY
@@ -613,8 +614,8 @@ final class CRB_DS {
 
 		$roles = crb_get_settings( 'ds_4opts_roles' );
 
-		if ( ! $roles || ! cerber_user_has_role( $roles ) ) {
-			CRB_Globals::$act_status = ( is_user_logged_in() ) ? 33 : 34;
+		if ( ! $roles || ! crb_wp_user_has_role( $roles ) ) {
+			CRB_Globals::set_act_status( is_user_logged_in() ? 33 : 34, 'ds_4opts_roles' );
 			cerber_log( 75 );
 
 			return $old_value;
@@ -636,12 +637,11 @@ final class CRB_DS {
 			return $value;
 		}
 
-		CRB_Globals::$act_status = 0;
+		CRB_Globals::set_act_status( 0 );
 
 		if ( ! self::role_update_permitted( $value, $old_value ) ) {
-			if ( ! CRB_Globals::$act_status ) {
-				CRB_Globals::$act_status = ( is_user_logged_in() ) ? 33 : 34;
-			}
+
+			CRB_Globals::set_act_status_if( is_user_logged_in() ? 33 : 34, self::$setting_id );
 			cerber_log( 74 );
 
 			return $old_value;
@@ -673,14 +673,11 @@ final class CRB_DS {
 		$add  = crb_get_settings( 'ds_add_role' );
 		$edit = crb_get_settings( 'ds_edit_role' );
 
-		if ( ! $add && ! $edit ) {
-			return false;
-		}
-
 		// Are there new or deleted roles?
 
 		if ( crb_array_diff_keys( $value, $old_value ) ) {
-			if ( ! $add || ! cerber_user_has_role( $add ) ) {
+			if ( ! $add || ! crb_wp_user_has_role( $add ) ) {
+				self::$setting_id = 'ds_add_role';
 				return false;
 			}
 
@@ -689,7 +686,8 @@ final class CRB_DS {
 
 		// There are some changes in capabilities or names
 
-		if ( ! $edit || ! cerber_user_has_role( $edit ) ) {
+		if ( ! $edit || ! crb_wp_user_has_role( $edit ) ) {
+			self::$setting_id = 'ds_edit_role';
 			return false;
 		}
 
@@ -868,8 +866,14 @@ final class CRB_DS {
 	}
 
 	// TODO: implement error notification
-	static function check_errors( &$msg ) {
-		$msg = '...';
+
+	/**
+	 * @return WP_Error|false
+	 */
+	static function check_errors() {
+		/*if () {
+			return new WP_Error();
+		}*/
 		return false;
 	}
 }

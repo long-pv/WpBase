@@ -1,4 +1,7 @@
-jQuery(document).ready(function ($) {
+/**
+ *	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+ */
+jQuery( function( $ ) {
 
     // Async content loading -----------------------------------------------------
 
@@ -120,7 +123,20 @@ jQuery(document).ready(function ($) {
 
     $(".crb-popup-dialog-open").on('click', function (event) {
 
-        let popup_element = '#' + $(this).data('popup_element_id');
+        event.preventDefault();
+
+        let popup_element_id = $(this).data('popup_element_id');
+
+        if (document.getElementById(popup_element_id) == null) {
+            let err_message = 'POP-UP ERROR: Unable to find content to display. Element with ID: ' + popup_element_id + ' does not exist on the page.';
+
+            alert(err_message);
+            console.log(err_message);
+
+            return;
+        }
+
+        let popup_element = '#' + popup_element_id;
 
         $(popup_element + ' .crb-popup-dialog-close').on('click', function () {
             $.magnificPopup.close();
@@ -137,7 +153,6 @@ jQuery(document).ready(function ($) {
             preloader: false,
         });
 
-        event.preventDefault();
     });
 
     $('.crb-popup-dialog form').on('submit', function (event) {

@@ -1,7 +1,7 @@
 /**
- *	Copyright (C) 2015-22 CERBER TECH INC., https://wpcerber.com
+ *	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
  */
-jQuery(document).ready(function ($) {
+jQuery( function( $ ) {
 
     window.crb_scan_id = 0;
 
@@ -10,11 +10,11 @@ jQuery(document).ready(function ($) {
     const CERBER_DIR = 26;
     const CERBER_MOD = 50;
 
-    var crb_req_min_delay = 1000; // ms, throttling - making requests to the server not often than
+    let crb_req_min_delay = 1000; // ms, throttling - making requests to the server not often than
 
-    var crb_scan_mode = '';
-    var crb_user_stop = false;
-    var crb_scan_in_progress = false;
+    let crb_scan_mode = '';
+    let crb_user_stop = false;
+    let crb_scan_in_progress = false;
 
     let crb_response;
     let scanner_data;
@@ -24,32 +24,28 @@ jQuery(document).ready(function ($) {
     let crb_server_errors = 0;
 
     let crb_scanner = $("#crb-scanner");
-    var crb_scan_display = $("#crb-scan-display");
-    var crb_scan_controls = $('#crb-scan-controls');
-    var crb_file_controls = $('#crb-file-controls');
-    var crb_scan_filter = $('#crb-scan-filter');
+    let crb_scan_display = $("#crb-scan-display");
+    let crb_scan_controls = $('#crb-scan-controls');
+    let crb_file_controls = $('#crb-file-controls');
+    let crb_scan_filter = $('#crb-scan-filter');
 
-    var crb_scan_details = $('#crb-scan-details');
-    var crb_scan_progress = $('#crb-scan-progress');
-    var crb_scan_bar = crb_scan_progress.find('#the-scan-bar');
+    let crb_scan_details = $('#crb-scan-details');
+    let crb_scan_progress = $('#crb-scan-progress');
+    let crb_scan_bar = crb_scan_progress.find('#the-scan-bar');
 
     let crb_scan_message = $("#crb-scan-message");
     let crb_scan_note = $("#crb-scan-note");
-    var crb_scan_browser = $("#crb-browse-files > tbody");
+    let crb_scan_browser = $("#crb-browse-files > tbody");
 
-    var crb_txt_strings = [];
-    var crb_the_file;
-    var crb_row_id = 0; // For local parent -> child relationship
+    let crb_txt_strings = [];
+    let crb_the_file;
+    let crb_row_id = 0; // For local parent -> child relationship
 
     let crb_all_sections = null;
     let crb_all_rows = null;
 
     if (crb_admin_page === 'cerber-integrity'
         && (crb_admin_tab === '' || crb_admin_tab === 'scan_main')) {
-
-        /*if (crb_scanner.hasClass('crb-scanner-has-data')) {
-            crb_scan_details.append('<div class="uis_page_loader"></div>');
-        }*/
 
         cerber_scan_load_data();
     }
@@ -95,7 +91,7 @@ jQuery(document).ready(function ($) {
         crb_server_errors = 0;
 
         crb_scan_display.find('[data-init]').each(function () {
-            $(this).html($(this).data('init'));
+            $(this).text($(this).data('init'));
         });
 
         crb_scan_filter.find('.crb-scan-flon').removeClass('crb-scan-flon');
@@ -113,7 +109,7 @@ jQuery(document).ready(function ($) {
         crb_scan_requests = 0;
         crb_user_stop = false;
 
-        crb_scan_message.slideDown().html(crb_scan_msg_steps[0]);
+        crb_scan_message.slideDown().text(crb_scan_msg_steps[0]);
         crb_scan_note.hide();
 
         cerber_update_bar(true);
@@ -122,7 +118,7 @@ jQuery(document).ready(function ($) {
     }
 
     function cerber_scan_continue() {
-        crb_scan_message.html('');
+        crb_scan_message.text('');
         cerber_scan_controls('scanning');
         cerber_scan_step();
     }
@@ -218,27 +214,19 @@ jQuery(document).ready(function ($) {
         }
 
         let smode = scanner_data.mode;
+
         if (scanner_data.cloud) {
             smode += ', Scheduled';
         }
         else {
             smode += ', Manual';
         }
-        smode = '<span style="text-transform: capitalize;">' + smode + '</span>';
 
-        $("#crb-started").html(scanner_data.started);
-        $("#crb-finished").html(scanner_data.finished);
-        $("#crb-duration").html(scanner_data.duration);
-        $("#crb-performance").html(scanner_data.performance);
-        $("#crb-smode").html(smode);
-
-        /*$.each(scanner_data.numbers, function (type, value) {
-            var e = $('#crb-numbers-' + type);
-            if (e.length) {
-                e.find('.crb-scan-number').html(value);
-                e.find('span').addClass('crb-scan-flon');
-            }
-        });*/
+        $("#crb-started").text(scanner_data.started);
+        $("#crb-finished").text(scanner_data.finished);
+        $("#crb-duration").text(scanner_data.duration);
+        $("#crb-performance").text(scanner_data.performance);
+        $("#crb-smode").text(smode);
 
         $.each(scanner_data.scan_ui, function (id, element_html) {
             let e = $('#' + id);
@@ -247,18 +235,20 @@ jQuery(document).ready(function ($) {
             }
         });
 
-        $("#crb-total-files").html(scanner_data.total.files);
-        $("#crb-scanned-files").html(scanner_data.scanned.files);
+        $("#crb-total-files").text(scanner_data.total.files);
+        $("#crb-scanned-files").text(scanner_data.scanned.files);
 
         if ((typeof scanner_data.scan_stats !== 'undefined')) {
-            $("#crb-critical").html(scanner_data.scan_stats.risk[3]);
-            $("#crb-warning").html(scanner_data.scan_stats.total_issues);
+            $("#crb-critical").text(scanner_data.scan_stats.risk[3]);
+            $("#crb-warning").text(scanner_data.scan_stats.total_issues);
         }
 
         if (!scanner_data.aborted && crb_scan_in_progress) {
-            let progress = scanner_data.progress?.step;
-            progress = ((typeof progress === 'undefined' || progress === 0) ? '' : ' - ' + progress + '%')
-            crb_scan_message.html(crb_scan_msg_steps[scanner_data.step] + ' ' + progress);
+
+            let progress = scanner_data.progress?.step || '';
+            progress = progress ? ' - ' + progress + '%' : '';
+
+            crb_scan_message.text((crb_scan_msg_steps[scanner_data.step] || '') + ' ' + progress);
         }
 
         if (crb_scan_message.text()) {
@@ -669,13 +659,13 @@ jQuery(document).ready(function ($) {
         if (window.cerber_name_toggler) {
             $('.crb-item-file').each(function () {
                 full_name = $(this).data('file_name');
-                $(this).find('td:nth-child(2)').html(full_name);
+                $(this).find('td:nth-child(2)').text(full_name);
             });
         }
         else {
             $('.crb-item-file').each(function () {
                 td = $(this).find('td:nth-child(2)');
-                td.html($(td).data('short'));
+                td.text($(td).data('short'));
             });
         }
     }
@@ -833,13 +823,13 @@ jQuery(document).ready(function ($) {
         return info;
     }
 
-    // Explainer for end-user
+    // Our explainer for the admin
+
     function cerber_get_issue_explain(itype, subject) {
-        if (typeof subject === 'undefined' || !subject) {
-            subject = 'WordPress';
-        }
-        subject = '<b>' + subject + '</b>';
+
+        subject = '<b>' + (subject || 'WordPress') + '</b>';
         let ret = [];
+
         switch (itype) {
             case CERBER_LDE: // New way
                 let explainer = crb_txt_strings['explain_issue'][itype];
@@ -1010,8 +1000,8 @@ jQuery(document).ready(function ($) {
             message = '<div>' + message.join('</div><div>') + '</div>';
         }
 
-        wmax = (window.innerWidth < 600) ? window.innerWidth * 0.9 : window.innerWidth * 0.5;
-        hmax = (window.innerHeight < 600) ? window.innerHeight * 0.9 : window.innerHeight * 0.5;
+        let wmax = (window.innerWidth < 600) ? window.innerWidth * 0.9 : window.innerWidth * 0.5;
+        let hmax = (window.innerHeight < 600) ? window.innerHeight * 0.9 : window.innerHeight * 0.5;
 
         w = 200 + message.length;
         h = 140 + Math.round(message.length / 2);
@@ -1020,14 +1010,15 @@ jQuery(document).ready(function ($) {
         w = (w > wmax) ? wmax : w;
         h = (h > hmax) ? hmax : h;
 
-        var max = h - 70;
+        let max = h - 70;
 
-        var button = '<input type="button" value="OK" class="button button-primary">';
+        let button = '<input type="button" value="OK" class="button button-primary">';
+
         if (b) {
             button += '<input type="button" id="add2ignore" value=" Add to ignore list " class="button button-secondary">';
         }
 
-        var popup = cerber_init_popup('crb-popup-box');
+        let popup = cerber_init_popup('crb-popup-box');
         popup.html('<div class="crb-popup-inner" style="max-height: ' + max + 'px;">' + message + '</div>' +
             '<p class="crb-popup-controls">'
             + button

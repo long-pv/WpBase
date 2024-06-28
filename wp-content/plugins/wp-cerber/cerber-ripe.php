@@ -1,7 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-22 CERBER TECH INC., https://cerber.tech
-	Copyright (C) 2015-22 Markov Gregory, https://wpcerber.com
+	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -48,23 +47,26 @@ if ( ! defined( 'WPINC' ) ) { exit; }
  */
 
 const RIPE_ERR_EXPIRE = 300;
-const RIPE_OK_EXPIRE = 24 * 3600;
-const RIPE_HOST = 'http://rest.db.ripe.net/';
+const RIPE_OK_EXPIRE = 4 * 3600;
+const RIPE_HOST = 'https://rest.db.ripe.net/';
 
 /**
  * Search for the information about IP by using RIPE REST API, method 'search'
- * @since 2.7
  *
+ * @param string $ip IP address
+ *
+ * @return array|false|string Array with unescaped RIPE data on success, otherwise false or a string with an error message
+ *
+ * @since 2.7
  */
-function ripe_search( $ip = '' ) {
+function ripe_search( $ip ) {
 
 	if ( ! cerber_is_ip_or_net( $ip ) ) {
 		return false;
 	}
 
 	$key = 'wp-cerber-ripe-' . cerber_get_id_ip( $ip );
-	$ripe = get_transient( $key );
-	//$ripe = false;
+	$ripe = cerber_get_set( $key );
 
 	if ( ! $ripe ) {
 		$args = array();
@@ -78,25 +80,27 @@ function ripe_search( $ip = '' ) {
 
 		if ( absint( $ripe_response['response']['code'] ) != 200 ) {
 			$error = 'WHOIS ERROR: ' . $ripe_response['response']['message'] . ' / ' . $ripe_response['response']['code'];
-			set_transient( $key, json_encode( array( 'ripe_error' => $error ) ), RIPE_ERR_EXPIRE );
-
+			cerber_update_set( $key, array( 'ripe_error' => $error ), null, true, time() + RIPE_ERR_EXPIRE );
 			return $error;
 		}
 
 		$ret = array();
+
 		$ret['body'] = json_decode( $ripe_response['body'], true );
 		if ( JSON_ERROR_NONE != json_last_error() ) {
 			$error = 'WHOIS ERROR: ' . json_last_error_msg();
-			set_transient( $key, json_encode( array( 'ripe_error' => $error ) ), RIPE_ERR_EXPIRE );
+			cerber_update_set( $key, array( 'ripe_error' => $error ), null, true, time() + RIPE_ERR_EXPIRE );
 
 			return $error;
 		}
 
+		// All good
+
 		$ret['abuse_email'] = ripe_find_abuse_contact( $ret['body'], $ip );
-		set_transient( $key, json_encode( $ret ), RIPE_OK_EXPIRE );
+		cerber_update_set( $key, $ret, null, true, time() + RIPE_ERR_EXPIRE );
 	}
 	else {
-		$ret = json_decode( $ripe, true );
+		$ret = $ripe;
 		if ( ! empty( $ret['ripe_error'] ) ) {
 			return $ret['ripe_error'];
 		}
@@ -104,14 +108,21 @@ function ripe_search( $ip = '' ) {
 
 	return $ret;
 }
-/*
+
+/**
  * Retrieve abuse email from response, rollback to direct request to the API
- * @since 2.7
  *
+ * @param array $ripe_body
+ * @param string $ip IP address
+ *
+ * @return string Valid email address if found
+ *
+ * @since 2.7
  */
-function ripe_find_abuse_contact($ripe_body, $ip){
-	//http://rest.db.ripe.net/abuse-contact
+function ripe_find_abuse_contact( $ripe_body, $ip ) {
+
 	$email = '';
+
 	foreach ( $ripe_body['objects']['object'] as $object ) {
 		foreach ( $object['attributes']['attribute'] as $att ) {
 			if ( $att['name'] == 'abuse-mailbox' && is_email( $att['value'] ) ) {
@@ -124,10 +135,13 @@ function ripe_find_abuse_contact($ripe_body, $ip){
 	if ( ! $email ) { // make an API request
 		$args = array();
 		$args['headers']['Accept'] = 'application/json';
+
 		$ripe_response = wp_remote_get( RIPE_HOST . 'abuse-contact/' . $ip, $args );
+
 		if ( crb_is_wp_error( $ripe_response ) ) {
 			return $ripe_response->get_error_message();
 		}
+
 		$abuse = json_decode( $ripe_response['body'] );
 		$abuse = get_object_vars( $abuse );
 		if ( is_email( $abuse['abuse-contacts']->email ) ) {
@@ -137,33 +151,44 @@ function ripe_find_abuse_contact($ripe_body, $ip){
 
 	return $email;
 }
-/*
- * Get and parse RIPE response to human readable view
- * @since 2.7
+
+/**
+ * Retrieve, parse IP information from RIPE, create a human-readable HTML view
  *
+ * @param string $ip IP address
+ *
+ * @return array|array[]|string[]
+ *
+ * @since 2.7
  */
-function ripe_readable_info($ip){
-	$ripe = ripe_search($ip);
+function ripe_readable_info( $ip ) {
+
+	$ripe = ripe_search( $ip );
 
 	if ( ! is_array( $ripe ) ) { // Error
 		if ( ! $ripe ) {
-			return array( 'error' => 'RIPE error' );
+			return array( 'error' => 'Unexpected RIPE error' );
 		}
 
-		return array( 'whois' => $ripe );
+		return array( 'whois' => crb_escape( $ripe ) );
 	}
 
 	$ret = array();
 
 	$body = $ripe['body'];
 
+	$body = crb_attr_escape( $body );
+
 	if ( $body['service']['name'] != 'search' ) {
 		return $ret;  // only for RIPE search requests & responses
 	}
 
 	$info = '';
+
 	foreach ( $body['objects']['object'] as $object ) {
+
 		$info .= '<table class="whois-object otype-' . $object['type'] . '"><tr><td colspan="2"><b>' . strtoupper( $object['type'] ) . '</b></td></tr>';
+
 		foreach ( $object['attributes']['attribute'] as $att ) {
 			$value = $att['value'];
 			$ret['data'][ $att['name'] ] = $att['value'];
@@ -178,17 +203,13 @@ function ripe_readable_info($ip){
 
 			$info .= '<tr><td>' . $att['name'] . '</td><td>' . $value . '</td></tr>';
 		}
+
 		$info .= '</table>';
 	}
 
-	if ( ! empty( $ripe['abuse_email'] ) && is_email( $ripe['abuse_email'] ) ) {
-		$ret['data']['abuse-mailbox'] = $ripe['abuse_email'];
-	}
+	$ret['data']['abuse-mailbox'] = filter_var( $ripe['abuse_email'] ?? '', FILTER_VALIDATE_EMAIL );
 
-	// Network
-	if ( ! empty( $ret['data']['inetnum'] ) ) {
-		$ret['data']['network'] = $ret['data']['inetnum'];
-	}
+	$ret['data']['ripe_network'] = $ret['data']['inetnum'] ?? '';
 
 	$ret['whois'] = $info;
 

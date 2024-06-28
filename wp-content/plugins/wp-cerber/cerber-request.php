@@ -3,9 +3,8 @@
 final class CRB_Request {
 	private static $remote_ip = null;
 	private static $clean_uri = null; // No trailing slash, GET parameters and other junk symbols
-	private static $request_uri = null; // Undecoded $_SERVER['REQUEST_URI']
 	private static $uri_script = null; // With path and the starting slash (if script)
-	private static $site_root = null; // Without trailing slash and path (site domain or IP address)
+	private static $site_root = null; // Without trailing slash and path (site domain or IP address plus schema only)
 	private static $sub_folder = null; // Without trailing slash and site domain
 	private static $the_path = null;
 	private static $files = array();
@@ -61,9 +60,9 @@ final class CRB_Request {
 	}
 
 	/**
-	 * If the WordPress is installed in a subfolder, returns the subfolder. The empty string otherwise.
+	 * If the WordPress is installed in a subfolder, returns the subfolder without trailing slash. The empty string otherwise.
 	 *
-	 * @return string
+	 * @return string Empty string if not in a subfolder
 	 *
 	 * @since 9.3.1
 	 */
@@ -249,8 +248,9 @@ final class CRB_Request {
 	}
 
 	/**
-	 * The request path without trailing slashes
-	 * No subfolder if WP is installed in a subfolder
+	 * The request path with leading and trailing slashes
+	 * The path is relative to the home folder of WP
+	 * No subfolder is included if WP is installed in a subfolder
 	 *
 	 * @return string
 	 *
@@ -268,30 +268,30 @@ final class CRB_Request {
 				$path = substr( $path, 0, $pos );
 			}
 
-			$path = '/' . urldecode( trim( $path, '/' ) );
+			$path = urldecode( $path );
+
+			$end = ( mb_substr( $path, -1, 1 ) == '/' ) ? '/' : '';
+
+			$path = trim( $path, '/' );
 
 			if ( $site_path = self::get_site_path() ) {
 				$len = mb_strlen( $site_path );
 				$path = mb_substr( $path, $len );
 			}
 
-			self::$the_path = $path;
+			self::$the_path = '/' . $path . ( ( $path ) ? $end : '' );
 		}
 
 		return self::$the_path;
 	}
 
 	/**
-	 * Return decoded $_SERVER['REQUEST_URI']
+	 * True if the request is sent to the root of the WP installation
 	 *
-	 * @return string
+	 * @return bool
 	 */
-	static function get_request_URI() {
-		if ( ! isset( self::$request_uri ) ) {
-			self::$request_uri = trim( urldecode( $_SERVER['REQUEST_URI'] ) );
-		}
-
-		return self::$request_uri;
+	static function is_root_request() {
+		return ! (bool) ( strlen( self::get_relative_path() ) > 1 );
 	}
 
 	static function get_files() {
