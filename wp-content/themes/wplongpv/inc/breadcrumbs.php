@@ -16,8 +16,11 @@ function wp_breadcrumbs()
 	$before = '<span class="current">';
 	$after = '</span>';
 	if (!is_home() && !is_front_page() || is_paged()) {
-		echo '<div class="breadcrumbs">';
+
 		global $post;
+		
+		echo '<nav>';
+		echo '<div id="breadcrumbs" class="breadcrumbs" typeof="BreadcrumbList" vocab="https://schema.org/">';
 
 		$homeLink = home_url();
 		echo '<a href="' . $homeLink . '">' . $home . '</a>' . $delimiter . ' ';
@@ -73,6 +76,7 @@ function wp_breadcrumbs()
 		}
 
 		echo '</div>';
+		echo '</nav>';
 	}
 } // end wp_breadcrumbs()
 
