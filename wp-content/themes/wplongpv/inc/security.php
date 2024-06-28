@@ -44,13 +44,19 @@ function PBP_increase_upload($bytes)
     return 524288 * 4;
 }
 
+// Remove the Comments menu from the Dashboard
+function remove_comments_menu()
+{
+    remove_menu_page('edit-comments.php');
+}
+add_action('admin_menu', 'remove_comments_menu');
+
 // Remove wp's default comment function
 function disable_comments_and_pings_post_type()
 {
     // Remove comments displayed in posts
     remove_post_type_support('post', 'comments');
     remove_post_type_support('post', 'trackbacks');
-    remove_menu_page('edit-comments.php');
 
     // Automatically update status in admin settings
     update_option('default_ping_status', 'closed');
@@ -189,10 +195,18 @@ add_filter('upload_mimes', 'restrict_file_types');
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
 {
-    if (!is_user_logged_in() && !is_admin() && !defined('DOING_AJAX') && (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false || strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false)) {
-        wp_redirect(home_url());
+    // ngăn chặn người dùng vào trang đăng ký
+    if (strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false) {
+        wp_redirect(home_url('/404'));
         exit();
     }
+
+    // ngăn chặn người dùng vào trong trang wp-admin
+    if (!is_admin() && !defined('DOING_AJAX') && strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false) {
+        wp_redirect(home_url('/404'));
+        exit();
+    }
+
     // Particularly, urls containing xmlrpc.php give status 403
     if (strpos($_SERVER['REQUEST_URI'], 'xmlrpc.php') !== false) {
         status_header(403);
@@ -219,19 +233,6 @@ function clear_tag_html_post_title($title)
 {
     $title = custom_replace_value($title);
     return strip_tags($title);
-}
-
-// Remove check to allow weak passwords
-add_action('admin_footer', 'custom_admin_footer_script');
-function custom_admin_footer_script()
-{
-    ?>
-    <script>
-        jQuery(document).ready(function ($) {
-            $(".pw-weak").remove();
-        });
-    </script>
-    <?php
 }
 
 // Block CORS in WordPress
@@ -288,7 +289,6 @@ function disable_default_endpoints($endpoints)
 {
     $endpoints_to_remove = array(
         '/oembed/1.0',
-        '/wp/v2',
         '/wp/v2/media',
         '/wp/v2/types',
         '/wp/v2/statuses',
@@ -325,6 +325,7 @@ function custom_login_logo()
 {
     echo '<style type="text/css">
     h1 a {
+      display: none !important;
       background-image: url(' . get_template_directory_uri() . '/assets/images/logo_login.svg) !important;
       height: 80px !important;
       width: 100% !important;
@@ -339,15 +340,18 @@ add_action('template_redirect', 'redirect_author_pages');
 function redirect_author_pages()
 {
     if (is_author()) {
-        wp_redirect(home_url());
-        exit;
+        wp_redirect(home_url('/404'));
+        exit();
     }
 }
 
-// Set the maximum number of revisions
-if (!defined('WP_POST_REVISIONS')) {
-    define('WP_POST_REVISIONS', 3);
+// Remove the "View" button from the user's row actions
+function remove_user_row_actions($actions)
+{
+    unset($actions['view']);
+    return $actions;
 }
+add_filter('user_row_actions', 'remove_user_row_actions', 10, 1);
 
 // allow script iframe tag within posts
 function allow_iframe_script_tags($allowedposttags)

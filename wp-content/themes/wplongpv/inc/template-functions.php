@@ -286,50 +286,6 @@ function custom_convert_time($date_time, $format = "d/m/Y")
     return false;
 }
 
-add_action('admin_footer', 'custom_required_featured_image');
-function custom_required_featured_image()
-{
-    global $post_type;
-
-    $post_type_arr = [
-        'post',
-        'event',
-    ];
-
-    if (in_array($post_type, $post_type_arr)) {
-        ?>
-        <script>
-            jQuery(document).ready(function ($) {
-                $('label[for="postimagediv-hide"]').remove();
-
-                $('#post').submit(function () {
-                    // Check for featured images
-                    if ($('#set-post-thumbnail img').length == 0) {
-                        // image input area
-                        let postimagediv = $('#postimagediv');
-
-                        // Scroll to the image import area
-                        $('html, body').animate({
-                            scrollTop: postimagediv.offset().top - 100
-                        }, 500);
-
-                        // show notification
-                        alert('Please enter Featured image.');
-
-                        return false;
-                    }
-                });
-
-                // If an image is selected, remove the 'error' class
-                $('#set-post-thumbnail').on('click', function () {
-                    $('#postimagediv').removeClass('error');
-                });
-            });
-        </script>
-        <?php
-    }
-}
-
 /**
  * Add Recommended size image to Featured Image Box
  */
@@ -373,43 +329,6 @@ function the_url_search()
     }
 
     echo $search;
-}
-
-// Required to enter category for article
-add_action('admin_footer', 'custom_required_enter_category');
-function custom_required_enter_category()
-{
-    global $post_type;
-    if ($post_type == 'post') {
-        ?>
-        <script type="text/javascript">
-            jQuery(document).ready(function ($) {
-                $('label[for="categorydiv-hide"]').remove();
-
-                $('#post').submit(function () {
-                    if ($('#categorychecklist input[type="checkbox"]:checked').length === 0) {
-                        alert('Please enter category.');
-                        $('html, body').animate({
-                            scrollTop: $('#categorydiv').offset().top - 100
-                        }, 'slow');
-                        return false;
-                    }
-                });
-            });
-        </script>
-        <?php
-    }
-
-    // Check if it is a new post creation page
-    if ($post_type == 'post' && isset($_GET['post']) && $_GET['post'] == 0) {
-        ?>
-        <script type="text/javascript">
-            jQuery(document).ready(function ($) {
-                $('#categorychecklist input[type="checkbox"]').prop('checked', false);
-            });
-        </script>
-        <?php
-    }
 }
 
 function custom_replace_text($text, $arr = null)
