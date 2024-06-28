@@ -58,7 +58,7 @@ ul li#wp-admin-bar-crb_site_switch {
     color: #fff;
 }
 
-#wp-admin-bar-crb_slave_site_menu .ab-icon::before {
+#wp-admin-bar-crb_managed_site_menu .ab-icon::before {
     content: "\f102";
 }
 
@@ -67,7 +67,7 @@ ul li#wp-admin-bar-crb_site_switch {
 }
 
 @media screen and (min-width: 1000px) {
-    #crb-form-slave-edit-form table {
+    #crb-form-managed-edit-form table {
         max-width: 800px;
         /*padding-right: 30%;*/
     }
@@ -80,23 +80,23 @@ ul li#wp-admin-bar-crb_site_switch {
 }
 
 @media screen and (min-width: 768px) {
-    .crb-main .fixed .column-site_name {
+    #crb-main .fixed .column-site_name {
         width: 20%;
     }
 
-    .crb-main .fixed .column-wp_v,
-    .crb-main .fixed .column-plugin_v,
-    .crb-main .fixed .column-updates {
+    #crb-main .fixed .column-wp_v,
+    #crb-main .fixed .column-plugin_v,
+    #crb-main .fixed .column-updates {
         width: 8%;
     }
 }
 
-.crb-main .column-site_url {
+#crb-main .column-site_url {
     width: 18%;
 }
 
-.crb-main .column-site_url,
-.crb-main .column-site_url a {
+#crb-main .column-site_url,
+#crb-main .column-site_url a {
     /*overflow-wrap: normal;*/
     /*word-break: keep-all !important; */
     word-wrap: normal !important;
@@ -116,11 +116,11 @@ ul li#wp-admin-bar-crb_site_switch {
     margin-right: 3em;
 }
 
-.column-primary .crb-slave-url {
+.column-primary .crb-managed-url {
     color: #555;
 }
 
-.crb-slave-ver {
+.crb-managed-cerber-ver {
     margin-right: 0.5em;
 }
 
@@ -129,7 +129,7 @@ ul li#wp-admin-bar-crb_site_switch {
     color: #fff;
     background-color: #38ab6b;
     padding: 0em 0.4em 0em 0.4em;
-    font-weight: bold;
+    font-weight: 600;
     font-size: 90%;
     text-align: center;
     border-radius: 3px;

@@ -1,7 +1,7 @@
 /**
- *	Copyright (C) 2015-22 CERBER TECH INC., https://wpcerber.com
+ *	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
  */
-jQuery(document).ready(function ($) {
+jQuery( function( $ ) {
 
     let crb_admin = $('#crb-admin');
 
@@ -11,7 +11,7 @@ jQuery(document).ready(function ($) {
     if (crb_se2.length) {
         crb_se2.select2({
             allowClear: true,
-            placeholder: crb_se2.data( 'placeholder' ),
+            placeholder: crb_se2.data('placeholder'),
             minimumInputLength: crb_se2.data('min_symbols') ? crb_se2.data('min_symbols') : '1',
             ajax: {
                 url: ajaxurl,
@@ -24,7 +24,7 @@ jQuery(document).ready(function ($) {
                         ajax_nonce: crb_ajax_nonce,
                     };
                 },
-                processResults: function( data ) {
+                processResults: function (data) {
                     return {
                         results: data
                     };
@@ -55,7 +55,7 @@ jQuery(document).ready(function ($) {
     crb_admin.on('click', '.crb-opener', function (event) {
         let target = $(this).data('target');
         if (target) {
-            $('#'+target).slideToggle(200);
+            $('#' + target).slideToggle(200);
         }
     });
 
@@ -202,16 +202,6 @@ jQuery(document).ready(function ($) {
         request_details.toggle();
     });
 
-    let crb_traffic_tr = crb_traffic.find('tr');
-
-    crb_traffic_tr.on('mouseenter', function () {
-        $(this).find('a.crb-traffic-more').css('left', '0');
-    });
-
-    crb_traffic_tr.on('mouseleave', function () {
-        $(this).find('a.crb-traffic-more').css('left', '-9999em');
-    });
-
     $('#traffic-search-btn').on('click', function (event) {
         $('#crb-traffic-search').slideToggle(500);
     });
@@ -286,23 +276,23 @@ jQuery(document).ready(function ($) {
 
     /* Nexus Master's code */
 
-    $('#crb-nexus-sites .crb-slave-site .column-updates a').on('click', function (event) {
-        let slave_id = $(this).closest('tr').data('slave-id');
-        let slave_name = $(this).closest('tr').data('slave-name');
+    $('#crb-nexus-sites .crb-nexus-managed .column-updates a').on('click', function (event) {
+        let managed_site_id = $(this).closest('tr').data('managed-site-id');
+        let managed_site_name = $(this).closest('tr').data('managed-site-name');
 
         $.magnificPopup.open({
             items: {
-                src: ajaxurl + '?slave_id=' + slave_id + '&action=cerber_master_ajax&crb_ajax_do=nexus_view_updates&ajax_nonce=' + crb_ajax_nonce,
+                src: ajaxurl + '?managed_site_id=' + managed_site_id + '&action=cerber_master_ajax&crb_ajax_do=nexus_view_updates&ajax_nonce=' + crb_ajax_nonce,
             },
             type: 'ajax',
             callbacks: {
                 parseAjax: function (server_response) {
                     let the_response = JSON.parse(server_response.data);
                     // Note: All html MUST BE inside of "crb-popup-wrap"
-                    server_response.data = '<div id="crb-popup-wrap"><div id="crb-outer"><div id="crb-inner"><h3>' + the_response['header'] + ' ' + slave_name + '</h3>' + the_response['html'] + '</div></div><p class="crb-popup-controls"><input type="button" value="OK" class="crb-mpopup-close button button-primary"></p></div>';
+                    server_response.data = '<div id="crb-popup-wrap"><div id="crb-outer"><div id="crb-inner"><h3>' + the_response['header'] + ' ' + managed_site_name + '</h3>' + the_response['html'] + '</div></div><p class="crb-popup-controls"><input type="button" value="OK" class="crb-mpopup-close button button-primary"></p></div>';
                 },
-                ajaxContentAdded: function() {
-                    let popup_width =  window.innerWidth * ((window.innerWidth < 800) ? 0.7 : 0.6);
+                ajaxContentAdded: function () {
+                    let popup_width = window.innerWidth * ((window.innerWidth < 800) ? 0.7 : 0.6);
                     $('.crb-admin-mpopup .mfp-content').css('width', popup_width + 'px');
                     let popup_height = window.innerHeight * ((window.innerHeight < 800) ? 0.7 : 0.6);
                     $('.crb-admin-mpopup #crb-inner').css('max-height', popup_height + 'px');
@@ -362,20 +352,35 @@ jQuery(document).ready(function ($) {
     cerber_highlight_text('crb-log-viewer', 'ERROR:', 200);
 
 
-
     /* VTabs */
 
-    // Initialize the first tab
-    let form_id = $('#crb-vtabs').closest('form').attr('id');
-    let vac = crb_get_local('vtab_active' + form_id);
-    if (vac) {
-        $('#crb-vtabs [data-tab-id=' + vac + ']').addClass('active_tab');
-    }
-    else {
-        $('#crb-vtabs .tablinks').first().addClass('active_tab');
+    // Select and initialize visible tab
+
+    let vtabs = $('#crb-vtabs');
+    let form_id = vtabs.closest('form').attr('id');
+    let active_tab_id = crb_get_bookmark();
+    let active_tab = false;
+
+    if (active_tab_id) {
+        let find_tab = vtabs.find('[data-tab-id=' + active_tab_id + ']');
+        active_tab = find_tab.length > 0 ? find_tab : false;
     }
 
+    if (!active_tab) {
+        active_tab_id = crb_get_local('vtab_active' + form_id);
+    }
+
+    if (active_tab_id) {
+        active_tab = vtabs.find('[data-tab-id=' + active_tab_id + ']');
+    }
+    else {
+        active_tab = vtabs.find('.tablinks').first();
+    }
+
+    active_tab.addClass('active_tab');
+
     crb_init_active_tab();
+    crb_update_local('vtab_active' + form_id, active_tab_id);
 
     function crb_init_active_tab() {
         let active = $('#crb-vtabs .active_tab');
@@ -398,6 +403,34 @@ jQuery(document).ready(function ($) {
         crb_init_active_tab();
         crb_update_local('vtab_active' + form_id, tab_id);
     });
+
+    /* Misc UI routines */
+
+    // Highlight a setting filed row
+
+    let crb_bm = crb_get_bookmark();
+
+    if (crb_bm) {
+        let crb_setting = $('form #' + crb_bm);
+        if (crb_setting.length) {
+            let flash_this = crb_setting.closest('tr.crb-setting-row');
+            flash_this.addClass('crb-flash-effect');
+        }
+    }
+
+    // -----------------------------
+
+    function crb_get_bookmark(){
+        let bookmark = window.location.hash;
+
+        if (bookmark) {
+            bookmark = bookmark.replace(/^#/, ''); // Remove leading #
+            bookmark = bookmark.replace(/[^a-z\d\-]/gi, '_'); // Sanitize
+            return bookmark;
+        }
+
+        return false;
+    }
 
 });
 
