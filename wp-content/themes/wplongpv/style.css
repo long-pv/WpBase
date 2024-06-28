@@ -87,7 +87,6 @@ Tags: CodLUCK, codluck.com, custom theme by CodLUCK.
 /* Alignments
 --------------------------------------------- */
 .alignleft {
-
 	/*rtl:ignore*/
 	float: left;
 
@@ -97,7 +96,6 @@ Tags: CodLUCK, codluck.com, custom theme by CodLUCK.
 }
 
 .alignright {
-
 	/*rtl:ignore*/
 	float: right;
 

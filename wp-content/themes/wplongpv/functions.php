@@ -84,5 +84,8 @@ require get_template_directory() . '/inc/breadcrumbs.php';
 // Script admin
 require get_template_directory() . '/inc/script_admin.php';
 
+// Style admin
+require get_template_directory() . '/inc/style_admin.php';
+
 // auto active plugin
 require get_template_directory() . '/inc/auto_active_plugin.php';

@@ -1,24 +1,18 @@
 <?php
 // Setup theme setting page
 if (function_exists('acf_add_options_page')) {
-    $name_option = 'Theme Setting';
+    $name_option = 'Theme Settings';
     acf_add_options_page(
         array(
             'page_title' => $name_option,
             'menu_title' => $name_option,
-            'menu_slug' => 'theme-general-settings',
+            'menu_slug' => 'theme-settings',
             'capability' => 'edit_posts',
-            'redirect' => false
+            'redirect' => false,
+            'position' => 80
         )
     );
 }
-
-// save ACF local
-function custom_acf_json_save_point($path)
-{
-    return get_template_directory() . '/acf';
-}
-add_filter('acf/settings/save_json', 'custom_acf_json_save_point');
 
 // The function "write_log" is used to write debug logs to a file in PHP.
 function write_log($log = null, $title = 'Debug')

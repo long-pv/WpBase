@@ -59,21 +59,59 @@ function disable_comments_and_pings_post_type()
     remove_post_type_support('post', 'trackbacks');
 
     // Automatically update status in admin settings
-    update_option('default_ping_status', 'closed');
-    update_option('default_comment_status', 'closed');
-    update_option('comments_notify', 0);
-    update_option('moderation_notify', 1);
-    update_option('comment_registration', 1);
-    update_option('close_comments_for_old_posts', 1);
-    update_option('require_name_email', 1);
-    update_option('show_comments_cookies_opt_in', 1);
-    update_option('thread_comments', 1);
-    update_option('page_comments', 1);
-    update_option('close_comments_days_old', 1);
-    update_option('default_pingback_flag', 0);
-    update_option('comment_moderation', 1);
-    update_option('comment_previously_approved', 1);
-    update_option('comment_max_links', 1);
+    if (get_option('default_ping_status') != 'closed') {
+        update_option('default_ping_status', 'closed');
+    }
+    if (get_option('default_comment_status') != 'closed') {
+        update_option('default_comment_status', 'closed');
+    }
+    if (get_option('comments_notify') != 0) {
+        update_option('comments_notify', 0);
+    }
+    if (get_option('moderation_notify') != 1) {
+        update_option('moderation_notify', 1);
+    }
+    if (get_option('comment_registration') != 1) {
+        update_option('comment_registration', 1);
+    }
+    if (get_option('close_comments_for_old_posts') != 1) {
+        update_option('close_comments_for_old_posts', 1);
+    }
+    if (get_option('require_name_email') != 1) {
+        update_option('require_name_email', 1);
+    }
+    if (get_option('show_comments_cookies_opt_in') != 1) {
+        update_option('show_comments_cookies_opt_in', 1);
+    }
+    if (get_option('thread_comments') != 1) {
+        update_option('thread_comments', 1);
+    }
+    if (get_option('page_comments') != 1) {
+        update_option('page_comments', 1);
+    }
+    if (get_option('close_comments_days_old') != 1) {
+        update_option('close_comments_days_old', 1);
+    }
+    if (get_option('default_pingback_flag') != 0) {
+        update_option('default_pingback_flag', 0);
+    }
+    if (get_option('comment_moderation') != 1) {
+        update_option('comment_moderation', 1);
+    }
+    if (get_option('comment_previously_approved') != 1) {
+        update_option('comment_previously_approved', 1);
+    }
+    if (get_option('comment_max_links') != 1) {
+        update_option('comment_max_links', 1);
+    }
+    if (get_option('show_avatars') != 0) {
+        update_option('show_avatars', 0);
+    }
+
+    // Always close the user registration function
+    if (get_option('users_can_register') == 1) {
+        update_option('users_can_register', 0);
+    }
 }
 add_action('admin_init', 'disable_comments_and_pings_post_type');
 
@@ -121,14 +159,14 @@ add_filter('upload_mimes', 'restrict_file_types');
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
 {
-    // ngăn chặn người dùng vào trang đăng ký
+    // prevent users from entering the registration page
     if (strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false) {
         wp_redirect(home_url('/404'));
         exit();
     }
 
-    // ngăn chặn người dùng vào trong trang wp-admin
-    if (!is_admin() && !defined('DOING_AJAX') && strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false) {
+    // prevent users from entering the wp-admin page
+    if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false && !is_admin() && !defined('DOING_AJAX') && !is_user_logged_in()) {
         wp_redirect(home_url('/404'));
         exit();
     }
