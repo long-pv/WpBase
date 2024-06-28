@@ -37,36 +37,11 @@ function cerber_add_handler( $event, $callback, $addon_id = null ) {
 	return CRB_Events::add_handler( $event, $callback, $addon_id );
 }
 
-/**
- * Returns add-on settings
- *
- * @param string $addon_id
- * @param string $setting
- * @param bool $purge_cache
- *
- * @return array|bool|mixed
- *
- * @since 9.3.4
- */
-function cerber_get_addon_settings( $addon_id = '', $setting = '', $purge_cache = false ) {
-	$all = crb_get_settings( CRB_ADDON_STS, $purge_cache );
-
-	if ( ! $addon_id ) {
-		return $all;
-	}
-
-	$ret = crb_array_get( $all, $addon_id, false );
-
-	if ( ! $ret || ! $setting ) {
-		return $ret;
-	}
-
-	return crb_array_get( $ret, $setting, false );
-}
 
 // END of Add-ons API ----------------------------------------------------------
 
 cerber_add_handler( 'update_settings', function ( $data ) {
+	CRB_Addons::settings_saved( $data['group'], $data['new_values'] );
 	crb_x_update_add_on_list();
 } );
 
@@ -93,23 +68,18 @@ function crb_update_add_on_list() {
 }
 
 add_action( 'deactivated_plugin', 'crb_x_update_add_on_list' );
-
 /**
- * Postponed refreshing. This combination is used when it's not possible to correctly refresh
- * the list during the current request.
+ * Is used when it's not possible to correctly refresh the list during the current request
  *
  */
 function crb_x_update_add_on_list() {
-	if ( ! defined( 'CRB_POSTPONE_REFRESH' ) ) {
-		define( 'CRB_POSTPONE_REFRESH', 1 );
-	}
-
+	define( 'CRB_POSTPONE_REFRESH', 1 );
 	cerber_update_set( 'refresh_add_on_list', 1, null, false );
 }
-register_shutdown_function( function () {
-	if ( ! defined( 'CRB_POSTPONE_REFRESH' )
-	     && cerber_get_set( 'refresh_add_on_list', null, false ) ) {
 
+register_shutdown_function( function () {
+	if ( cerber_get_set( 'refresh_add_on_list', null, false ) &&
+	     ! defined( 'CRB_POSTPONE_REFRESH' ) ) {
 		crb_update_add_on_list();
 		cerber_update_set( 'refresh_add_on_list', 0, null, false );
 	}
@@ -228,27 +198,26 @@ final class CRB_Addons {
 		return self::$addons;
 	}
 
-	static function update_settings( $form_fields, $id ) {
-
-		if ( $addon = self::$addons[ $id ] ?? false ) {
-
-			$fields = array();
-			foreach ( $addon['settings'] as $section ) {
-				$fields = array_merge( $fields, array_keys( $section['fields'] ) );
-			}
-
-			$settings = array_merge( array_fill_keys( $fields, '' ), $form_fields );
-			$ret = cerber_settings_update( array( CRB_ADDON_STS => array( $id => $settings ) ) );
-
-			if ( $cb = $addon['callback'] ?? false ) {
-				crb_sanitize_deep( $settings );
-				call_user_func( $cb, $settings );
-			}
-
-			return $ret;
+	static function settings_saved( $group, $new_values ) {
+		if ( ! self::$addons ) {
+			return;
 		}
 
-		return false;
+		// Detect an add-on from the settings form group name
+		$len = strlen( CRB_ADDON_SIGN );
+		if ( substr( $group, 0 - $len ) !== CRB_ADDON_SIGN ) {
+			return;
+		}
+		$len      = strlen( $group ) - $len;
+		$addon_id = substr( $group, 0, $len );
+
+		// If this add-on has a callback, call it
+		if ( ! empty( self::$addons[ $addon_id ]['callback'] ) ) {
+			call_user_func( self::$addons[ $addon_id ]['callback'], $new_values );
+
+			return;
+		}
+
 	}
 
 	/**
@@ -318,30 +287,46 @@ function crb_addon_admin_page( $page ) {
 
 	$config = array(
 		'title'    => __( 'Add-ons', 'wp-cerber' ),
-		'callback' => function ( $tab, $tab_data ) {
-			cerber_show_settings_form( $tab, $tab_data );
-		},
+		'callback' => 'cerber_show_settings_form',
 	);
 
 	foreach ( $addons as $id => $addon ) {
-		$config['tabs'][ $id . CRB_ADDON_SIGN ] = array(
-			'bx-cog',
-			crb_generic_escape( $addon['name'] ),
-			'tab_data' => array(
-				'page_type' => 'addon-settings',
-				'addon_id'  => $id
-			)
-		);
+		$config['tabs'][ $id . CRB_ADDON_SIGN ] = array( 'bx-cog', htmlspecialchars( $addon['name'] ) );
 	}
 
 	return $config;
 }
 
 function crb_addon_settings_config( $args ) {
+	//global $cerber_addons;
 
-	if ( ! $addons = CRB_Addons::get_all() ) {
+	$addons = CRB_Addons::get_all();
+
+	if ( ! $addons ) {
 		return false;
 	}
+
+	//if ( $args['screen_id'] == 'add_on_settings' ) {
+	/*
+	if ( $args['screen_id'] == CRB_ADDON_PAGE ) {
+		$addon_id = $cerber_first_addon;
+	}
+	else {
+		$addon_id = $args['screen_id'];
+	}
+
+
+	echo '======================='.$args['screen_id'].' ++ '.$addon_id;
+
+*/
+	$settings = array();
+
+	//$settings['screens'][CRB_ADDON_PAGE] = array_keys( $cerber_addons[ $addon_id ]['settings'] );
+	//$settings['sections'] = $cerber_addons[ $addon_id ] = $cerber_addons[ $addon_id ]['settings'];
+
+	/*foreach ( $addons as $id => $addon ) {
+
+	}*/
 
 	$settings = array( 'screens' => array(), 'sections' => array() );
 
@@ -362,33 +347,4 @@ function crb_addon_settings_mapper( &$map ) {
 	$map[ CRB_ADDON_PAGE ] = CRB_Addons::get_first() . CRB_ADDON_SIGN;
 
 	//$map[ CRB_ADDON_PAGE ] = 'add_on_settings';
-}
-
-/**
- * Upgrade add-on settings (if any) to a new format
- *
- * @return void
- *
- * @since 9.3.4
- */
-function _cerber_upgrade_addon_settings(){
-	$addon_settings = array();
-	$old_settings = get_site_option( 'cerber_tmp_old_settings' );
-
-	foreach ( CRB_Addons::get_all() as $addon_id => $addon_conf ) {
-		$fields = array();
-
-		foreach ( $addon_conf['settings'] as $section ) {
-			$fields = array_merge( $fields, array_keys( $section['fields'] ) );
-		}
-
-		$addon_settings[ $addon_id ] = array_intersect_key( $old_settings, array_flip( $fields ) );
-	}
-
-	if ( $addon_settings
-	     && ! cerber_settings_update( array( CRB_ADDON_STS => $addon_settings ) ) ) {
-		cerber_admin_notice( 'Unable to upgrade add-on settings' );
-	}
-
-	delete_site_option( 'cerber_tmp_old_settings' );
 }

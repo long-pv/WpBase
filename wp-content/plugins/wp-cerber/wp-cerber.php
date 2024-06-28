@@ -4,14 +4,15 @@
 	Plugin URI: https://wpcerber.com
 	Description: Defends WordPress against hacker attacks, spam, trojans, and viruses. Malware scanner and integrity checker. Hardening WordPress with a set of comprehensive security algorithms. Spam protection with a sophisticated bot detection engine and reCAPTCHA. Tracks user and intruder activity with powerful email, mobile and desktop notifications.
 	Author: Cerber Tech Inc.
-	Author URI: https://talk.wpcerber.com
+	Author URI: https://wpcerber.com
 	Update URI: https://downloads.wpcerber.com/versions/wp-cerber.json
-	Version: 9.6.2
+	Version: 9.3.2
 	Text Domain: wp-cerber
 	Domain Path: /languages
 	Network: true
 
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-22 CERBER TECH INC., https://cerber.tech
+	Copyright (C) 2015-22 Markov Gregory, https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -31,7 +32,7 @@
 
 */
 
-const CERBER_VER = '9.6.2';
+const CERBER_VER = '9.3.2';
 const CERBER_PLUGIN_ID = 'wp-cerber/wp-cerber.php';
 
 function cerber_plugin_file() {
@@ -43,45 +44,34 @@ function cerber_plugin_data() {
 }
 
 function cerber_plugin_dir() {
+	static $dir;
 
-	return __DIR__;
-}
-
-/**
- * Returns the full URL with a path to the WP Cerber folder containing trailing slash
- *
- * @return string
- */
-function cerber_plugin_dir_url() {
-	static $ret = null;
-
-	if ( $ret === null ) {
-		$ret = (string) plugin_dir_url( __FILE__ );
-	}
-
-	return $ret;
-}
-
-/**
- * Returns an absolute path to the plugins folder without trailing slash: /full-path-to-wordpress-folder/wp-content/plugins
- *
- * @return string
- */
-function cerber_get_plugins_dir() {
-	static $dir = null;
-
-	if ( $dir === null ) {
-		$dir = dirname( __FILE__, 2 );
+	if ( ! $dir ) {
+		$dir = dirname( __FILE__ );
 	}
 
 	return $dir;
 }
 
-/**
- * Returns an absolute path to the themes folder without trailing slash: /full-path-to-wordpress-folder/wp-content/themes
- *
- * @return string
- */
+function cerber_plugin_dir_url() {
+	static $ret = null;
+	if ( $ret === null ) {
+		$ret = plugin_dir_url( __FILE__ );
+	}
+
+	return $ret;
+}
+
+function cerber_get_plugins_dir() {
+	static $dir = null;
+
+	if ( $dir === null ) {
+		$dir = cerber_dirname( __FILE__, 2 );
+	}
+
+	return $dir;
+}
+
 function cerber_get_themes_dir() {
 	static $dir = null;
 
@@ -122,30 +112,28 @@ function cerber_get_upload_dir() {
 }
 
 /**
- * Returns path to the root uploads folder for all sites in the MU network
+ * Return path to root uploads folder for all sites in the MU network
  *
- * @return false|string
+ * @return bool|null|string
  */
 function cerber_get_upload_dir_mu() {
 	global $blog_id, $wpdb;
 	static $dir = null;
 
 	if ( $dir === null ) {
-		if ( is_multisite()
-		     && ( $id = cerber_db_get_var( 'SELECT MAX(blog_id) FROM ' . $wpdb->blogs ) ) ) {
-
+		if ( is_multisite() && ( $id = cerber_db_get_var( 'SELECT MAX(blog_id) FROM ' . $wpdb->blogs ) ) ) {
 			if ( $id == get_main_site_id() ) {
 				// no child sites in the network
 				$dir = cerber_get_upload_dir();
 			}
 			else {
-				$tmp = $blog_id;
-				$blog_id = $id;
+				$tmp           = $blog_id;
+				$blog_id       = $id;
 				$wp_upload_dir = wp_upload_dir();
-				$blog_id = $tmp;
+				$blog_id       = $tmp;
 				$site_dir = rtrim( $wp_upload_dir['basedir'], '/' ) . '/';
 				// A new network created post-3.5
-				$end = '/sites/' . $id . '/';
+				$end      = '/sites/' . $id.'/';
 				if ( $p = mb_strpos( $site_dir, $end ) ) {
 					$dir = mb_substr( $site_dir, 0, $p );
 				}
@@ -156,17 +144,14 @@ function cerber_get_upload_dir_mu() {
 						$dir = mb_substr( $site_dir, 0, $p );
 					}
 					else {
-						// Check if a custom path has been defined by the site admin
+						// A custom path has been configured by site admin?
 						// see also UPLOADS,  BLOGUPLOADDIR, BLOGUPLOADDIR
-						if ( defined( 'UPLOADBLOGSDIR' ) ) {
-							$dir = ABSPATH . UPLOADBLOGSDIR;
-							if ( ! file_exists( $dir ) ) {
-								$dir = false;
-							}
+						$dir = ABSPATH.UPLOADBLOGSDIR;
+						if ( ! file_exists( $dir ) ) {
+							$dir = false;
 						}
 					}
 				}
-
 				if ( $dir ) {
 					$dir = cerber_normal_path( $dir );
 				}
@@ -175,10 +160,6 @@ function cerber_get_upload_dir_mu() {
 		else {
 			$dir = cerber_get_upload_dir();
 		}
-	}
-
-	if ( ! $dir ) {
-		$dir = false;
 	}
 
 	return $dir;
@@ -194,30 +175,26 @@ function cerber_get_abspath() {
 	return $abspath;
 }
 
-/**
- * @return float
- */
 function cerber_request_time() {
-	static $req_time = null;
+	static $stamp = null;
 
-	if ( ! isset( $req_time ) ) {
+	if ( ! isset( $stamp ) ) {
 
-		if ( ! empty( $_SERVER['REQUEST_TIME_FLOAT'] ) ) {
-			$req_time = filter_var( $_SERVER['REQUEST_TIME_FLOAT'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION );
+		if ( ! empty( $_SERVER['REQUEST_TIME_FLOAT'] ) ) { // PHP >= 5.4
+			$stamp = filter_var( $_SERVER['REQUEST_TIME_FLOAT'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION );
 		}
-
 		$mt = microtime( true );
-
-		if ( ! $req_time || 60 < abs( $req_time - $mt ) ) { // Workaround: some servers may have a wrong value in 'REQUEST_TIME_FLOAT'
-			$req_time = $mt;
+		if ( ! $stamp || $stamp > ( $mt + 300 ) ) { // Some platforms may have wrong value in 'REQUEST_TIME_FLOAT'
+			$stamp = $mt;
 		}
 	}
 
-	return $req_time;
+	return $stamp;
 }
 
 cerber_request_time();
 
-require_once( __DIR__ . '/cerber-load.php' );
+require_once( dirname( __FILE__ ) . '/cerber-load.php' );
 
 cerber_init();
+

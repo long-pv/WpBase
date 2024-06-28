@@ -1,6 +1,7 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-22 CERBER TECH INC., https://cerber.tech
+	Copyright (C) 2015-22 Markov Gregory, https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -34,8 +35,8 @@ if ( ! defined( 'WPINC' ) ) { exit; }
 
 function nexus_init() {
 
-	if ( nexus_is_client() ) {
-		require_once( __DIR__ . '/cerber-nexus-client.php' );
+	if ( nexus_is_slave() ) {
+		require_once( dirname( __FILE__ ) . '/cerber-nexus-slave.php' );
 		if ( nexus_is_valid_request() ) {
 			cerber_load_wp_constants();
 			nexus_slave_process();
@@ -44,8 +45,8 @@ function nexus_init() {
 	elseif ( defined( 'WP_ADMIN' )
 	     || defined( 'WP_NETWORK_ADMIN' )
 	     || cerber_is_wp_cron() ) {
-		if ( nexus_is_main() ) {
-			require_once( __DIR__ . '/cerber-nexus-manager.php' );
+		if ( nexus_is_master() ) {
+			require_once( dirname( __FILE__ ) . '/cerber-nexus-master.php' );
 			nexus_upgrade_db();
 		}
 	}
@@ -88,7 +89,7 @@ function nexus_admin_page() {
 		return;
 	}
 
-	if ( nexus_is_main() ) {
+	if ( nexus_is_master() ) {
 		$tabs = array(
 			'nexus_sites'  => array( 'bxs-world', __( 'My Websites', 'wp-cerber' ) ),
 			'nexus_master' => array( 'bx-cog', __( 'Settings', 'wp-cerber' ) ),
@@ -100,7 +101,7 @@ function nexus_admin_page() {
 		);
 	}
 
-	$t = ( nexus_is_client() ) ? __( 'Access Settings', 'wp-cerber' ) : __( 'My Websites', 'wp-cerber' );
+	$t = ( nexus_is_slave() ) ? __( 'Access Settings', 'wp-cerber' ) : __( 'My Websites', 'wp-cerber' );
 
 	cerber_show_admin_page( $t, $tabs, null, function ( $tab ) {
 
@@ -123,13 +124,13 @@ function nexus_admin_page() {
 }
 
 function nexus_site_manager() {
-	if ( nexus_is_main() ) {
+	if ( nexus_is_master() ) {
 		if ( $site_id = absint( cerber_get_get( 'site_id' ) ) ) {
-			nexus_show_site_edit_form( $site_id );
+			nexus_show_slave_form( $site_id );
 
 			return;
 		}
-		nexus_show_website_list();
+		nexus_show_slaves();
 	}
 	else {
 
@@ -140,7 +141,7 @@ function nexus_site_manager() {
 			'nexus_set_role'  => 'none',
 		) ), 'control', 'cerber_nonce' );
 
-		echo '<div class="crb-admin-form" style="padding-bottom: 1em; font-size: 2em;"><p style="font-weight: 600;">' . __( 'Secret Access Token', 'wp-cerber' ) . '</p>';
+		echo '<div class="crb-admin-form" style="padding-bottom: 1em; font-size: 2em;"><p style="font-weight: bold;">' . __( 'Secret Access Token', 'wp-cerber' ) . '</p>';
 
 		echo '<p>' . __( 'The token is unique to this website. Keep it secret. Install the token on your main website to grant access to this website.', 'wp-cerber' ) . ' </p>';
 		echo '<p class="crb-monospace" style="padding:1em; background-color: #fff; border: solid 1px #d6d6d6; word-break: break-all;">' . $token . '</p>';
@@ -154,7 +155,7 @@ function nexus_site_manager() {
 }
 
 /**
- * Return secret token if no token specified, otherwise decode and return it
+ * Return slave token if no token specified, otherwise decode and return it
  *
  * @param string $token Token to decode
  *
@@ -218,10 +219,10 @@ function nexus_enable_role() {
 		cerber_delete_set( '_nexus_mode' );
 		return;
 	}
-	if ( nexus_is_main() && ( $role == 'master' ) ) {
+	if ( nexus_is_master() && ( $role == 'master' ) ) {
 		return;
 	}
-	if ( nexus_is_client() && ( $role == 'slave' ) ) {
+	if ( nexus_is_slave() && ( $role == 'slave' ) ) {
 		return;
 	}
 
@@ -238,9 +239,9 @@ function nexus_enable_role() {
 			$data['x_num'] = rand( 1, $num - 2 ); // see loop in nexus_get_fields()
 			break;
 		case 'master':
-			require_once( __DIR__ . '/cerber-nexus-manager.php' );
+			require_once( dirname( __FILE__ ) . '/cerber-nexus-master.php' );
 			if ( ! nexus_create_db( $role ) ) {
-				cerber_admin_notice( 'Unable to create main website DB tables' );
+				cerber_admin_notice( 'Unable to create master DB tables' );
 
 				return;
 			}
@@ -259,7 +260,7 @@ function nexus_enable_role() {
 
 	//cerber_admin_message( sprintf( __( 'This website is set as %s.', 'wp-cerber' ), $role ) );
 	$msg = array();
-	if ( nexus_is_main() ) {
+	if ( nexus_is_master() ) {
 		$msg[] = __( 'This website is set as a main website.', 'wp-cerber' );
 		$msg[] = __( 'Add managed websites by using access tokens.', 'wp-cerber' ) . ' <a href="https://wpcerber.com/manage-multiple-websites/" target="_blank">Read more</a>.';
 	}
@@ -283,7 +284,7 @@ function nexus_is_valid_request() {
 	if ( ! empty( $_COOKIE )
 	     || crb_array_get( $_SERVER, 'REQUEST_METHOD' ) != 'POST'
 	     || count( $_POST ) < 2
-	     || ! nexus_is_client() ) {
+	     || ! nexus_is_slave() ) {
 
 		$ret = false;
 		return false;
@@ -315,7 +316,7 @@ function nexus_is_valid_request() {
 		return false;
 	}
 
-	nexus_diag_log( 'Check for a valid main website request ...' );
+	nexus_diag_log( 'Check for a valid master request ...' );
 
 	// It seems this is a request from the master
 	// Check master credentials and payload checksum
@@ -324,12 +325,12 @@ function nexus_is_valid_request() {
 	//$payload = stripslashes( $payload );
 
 	if ( hash_equals( $auth, hash( 'sha512', $role['slave']['nx_pass'] . sha1( $payload ) ) ) ) {
-		nexus_diag_log( 'Main website credentials are valid' );
+		nexus_diag_log( 'Master credentials are valid' );
 		$ret = true;
 	}
 	else {
 		cerber_log( 300 );
-		nexus_diag_log( 'ERROR: invalid main website credentials or payload checksum mismatch' );
+		nexus_diag_log( 'ERROR: invalid master credentials or payload checksum mismatch' );
 		$ret = false;
 	}
 
@@ -343,7 +344,7 @@ function nexus_get_context() {
 	static $slave, $slave_id;
 
 	if ( ! is_admin()
-	     || ! nexus_is_main() ) {
+	     || ! nexus_is_master() ) {
 		return false;
 	}
 
@@ -389,12 +390,7 @@ function nexus_get_role_data( $flush = false ) {
 	return $data;
 }
 
-/**
- * Return true if this site is a main Cerber.Hub site
- *
- * @return bool
- */
-function nexus_is_main() {
+function nexus_is_master() {
 	$role = nexus_get_role_data();
 	if ( ! empty( $role['master'] ) ) {
 		return true;
@@ -403,12 +399,7 @@ function nexus_is_main() {
 	return false;
 }
 
-/**
- * Return true if this site is a managed Cerber.Hub site
- *
- * @return bool
- */
-function nexus_is_client() {
+function nexus_is_slave() {
 	$role = nexus_get_role_data();
 	if ( ! empty( $role['slave'] ) ) {
 		return true;
@@ -419,14 +410,14 @@ function nexus_is_client() {
 
 function nexus_diag_log( $msg ) {
 
-	if ( ( nexus_is_client() && crb_get_settings( 'slave_diag' ) )
-	     || ( nexus_is_main() && crb_get_settings( 'master_diag' ) ) ) {
+	if ( ( nexus_is_slave() && crb_get_settings( 'slave_diag' ) )
+	     || ( nexus_is_master() && crb_get_settings( 'master_diag' ) ) ) {
 		$m = 'NONE';
-		if ( nexus_is_client() ) {
-			$m = 'Managed';
+		if ( nexus_is_slave() ) {
+			$m = 'Slave';
 		}
-		elseif ( nexus_is_main() ) {
-			$m = 'Main';
+		elseif ( nexus_is_master() ) {
+			$m = 'Master';
 		}
 
 		cerber_diag_log( cerber_db_get_errors(), 'NXS ' . $m );
@@ -446,12 +437,12 @@ function nexus_diag_log( $msg ) {
 }
 
 function nexus_get_fields( $slave = null ) {
-	if ( nexus_is_client() ) {
+	if ( nexus_is_slave() ) {
 		$role = nexus_get_role_data();
 		$xf   = $role['slave']['x_field'];
 		$xn   = $role['slave']['x_num'];
 	}
-	elseif ( nexus_is_main() ) {
+	elseif ( nexus_is_master() ) {
 		if ( ! $slave ) {
 			$slave = nexus_get_context();
 		}

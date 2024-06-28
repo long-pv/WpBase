@@ -1,6 +1,7 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-22 CERBER TECH INC., https://cerber.tech
+	Copyright (C) 2015-22 Markov Gregory, https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -68,7 +69,7 @@ class CRB_Master {
 
 		$fields = nexus_get_fields();
 		if ( ! $payload = cerber_get_post( $fields[1] ) ) {
-			$this->error = new WP_Error( 'nexus_format_error', 'Invalid request: main website request malformed' );
+			$this->error = new WP_Error( 'nexus_format_error', 'Invalid request: master request malformed' );
 			return;
 		}
 		$request = json_decode( stripslashes( $payload ), true );
@@ -98,7 +99,8 @@ class CRB_Master {
 			}
 		}
 
-		CRB_Globals::set_assets_url( $request['assets'] );
+		CRB_Globals::$assets_url  = $request['assets'];
+		CRB_Globals::$ajax_loader = CRB_Globals::$assets_url . 'ajax-loader.gif';
 
 		if ( $this->type == 'ajax' ) {
 			if ( ! $this->action = crb_array_get( $request['params'], 'action' ) ) {
@@ -204,7 +206,7 @@ function nexus_slave_process() {
 		$response = array( 'error' => $error );
 	}
 
-	nexus_diag_log( 'Now sending response to the main website...' );
+	nexus_diag_log( 'Now sending response to the master...' );
 
 	$result = nexus_net_send_responce( $response );
 
@@ -213,7 +215,7 @@ function nexus_slave_process() {
 	}
 
 	cerber_delete_set( 'processing_master_request' );
-	nexus_diag_log( '=== NEXUS CLIENT HAS FINISHED ===' );
+	nexus_diag_log( '=== SLAVE HAS FINISHED ===' );
 	exit;
 
 }
@@ -430,7 +432,7 @@ function nexus_process_wp_settings_form( $form ) {
 	$new_values = crb_array_get( $form, $wp_option );
 	nexus_diag_log( 'Updating ' . $wp_option . ' option' );
 	cerber_update_site_option( $wp_option, $new_values );
-	//cerber_admin_message( __( 'Plugin settings have been updated', 'wp-cerber' ) );
+	cerber_admin_message( __( 'Settings updated', 'wp-cerber' ) );
 
 	return '';
 }
@@ -451,7 +453,7 @@ function nexus_net_send_responce( $payload ) {
 	}
 	else {
 		$p   = '';
-		$ret = new WP_Error( 'wrong_type', 'Unsupported payload format' );
+		$ret = new WP_Error( 'wrong_type', 'Unsupported slave data type' );
 	}
 
 	$processing = microtime( true ) - cerber_request_time();

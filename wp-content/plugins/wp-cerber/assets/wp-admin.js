@@ -1,10 +1,10 @@
 /**
- *  Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+ *    Copyright (C) 2015-22 CERBER TECH INC., https://wpcerber.com
  *
- *  WordPress-specific JavaScript
+ *    WordPress-specific JavaScript
  *
  */
-jQuery( function( $ ) {
+jQuery(document).ready(function ($) {
 
     /* Menu editor */
 

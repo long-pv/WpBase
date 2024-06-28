@@ -1,105 +1,35 @@
 <?php
-/*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
-
-    Licenced under the GNU GPL
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-/*
-
-*========================================================================*
-|                                                                        |
-|	       ATTENTION!  Do not change or edit this file!                  |
-|                                                                        |
-*========================================================================*
-
-*/
 
 add_action( 'personal_options', function ( $profileuser ) {
 
-	ob_start();
-
 	if ( lab_lab() ) :
 
-		$cus = cerber_get_set( CRB_USER_SET, $profileuser->ID );
-		$user_tfmode = ( empty( $cus['tfm'] ) ) ? 0 : absint( $cus['tfm'] );
-		$tr_css = ( $user_tfmode == 2 ) ? 'style="display:none;"' : '';
+    ?>
+    <tr>
+        <th scope="row">
+            <label for="cerber_user_2fa"><?php _e( 'Two-Factor Authentication', 'wp-cerber' ); ?>
+            </label>
+        </th>
+        <td>
+			<?php
+			$cus      = cerber_get_set( CRB_USER_SET, $profileuser->ID );
+			$selected = ( empty( $cus['tfm'] ) ) ? 0 : $cus['tfm'];
+			echo cerber_select( 'cerber_user_2fa', array(
+				0 => __( 'Determined by user role policies', 'wp-cerber' ),
+				1 => __( 'Always enabled', 'wp-cerber' ),
+				2 => __( 'Disabled', 'wp-cerber' ),
+			), $selected );
+			?>
+        </td>
+    </tr>
 
-		?>
-        <tr>
-            <th scope="row">
-                <label for="cerber_user_2fa"><?php _e( 'Two-Factor Authentication', 'wp-cerber' ); ?>
-                </label>
-            </th>
-            <td>
-				<?php
-				echo cerber_select( 'cerber_user_2fa', array(
-					0 => __( 'Determined by user role policies', 'wp-cerber' ),
-					1 => __( 'Always enabled', 'wp-cerber' ),
-					2 => __( 'Disabled', 'wp-cerber' ),
-				), $user_tfmode, '', 'cerber_user_2fa' );
-				?>
-            </td>
-        </tr>
+    <?php
 
-        <tr <?php echo $tr_css; ?> >
-            <th>
-                <label for="cerber_2fa_remember"><?php _e( 'Allow user to remember devices for', 'wp-cerber' ); ?>
-                </label>
-            </th>
-            <td data-input_parent="cerber_user_2fa" data-input_parent_value="[0,1]" >
-                <input type="number" name="cerber_2fa_remember" id="cerber_2fa_remember" value="<?php echo esc_attr( $cus['tfremember'] ?? '' ); ?>"> <?php _e( 'days', 'wp-cerber' ); ?>
-            </td>
-        </tr>
+    endif;
 
-        <tr <?php echo $tr_css; ?> >
-            <th scope="row">
-                <label for="cerber_2fa_eminfo"><?php _e( 'Show sign-in attempt details in 2FA emails', 'wp-cerber' ); ?>
-                </label>
-            </th>
-            <td data-input_parent="cerber_user_2fa" data-input_parent_value="[0,1]" >
-				<?php
-				$selected = isset( $cus['tfemailinfo'] ) ? absint( $cus['tfemailinfo'] ) : CRB_NEXT_LVL;
-				echo cerber_select( 'cerber_2fa_eminfo', array(
-					CRB_NEXT_LVL => __( 'Determined by user role policies', 'wp-cerber' ),
-					0            => __( 'Disabled', 'wp-cerber' ),
-					1            => __( 'Minimal', 'wp-cerber' ),
-					2            => __( 'Full', 'wp-cerber' ),
-				), $selected );
-				?>
-            </td>
-        </tr>
-
-        <tr <?php echo $tr_css; ?> >
-            <th>
-                <label for="cerber_2fa_email"><?php _e( 'Two-Factor Authentication Email', 'wp-cerber' ); ?>
-                </label>
-            </th>
-            <td data-input_parent="cerber_user_2fa" data-input_parent_value="[0,1]" >
-                <input type="email" name="cerber_2fa_email" id="cerber_2fa_email" value="<?php echo esc_attr( $cus['tfemail'] ?? '' ); ?>" placeholder="Optional email for receiving 2FA codes" class="regular-text">
-            </td>
-        </tr>
-
-	<?php
-
-	endif;
-
-	if ( $pin = CRB_2FA::get_user_pin_info( $profileuser->ID ) ) :
-		?>
+	$pin = CRB_2FA::get_user_pin_info( $profileuser->ID );
+	if ( $pin ) :
+        ?>
         <tr>
             <th scope="row"><?php _e( '2FA PIN Code', 'wp-cerber' ); ?></th>
             <td>
@@ -108,80 +38,66 @@ add_action( 'personal_options', function ( $profileuser ) {
 				?>
             </td>
         </tr>
-	<?php
+    <?php
 
-	endif;
+    endif;
 
-	if ( ! defined( 'IS_PROFILE_PAGE' ) || ! IS_PROFILE_PAGE ):
+	if ( defined( 'IS_PROFILE_PAGE' ) && IS_PROFILE_PAGE ) {
+		return;
+	}
 
-		$b = crb_is_user_blocked( $profileuser->ID );
-		$b_msg = $b['blocked_msg'] ?? '';
-		$b_note = $b['blocked_note'] ?? '';
-		$dsp = ( ! $b ) ? 'display:none;' : '';
+	$b      = crb_is_user_blocked( $profileuser->ID );
+	$b_msg  = ( ! empty( $b['blocked_msg'] ) ) ? $b['blocked_msg'] : '';
+	$b_note = ( ! empty( $b['blocked_note'] ) ) ? $b['blocked_note'] : '';
+	$dsp    = ( ! $b ) ? 'display:none;' : '';
+	?>
+    <tr>
+        <th scope="row"><?php _e( 'Block User', 'wp-cerber' ); ?></th>
+        <td>
+            <fieldset>
+                <legend class="screen-reader-text">
+                    <span><?php _e( 'User is not permitted to log into the website', 'wp-cerber' ) ?></span>
+                </legend>
+                <label for="crb_user_blocked">
+                    <input name="crb_user_blocked" type="checkbox" id="crb_user_blocked"
+                           value="1" <?php
+				    checked( ( $b ) ? true : false ); ?> />
+				    <?php _e( 'User is not permitted to log into the website', 'wp-cerber' );
+				    if ( $by_who = crb_user_blocked_by( $b ) ) {
+					    echo ' - <i>' . $by_who . '</i>';
+				    }
+					?>
+                </label>
+            </fieldset>
 
-		?>
-
-        <tr>
-            <th scope="row"><?php _e( 'Block User', 'wp-cerber' ); ?></th>
-            <td>
-                <fieldset>
-                    <legend class="screen-reader-text">
-                        <span><?php _e( 'User is not permitted to log into the website', 'wp-cerber' ) ?></span>
-                    </legend>
-                    <label for="crb_user_blocked">
-                        <input name="crb_user_blocked" type="checkbox" id="crb_user_blocked"
-                               value="1" <?php
-						checked( ( $b ) ? true : false ); ?> />
-						<?php _e( 'User is not permitted to log into the website', 'wp-cerber' );
-						if ( $by_who = crb_user_blocked_by( $b ) ) {
-							echo ' - <i>' . $by_who . '</i>';
-						}
-						?>
-                    </label>
-                </fieldset>
-
-            </td>
-        </tr>
-        <tr class="crb_blocked_txt" style="<?php echo $dsp; ?>">
-            <th scope="row"><?php _e( 'User Message', 'wp-cerber' ); ?></th>
-            <td>
+        </td>
+    </tr>
+    <tr class="crb_blocked_txt" style="<?php echo $dsp; ?>">
+        <th scope="row"><?php _e( 'User Message', 'wp-cerber' ); ?></th>
+        <td>
             <textarea placeholder="<?php _e( 'An optional message for this user', 'wp-cerber' ); ?>"
-                      id="crb_blocked_msg" name="crb_blocked_msg"><?php echo crb_generic_escape( $b_msg ); ?></textarea>
-            </td>
-        </tr>
-        <tr class="crb_blocked_txt" style="<?php echo $dsp; ?>">
-            <th scope="row"><?php _e( 'Admin Note', 'wp-cerber' ); ?></th>
-            <td>
+                      id="crb_blocked_msg" name="crb_blocked_msg"><?php echo htmlspecialchars( $b_msg, ENT_SUBSTITUTE ); ?></textarea>
+        </td>
+    </tr>
+    <tr class="crb_blocked_txt" style="<?php echo $dsp; ?>">
+        <th scope="row"><?php _e( 'Admin Note', 'wp-cerber' ); ?></th>
+        <td>
             <textarea placeholder="<?php _e( 'It is visible only to website administrators', 'wp-cerber' ); ?>"
-                      id="crb_blocked_note" name="crb_blocked_note"><?php echo crb_generic_escape( $b_note ); ?></textarea>
-            </td>
-        </tr>
-
+                      id="crb_blocked_note" name="crb_blocked_note"><?php echo htmlspecialchars( $b_note, ENT_SUBSTITUTE ); ?></textarea>
+        </td>
+    </tr>
 	<?php
 
-	endif;
+}, 1000 );
 
-    // Flush content if any
+add_filter( 'user_contactmethods', function ( $methods, $user ) {
 
-	$content = ob_get_clean();
+	if ( lab_lab() ) {
+		$methods['cerber_2fa_email'] = __( 'Two-Factor Authentication Email', 'wp-cerber' );
+	}
 
-	if ( $content ) :
-
-		echo '</table>'; // To get a separate section for WP Cerber, we close the WP table
-
-		// New section for WP Cerber settings
-
-		echo '<h2>' . __( 'Login Security', 'wp-cerber' ) . '</h2>';
-
-        /* translators: Here %s is the name of the software. */
-        echo '<p>' . sprintf( __( 'These features are provided by %s', 'wp-cerber' ), '<a target="_blank" href="' . cerber_admin_link() . '">WP Cerber Security</a>' ) . '</p>
-        <table id="crb-wp-user-edit" class="form-table" role="presentation">';
-
-		echo $content;
-
-	endif;
-
-}, PHP_INT_MAX );
+	return $methods;
+}, 0, 2 );
 
 add_action( 'edit_user_profile_update', function ( $user_id ) {
 
@@ -206,39 +122,34 @@ add_action( 'personal_options_update', 'crb_admin_user2fa' );
 function crb_admin_user2fa( $user_id ) {
 	$cus = cerber_get_set( CRB_USER_SET, $user_id );
 
-	if ( ! $cus
-	     || ! is_array( $cus ) ) {
+	if ( ! $cus || ! is_array( $cus ) ) {
 		$cus = array();
 	}
 
-	if ( ! isset( $_POST['cerber_user_2fa'] )
-	     || ! lab_lab() ) {
+	if ( ! isset( $_POST['cerber_user_2fa'] ) ) {
 		return;
 	}
 
 	$cus['tfm'] = absint( $_POST['cerber_user_2fa'] );
 
-    if ( $cus['tfm'] == 2 ) {
-		CRB_2FA::delete_2fa( $user_id, true );
+	if ( ( $email = trim( cerber_get_post( 'cerber_2fa_email' ) ) ) ) {
+		if ( is_email( $email ) ) {
+			$cus['tfemail'] = $email;
+		}
+		else {
+			add_action( 'user_profile_update_errors', function ( $errors ) {
+				$errors->add( 'invalid-email', 'Invalid email address for Two-factor authentication' );
+			} );
+		}
 	}
-
-    $rem = cerber_get_post( 'cerber_2fa_remember' );
-	$cus['tfremember'] = is_numeric( $rem ) ? $rem : '';
-
-	$cus['tfemailinfo'] = absint( $_POST['cerber_2fa_eminfo'] );
-
-	$email = trim( cerber_get_post( 'cerber_2fa_email' ) );
-
-	if ( $email && ! is_email( $email ) ) {
-		$email = '';
-		add_action( 'user_profile_update_errors', function ( $errors ) {
-			$errors->add( 'invalid-email', 'You have specified an invalid email address for Two-Factor Authentication' );
-		} );
+	else {
+		$cus['tfemail'] = '';
 	}
-
-	$cus['tfemail'] = $email;
 
 	cerber_update_set( CRB_USER_SET, $cus, $user_id );
+	if ( $cus['tfm'] == 2 ) {
+		CRB_2FA::delete_2fa( $user_id, true );
+	}
 }
 
 add_filter( 'user_row_actions', 'crb_collect_uids', 10, 2 );
@@ -367,12 +278,13 @@ function crb_admin_show_role_policies() {
 	$roles = wp_roles();
 
 	$tabs_config = array();
+	$policies    = crb_get_settings( 'crb_role_policies' );
 
 	foreach ( $roles->role_names as $role_id => $name ) {
-		$tabs_config[ crb_sanitize_id( $role_id ) ] = array(
+		$tabs_config[ $role_id ] = array(
 			'title'   => $name,
 			//'desc'     => $info,
-			'content' => crb_admin_role_form( $role_id, cerber_get_role_policies( $role_id ) ),
+			'content' => crb_admin_role_form( $role_id, crb_array_get( $policies, $role_id ) ),
 		);
 	}
 
@@ -387,7 +299,6 @@ function crb_admin_role_form( $role_id, $values ) {
 	foreach ( crb_admin_role_config() as $section_id => $config ) {
 
 	    foreach ( $config['fields'] as $field_id => $field ) {
-
 		    $pro = ( isset( CRB_PRO_POLICIES[ $field_id ] ) && ! lab_lab() );
 		    $hide = ( $pro && CRB_PRO_POLICIES[ $field_id ][0] == 2 ) ? 'display:none;' : '';
 
@@ -403,7 +314,7 @@ function crb_admin_role_form( $role_id, $values ) {
 
 		    $enabler = '';
 		    if ( isset( $field['enabler'] ) ) {
-			    $enabler .= ' data-input_enabler="' . CRB_INPUT_PREFIX . $role_id . '[' . $field['enabler'][0] . ']" ';
+			    $enabler .= ' data-input_enabler="' . CRB_FIELD_PREFIX . $role_id . '[' . $field['enabler'][0] . ']" ';
 
 			    if ( isset( $field['enabler'][1] ) ) {
 				    $enabler .= ' data-input_enabler_value="' . $field['enabler'][1] . '" ';
@@ -423,17 +334,14 @@ function crb_admin_role_form( $role_id, $values ) {
 		    }
 
 		    if ( $field['type'] != 'html' ) {
-			    $name = $role_id . '[' . $field_id . ']';
 			    //$value = ( ! $pro ) ? crb_array_get( $values, $field_id, '' ) : '';
 			    $value = crb_array_get( $values, $field_id, '' );
 			    $field['pro'] = isset( CRB_PRO_POLICIES[ $field_id ] );
-			    $field_html = crb_admin_form_field( $field, $name, $value );
-			    //$html .= ( $pro && $field_id == '2faremember' ) ? '<tr style="' . $hide . '" class="' . $tr_class . '"><td colspan="2" style="padding-left: 0; ' . $s . '">'.crb_admin_cool_features().'<i ' . $enabler . '></i></td></tr>' : '';
-			    $html .= '<tr style="' . $hide . '" class="' . $tr_class . '"><th scope="row" style="' . $s . '">' . $title . '</th><td><div id="' . CRB_SETTING_PREFIX . 'role-' . $role_id . '-' . $field_id . '">' . $field_html . '<i ' . $enabler . '></i></div></td></tr>';
+			    $field_html = crb_admin_form_field( $field, $role_id . '[' . $field_id . ']', $value );
+			    $html .= '<tr style="' . $hide . '" class="' . $tr_class . '"><th scope="row" style="' . $s . '">' . $title . '</th><td>' . $field_html . '<i ' . $enabler . '></i></td></tr>';
 		    }
 		    else {
 			    $t = ( $pro && $field_id == '2fasmart' ) ? crb_admin_cool_features() : '';
-			    //$t = '';
 			    $html .= '<tr class="' . $tr_class . '"><td colspan="2" style="padding-left: 0; ' . $s . '">' . $t . $title . '<i ' . $enabler . '></i></td></tr>';
 		    }
 	    }
@@ -449,7 +357,7 @@ function crb_admin_form_field( $field, $name, $value, $id = '' ) {
 	$label = crb_array_get( $field, 'label' );
 
     if ( ! $id ) {
-		$id = CRB_INPUT_PREFIX . $name;
+		$id = CRB_FIELD_PREFIX . $name;
 	}
 
     $atts = '';
@@ -463,26 +371,22 @@ function crb_admin_form_field( $field, $name, $value, $id = '' ) {
 		$value = '';
 	}
 
-	if ( ! $plh = crb_array_get( $field, 'placeholder' ) ) {
-		if ( $cb = crb_array_get( $field, 'placeholder_cb' ) ) {
-			$plh = call_user_func( $cb );
-		}
+    if ( isset( $field['placeholder'] ) ) {
+		$atts .= ' placeholder="' . $field['placeholder'] . '"';
 	}
 
-	$atts .= ' placeholder="' . $plh . '"';
+    $style = '';
 
-	$style = '';
-
-	if ( isset( $field['width'] ) ) {
+    if ( isset( $field['width'] ) ) {
 		$style .= ' width:' . $field['width'];
 	}
 
 	switch ( $field['type'] ) {
 		case 'checkbox':
-			$html = cerber_checkbox( $name, $value, $label, $id, $atts );
+			return cerber_checkbox( $name, $value, $label, $id, $atts );
 			break;
 		case 'select':
-			$html = cerber_select( $name, $field['set'], $value, '', $id, '', '', null, $atts );
+			return cerber_select( $name, $field['set'], $value, '', $id, '', '', null, $atts );
 			break;
 		case 'textarea':
 			$html = '<textarea class="large-text crb-monospace" id="' . $id . '" name="' . $name . '" ' . $atts . '>' . $value . '</textarea>';
@@ -490,229 +394,172 @@ function crb_admin_form_field( $field, $name, $value, $id = '' ) {
 				$html .= '<br/><label class="crb-below" for="' . $id . '">' . $label . '</label>';
 			}
 
+			return $html;
 			break;
-
 		case 'text':
 		default:
 			$type = crb_array_get( $field, 'type', 'text' );
-			$html = '<input style="' . $style . '" type="' . $type . '" id="' . $id . '" name="' . $name . '" value="' . $value . '" ' . $atts . ' class="crb-input-' . $type . '"/>';
-			if ( $label ) {
-				$html .= ' <label for="' . $id . '">' . $label . '</label>';
-			}
 
+			//return $pre . '<input type="' . $type . '" id="' . $id . '" name="' . $name . '" value="' . $value . '"' . $atts . ' class="' . $class . '" ' . $size . $maxlength . $atts . $data . ' />';
+			return '<input style="' . $style . '" type="' . $type . '" id="' . $id . '" name="' . $name . '" value="' . $value . '" ' . $atts . ' />';
 			break;
 	}
-
-	return $html;
 }
 
-/**
- * Returns sections of role-based setting fields
- * Returns the field configuration if $field_id specified
- *
- * @return array[]|false
- */
-function crb_admin_role_config( $field_id = null ) {
-	static $role_sections;
+function crb_admin_role_config() {
+	return array(
+		'access'    => array(
+			'name'   => '',
+			'desc'   => '',
+			'fields' => array(
+				'nodashboard' => array(
+					'title'        => __( 'Block access to WordPress Dashboard', 'wp-cerber' ),
+					'type'         => 'checkbox',
+					'disable_role' => 'administrator',
+				),
+				'notoolbar' => array(
+					'title' => __( 'Hide Toolbar when viewing site', 'wp-cerber' ),
+					'type'  => 'checkbox',
+				),
+			)
+		),
+		'redirect' => array(
+			'name'   => __( 'Redirection rules', 'wp-cerber' ),
+			'desc'   => '',
+			'fields' => array(
+				'rdr_login'  => array(
+					'title' => __( 'Redirect user after login', 'wp-cerber' ),
+					'type'  => 'text',
+					'width' => '100%',
+				),
+				'rdr_logout' => array(
+					'title' => __( 'Redirect user after logout', 'wp-cerber' ),
+					'type'  => 'text',
+					'width' => '100%',
+				),
+			)
+		),
+		'misc' => array(
+			'name'   => '',
+			'desc'   => '',
+			'fields' => array(
+				'auth_expire' => array(
+					'title'       => __( 'User session expiration time', 'wp-cerber' ),
+					//'label' => 'minutes',
+					'placeholder' => 'minutes',
+					'type'        => 'number',
+				),
+				'sess_limit'  => array(
+					'title' => __( 'Number of allowed concurrent user sessions', 'wp-cerber' ),
+					'type'  => 'number',
+					'pro'   => 2
+				),
+				'sess_limit_policy' => array(
+					'title' => __( 'When the limit on concurrent user sessions is reached', 'wp-cerber' ),
+					'type'  => 'select',
+					'set'   => array(
+						0 => __( 'Terminate the oldest user session on a new login', 'wp-cerber' ),
+						1 => __( 'Deny further login attempts', 'wp-cerber' ),
+					),
+					'pro'   => 2
+				),
+				'sess_limit_msg' => array(
+					//'title'     => __( 'User message', 'wp-cerber' ),
+					'label'       => __( 'Display this message if an attempt to log in is denied because the limit on concurrent user sessions has been reached', 'wp-cerber' ),
+					'type'        => 'textarea',
+					'placeholder' => __( 'You are not allowed to log in. Ask your administrator for assistance.', 'wp-cerber' ),
+					'enabler'     => array( 'sess_limit_policy', 1 ),
+					'pro'         => 2
+				),
+				'app_pwd' => array(
+					'title' => __( 'Application Passwords', 'wp-cerber' ),
+					'type'  => 'select',
+					'set'   => array(
+						0 => __( 'Use global policies', 'wp-cerber' ),
+						1 => __( 'Enabled, access to API using standard user passwords is allowed', 'wp-cerber' ),
+						2 => __( 'Enabled, no access to API using standard user passwords', 'wp-cerber' ),
+						3 => __( 'Disabled', 'wp-cerber' ),
+					),
+					'pro'   => 2
+				),
+			)
+		),
+		'twofactor' => array(
+			'name'   => __( 'Two-Factor Authentication', 'wp-cerber' ),
+			'desc'   => '',
+			'fields' => array(
+				'2famode' => array(
+					'title'    => __( 'Two-factor authentication', 'wp-cerber' ),
+					'type'     => 'select',
+					'set'      => array(
+						0 => __( 'Disabled', 'wp-cerber' ),
+						1 => __( 'Always enabled', 'wp-cerber' ),
+						2 => __( 'Advanced mode', 'wp-cerber' )
+					),
+				),
+				'2fasmart'         => array(
+					'title'   => __( 'Enforce two-factor authentication if any of the following conditions is true', 'wp-cerber' ),
+					'type'    => 'html',
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
+				'2fanewcountry' => array(
+					'title'   => __( 'Login from a different country', 'wp-cerber' ),
+					'type'    => 'checkbox',
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
+				'2fanewnet4'      => array(
+					'title'   => __( 'Login from a different network Class C', 'wp-cerber' ),
+					'type'    => 'checkbox',
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
+				'2fanewip'      => array(
+					'title'   => __( 'Login from a different IP address', 'wp-cerber' ),
+					'type'    => 'checkbox',
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
+				'2fanewua'      => array(
+					'title'   => __( 'Login from a different browser or device', 'wp-cerber' ),
+					'type'    => 'checkbox',
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
+				'2fasessions'       => array(
+					'title'   => __( 'If the number of concurrent user sessions is greater', 'wp-cerber' ),
+					'type'    => 'number',
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
+				'note2'         => array(
+					'title'   => __( 'Enforce two-factor authentication with fixed intervals', 'wp-cerber' ),
+					'type'    => 'html',
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
+				'2fadays'       => array(
+					'title'   => __( 'Regular time intervals (days)', 'wp-cerber' ),
+					'type'    => 'number',
+					//'label'   => __( 'days interval', 'wp-cerber' ),
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
+				'2falogins'     => array(
+					'title'   => __( 'Fixed number of logins', 'wp-cerber' ),
+					'type'    => 'number',
+					'label'   => __( 'number of logins', 'wp-cerber' ),
+					'enabler' => array( '2famode', 2 ),
+					'pro'     => 1
+				),
 
-	if ( ! $role_sections ) {
-
-		$role_sections = array(
-			'access'    => array(
-				'name'   => '',
-				'desc'   => '',
-				'fields' => array(
-					'nodashboard' => array(
-						'title'        => __( 'Block access to WordPress Dashboard', 'wp-cerber' ),
-						'type'         => 'checkbox',
-						'disable_role' => 'administrator',
-					),
-					'notoolbar'   => array(
-						'title' => __( 'Hide Toolbar when viewing site', 'wp-cerber' ),
-						'type'  => 'checkbox',
-					),
-				)
-			),
-			'redirect'  => array(
-				'name'   => __( 'Redirection rules', 'wp-cerber' ),
-				'desc'   => '',
-				'fields' => array(
-					'rdr_login'  => array(
-						'title'       => __( 'Redirect user after login', 'wp-cerber' ),
-						'placeholder' => __( 'Specify a relative or absolute URL', 'wp-cerber' ),
-						'type'        => 'text',
-						'width'       => '100%',
-					),
-					'rdr_logout' => array(
-						'title'       => __( 'Redirect user after logout', 'wp-cerber' ),
-						'placeholder' => __( 'Specify a relative or absolute URL', 'wp-cerber' ),
-						'type'        => 'text',
-						'width'       => '100%',
-					),
-				)
-			),
-			'misc'      => array(
-				'name'   => '',
-				'desc'   => '',
-				'fields' => array(
-					'auth_expire'       => array(
-						'title'          => __( 'User session expiration time', 'wp-cerber' ),
-						'label'          => __( 'minutes', 'wp-cerber' ),
-						//'placeholder' => __( 'minutes', 'wp-cerber' ),
-						'placeholder_cb' => function () {
-							if ( $val = crb_get_settings( 'auth_expire' ) ) {
-								return (int) $val;
-							}
-
-							return '';
-						},
-						'type'           => 'number',
-					),
-					'sess_limit'        => array(
-						'title'       => __( 'Number of allowed concurrent user sessions', 'wp-cerber' ),
-						'type'        => 'number',
-						'placeholder' => __( 'unlimited', 'wp-cerber' ),
-						'pro'         => 2
-					),
-					'sess_limit_policy' => array(
-						'title' => __( 'When the limit on concurrent user sessions is reached', 'wp-cerber' ),
-						'type'  => 'select',
-						'set'   => array(
-							0 => __( 'Terminate the oldest user session on a new login', 'wp-cerber' ),
-							1 => __( 'Deny further login attempts', 'wp-cerber' ),
-						),
-						'pro'   => 2
-					),
-					'sess_limit_msg'    => array(
-						//'title'     => __( 'User message', 'wp-cerber' ),
-						'label'       => __( 'Display this message if an attempt to log in is denied because the limit on concurrent user sessions has been reached', 'wp-cerber' ),
-						'type'        => 'textarea',
-						'placeholder' => __( 'You are not allowed to log in. Ask your administrator for assistance.', 'wp-cerber' ),
-						'enabler'     => array( 'sess_limit_policy', 1 ),
-						'pro'         => 2
-					),
-					'app_pwd'           => array(
-						'title' => __( 'Application Passwords', 'wp-cerber' ),
-						'type'  => 'select',
-						'set'   => array(
-							0 => __( 'Use global policies', 'wp-cerber' ),
-							1 => __( 'Enabled, access to API using standard user passwords is allowed', 'wp-cerber' ),
-							2 => __( 'Enabled, no access to API using standard user passwords', 'wp-cerber' ),
-							3 => __( 'Disabled', 'wp-cerber' ),
-						),
-						'pro'   => 2
-					),
-				)
-			),
-			'twofactor' => array(
-				'name'   => __( 'Two-Factor Authentication', 'wp-cerber' ),
-				'desc'   => '',
-				'fields' => array(
-					'2famode'       => array(
-						'title' => __( 'Two-factor authentication', 'wp-cerber' ),
-						'type'  => 'select',
-						'set'   => array(
-							0 => __( 'Disabled', 'wp-cerber' ),
-							1 => __( 'Always enabled', 'wp-cerber' ),
-							2 => __( 'Advanced mode', 'wp-cerber' )
-						),
-					),
-					'2faremember'   => array(
-						'title'   => __( 'Allow users to remember their devices for', 'wp-cerber' ),
-						'type'    => 'number',
-						'label'   => __( 'days', 'wp-cerber' ),
-						'enabler' => array( '2famode', '[1,2]' ),
-						'pro'     => 1 // Does it work?
-					),
-					'2faemailinfo'  => array(
-						'title'   => __( 'Show sign-in attempt details in 2FA emails', 'wp-cerber' ),
-						'type'    => 'select',
-						'set'     => array(
-							0 => __( 'Disabled', 'wp-cerber' ),
-							1 => __( 'Minimal', 'wp-cerber' ),
-							2 => __( 'Full', 'wp-cerber' ),
-						),
-						'enabler' => array( '2famode', '[1,2]' ),
-						'pro'     => 1 // Does it work?
-					),
-					'2fasmart'      => array(
-						'title'   => __( 'Enforce two-factor authentication if any of the following conditions is true', 'wp-cerber' ),
-						'type'    => 'html',
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-					'2fanewcountry' => array(
-						'title'   => __( 'Login from a different country', 'wp-cerber' ),
-						'type'    => 'checkbox',
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-					'2fanewnet4'    => array(
-						'title'   => __( 'Login from a different network Class C', 'wp-cerber' ),
-						'type'    => 'checkbox',
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-					'2fanewip'      => array(
-						'title'   => __( 'Login from a different IP address', 'wp-cerber' ),
-						'type'    => 'checkbox',
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-					'2fanewua'      => array(
-						'title'   => __( 'Login from a different browser or device', 'wp-cerber' ),
-						'type'    => 'checkbox',
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-					'2fasessions'   => array(
-						'title'   => __( 'If the number of concurrent user sessions is greater', 'wp-cerber' ),
-						'type'    => 'number',
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-					'note2'         => array(
-						'title'   => __( 'Enforce two-factor authentication with fixed intervals', 'wp-cerber' ),
-						'type'    => 'html',
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-					'2fadays'       => array(
-						'title'   => __( 'Regular time intervals', 'wp-cerber' ),
-						'type'    => 'number',
-						'label'   => __( 'days', 'wp-cerber' ),
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-					'2falogins'     => array(
-						'title'   => __( 'Fixed number of logins', 'wp-cerber' ),
-						'type'    => 'number',
-						'label'   => __( 'number of logins', 'wp-cerber' ),
-						'enabler' => array( '2famode', 2 ),
-						'pro'     => 1
-					),
-				)
-			),
-		);
-	}
-
-	if ( ! $field_id ) {
-		return $role_sections;
-	}
-
-	$field = false;
-
-	foreach ( $role_sections as $sec_id => $role_section ) {
-		if ( $field = $role_section['fields'][ $field_id ] ?? false ) {
-			$field['section_name'] = $role_section['name'] ?? '';
-			$field['section_id'] = $sec_id;
-		}
-	}
-
-    return $field;
+			)
+		),
+	);
 }
 
-function crb_settings_update_role_policies( $post ) {
+function crb_admin_save_role_policies( $post ) {
 	$roles    = wp_roles();
 	$policies = array();
 	foreach ( $roles->role_names as $role_id => $name ) {
@@ -734,10 +581,18 @@ function crb_settings_update_role_policies( $post ) {
 			}
 		}
 
-		crb_sanitize_deep( $element );
+		if ( ! is_array( $element )
+		     && ! is_numeric( $element ) ) {
+			$element = sanitize_text_field( (string) $element );
+		}
 	} );
 
-	if ( cerber_settings_update( array( 'crb_role_policies' => $policies ) ) ) {
+	if ( ! $settings = get_site_option( CERBER_SETTINGS ) ) {
+		$settings = array();
+	}
+	$settings['crb_role_policies'] = $policies;
+
+	if ( cerber_update_site_option( CERBER_SETTINGS, $settings ) ) {
 		cerber_admin_message( __( 'Policies have been updated', 'wp-cerber' ) );
 	}
 }
@@ -774,7 +629,7 @@ function crb_admin_get_user_cell( $user_id = null, $base_url = '', $text = '', $
 
 	}
 
-	if ( ! $user = crb_get_userdata( $user_id ) ) {
+	if ( ! $user = get_userdata( $user_id ) ) {
 		if ( ! $user_data = cerber_get_set( 'user_deleted', $user_id ) ) {
 			$user_cache[ $key ] = 'UID ' . $user_id;
 
@@ -801,10 +656,10 @@ function crb_admin_get_user_cell( $user_id = null, $base_url = '', $text = '', $
 	$lbl = ( $label ) ? '<span class="crb-us-lbl">' . $label . '</span>' : '';
 
 	if ( $base_url ) {
-		$ret = '<a href="' . $base_url . '&amp;filter_user=' . $user_id . '"><b>' . $user_data['display_name'] . '</b></a>' . $lbl . '<div>' . $roles . '</div>';
+		$ret = '<a href="' . $base_url . '&amp;filter_user=' . $user_id . '"><b>' . $user_data['display_name'] . '</b></a>' . $lbl . '<p>' . $roles . '</p>';
 	}
 	else {
-		$ret = '<b>' . $user_data['display_name'] . '</b>' . $lbl . '<div>' . $roles . '</div>';
+		$ret = '<b>' . $user_data['display_name'] . '</b>' . $lbl . '<p>' . $roles . '</p>';
 	}
 
 	$ret = '<div class="crb-us-name">' . $ret . '</div>';
@@ -845,11 +700,10 @@ function crb_admin_show_sessions() {
 	echo '<input type="hidden" name="page" value="' . crb_admin_get_page() . '">';
 	echo '<input type="hidden" name="tab" value="' . crb_admin_get_tab() . '">';
 	echo '<input type="hidden" name="cerber_admin_do" value="crb_manage_sessions">';
-
-	$sessions_list = new CRB_Sessions_Table();
-	$sessions_list->prepare_items();
-	$sessions_list->display();
-
+	$slaves = new CRB_Sessions_Table();
+	$slaves->prepare_items();
+	//$slaves->search_box( 'Search', 'search_id' );
+	$slaves->display();
 	echo '</form>';
 }
 
@@ -1014,16 +868,7 @@ function crb_pdata_eraser( $email_address, $page = 1 ) {
 			update_user_meta( $user->ID , 'session_tokens', array() );
 		}
 
-		if ( cerber_get_set( CRB_USER_SET, $user->ID ) ) {
-			if ( cerber_delete_set( CRB_USER_SET, $user->ID ) ) {
-				$removed = true;
-				$retained = false;
-			}
-			else {
-				$removed = false;
-				$retained = true;
-			}
-		}
+		$removed = true;
 
 		// Check if removing is OK
 		if ( cerber_get_log( null, array( 'id' => $user->ID ), null, 1 )
@@ -1070,8 +915,6 @@ function crb_pdata_register_eraser( $erasers ) {
  * @return array|false
  *
  * @since 9.0.2
- *
- * @keywords assistant
  */
 function crb_get_user_auth_status( $user ) {
 	$nope = '';
@@ -1079,7 +922,7 @@ function crb_get_user_auth_status( $user ) {
 
 	if ( $b = crb_is_user_blocked( $user->ID ) ) {
 		$nope = crb_user_blocked_by( $b );
-		$nope_more = crb_generic_escape( $b['blocked_note'] );
+		$nope_more = htmlspecialchars( $b['blocked_note'] );
 
 		return array( $nope, $nope_more, true );
 	}
@@ -1103,13 +946,10 @@ function crb_get_user_auth_status( $user ) {
 
 	// Was the attempt to log in denied by WP Cerber?
 
-	if ( ! $last_denied = crb_get_last_failed( $user->user_login, $user->user_email, true ) ) {
-		return false;
-	}
+	$last_login = cerber_get_last_login( $user->ID );
+	$last_denied = crb_get_last_failed( $user->user_login, $user->user_login, true );
 
-	$last_login = crb_get_last_user_login( $user->ID );
-
-	if ( $last_login && $last_denied->stamp < $last_login['ts'] ) {
+	if ( $last_denied->stamp < $last_login->stamp ) {
 		return false; // Not relevant anymore, user has logged in
 	}
 
@@ -1173,8 +1013,8 @@ function crb_is_user_ip_blocked( $user ) {
 
 	// User logged in after several failed attempts - OK
 
-	if ( ( $last_login = crb_get_last_user_login( $user->ID ) )
-	     && ( $last_failed->stamp < $last_login['ts'] ) ) {
+	if ( ( $last_login = cerber_get_last_login( $user->ID ) )
+	     && ( $last_failed->stamp < $last_login->stamp ) ) {
 		return false;
 	}
 
@@ -1324,7 +1164,7 @@ class CRB_Sessions_Table extends WP_List_Table {
 		}
 
 		if ( ! empty( $term ) ) {
-			echo '<div style="margin-top:15px;"><b>' . __( 'Search results for:', 'wp-cerber' ) . '</b> “' . crb_generic_escape( $term ) . '”</div>';
+			echo '<div style="margin-top:15px;"><b>' . __( 'Search results for:', 'wp-cerber' ) . '</b> “' . htmlspecialchars( $term, ENT_SUBSTITUTE ) . '”</div>';
 		}
 
 		// Pagination, part 2
@@ -1350,7 +1190,7 @@ class CRB_Sessions_Table extends WP_List_Table {
 	}
 
 	/**
-	 * @param array $item
+	 * @param array $item // not object!
 	 * @param string $column_name
 	 *
 	 * @return string
@@ -1411,7 +1251,7 @@ class CRB_Sessions_Table extends WP_List_Table {
 				break;
 			case 'ses_host':
 				$ip_id   = cerber_get_id_ip( $item['ip'] );
-				$ip_info = cerber_get_ip_info( $item['ip'] );
+				$ip_info = cerber_get_ip_info( $item['ip'], true );
 				if ( ! $hostname = crb_array_get( $ip_info, 'hostname_html' ) ) {
 					$hostname = crb_get_ajax_placeholder( 'hostname', $ip_id );
 				}
