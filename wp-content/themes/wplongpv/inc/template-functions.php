@@ -109,7 +109,7 @@ function custom_link($link = null, $class = null)
     if ($link):
         // validate link
         $url = !empty($link['url']) ? $link['url'] : '';
-        $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
+        $title = !empty($link['title']) ? $link['title'] : __('See more', 'cltheme');
         $target = !empty($link['target']) ? $link['target'] : '';
 
         if ($url):
@@ -134,7 +134,7 @@ function custom_img_link($link = null, $image = '', $class = '')
     if ($image):
         // validate link
         $url = !empty($link['url']) ? $link['url'] : 'javascript:void(0);';
-        $title = !empty($link['title']) ? $link['title'] : __('See more', 'wplongpv');
+        $title = !empty($link['title']) ? $link['title'] : __('See more', 'cltheme');
         $target = !empty($link['target']) ? $link['target'] : '_self';
         $class_img_block = empty($link['url']) ? ' cursor-default ' : '';
         $class_img_block .= $class ? $class . 'Block' : '';

@@ -4,7 +4,7 @@
  *
  * @link https://developer.wordpress.org/themes/basics/template-hierarchy/#search-result
  *
- * @package wplongpv
+ * @package cltheme
  */
 
 get_header();

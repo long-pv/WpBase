@@ -3,7 +3,7 @@ function register_cpt_post_types()
 {
     $cpt_list = [
         'event' => [
-            'labels' => __('Event', 'wplongpv'),
+            'labels' => __('Event', 'cltheme'),
             'cap' => false,
             'hierarchical' => false
         ],
@@ -11,7 +11,7 @@ function register_cpt_post_types()
 
     $cpt_tax = [
         'event_category' => [
-            'labels' => __('Event category', 'wplongpv'),
+            'labels' => __('Event category', 'cltheme'),
             'cap' => false,
             'post_type' => ['event']
         ],

@@ -6,14 +6,15 @@
  *
  * @link https://developer.wordpress.org/themes/basics/template-files/#template-partials
  *
- * @package wplongpv
+ * @package cltheme
  */
 
 ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
+
 <head>
-	<meta charset="<?php bloginfo( 'charset' ); ?>">
+	<meta charset="<?php bloginfo('charset'); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="profile" href="https://gmpg.org/xfn/11">
 
@@ -21,10 +22,10 @@
 </head>
 
 <body <?php body_class(); ?>>
-<!-- header -->
-<header class="header" id="header">
-</header>
-<!-- end header -->
+	<!-- header -->
+	<header class="header" id="header">
+	</header>
+	<!-- end header -->
 
-<!-- main body -->
-<main class="mainBody">
+	<!-- main body -->
+	<main class="mainBody">

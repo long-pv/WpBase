@@ -10,7 +10,7 @@ function wp_breadcrumbs()
 	</svg>
 	</span>';
 
-	$home = __('Home', 'wplongpv');
+	$home = __('Home', 'cltheme');
 	$before = '<span class="current">';
 	$after = '</span>';
 	if (!is_home() && !is_front_page() || is_paged()) {
@@ -32,11 +32,11 @@ function wp_breadcrumbs()
 				$arr_post_parent = [
 					[
 						'post_type' => 'post',
-						'label' => __('News', 'wplongpv'),
+						'label' => __('News', 'cltheme'),
 					],
 					[
 						'post_type' => 'event',
-						'label' => __('Events', 'wplongpv'),
+						'label' => __('Events', 'cltheme'),
 					],
 				];
 

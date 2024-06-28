@@ -6,7 +6,7 @@
  *
  * @link https://developer.wordpress.org/themes/basics/template-files/#template-partials
  *
- * @package wplongpv
+ * @package cltheme
  */
 
 ?>
@@ -21,4 +21,5 @@
 <?php wp_footer(); ?>
 
 </body>
+
 </html>
