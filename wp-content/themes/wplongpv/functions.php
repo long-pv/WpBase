@@ -12,11 +12,6 @@ if (!defined('_S_VERSION')) {
 	define('_S_VERSION', '1.0.0');
 }
 
-// Set the maximum number of revisions - Đặt số lượng revision tối đa
-if (!defined('WP_POST_REVISIONS')) {
-	define('WP_POST_REVISIONS', 5);
-}
-
 /**
  * get currernt lang.
  */
@@ -73,7 +68,7 @@ add_action('wp_enqueue_scripts', 'cltheme_scripts');
 require get_template_directory() . '/inc/template-functions.php';
 
 // Create CPT
-require get_template_directory() . '/inc/cpt-custom-role.php';
+require get_template_directory() . '/inc/cpt_custom.php';
 
 // Security
 require get_template_directory() . '/inc/security.php';

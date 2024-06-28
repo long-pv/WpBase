@@ -29,8 +29,8 @@ add_action('init', 'register_cpt_post_types');
 
 function register_cpt($post_type, $data = [])
 {
-    $hierarchical = $data['hierarchical'] ?: false;
-    $attributes = $hierarchical ? 'page-attributes' : '';
+    $hierarchical = !empty($data['hierarchical']) ? $data['hierarchical'] : false;
+    $attributes = $hierarchical == true ? 'page-attributes' : '';
 
     $labels = [
         'name' => $data['labels'],
@@ -53,7 +53,7 @@ function register_cpt($post_type, $data = [])
         'delete_with_user' => false,
         'exclude_from_search' => true,
         'map_meta_cap' => true,
-        'hierarchical' => $data['labels'] ?: false,
+        'hierarchical' => $hierarchical,
         'rewrite' => array('slug' => $post_type, 'with_front' => true),
         'query_var' => true,
         'menu_icon' => 'dashicons-admin-post',
