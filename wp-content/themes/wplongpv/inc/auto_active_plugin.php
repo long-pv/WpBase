@@ -67,3 +67,13 @@ function activate_my_plugins()
     }
 }
 add_action('admin_init', 'activate_my_plugins');
+
+// stop upgrading wp cerber plugin
+add_filter('site_transient_update_plugins', 'disable_wp_cerber_update');
+function disable_wp_cerber_update($value)
+{
+    if (isset($value->response['wp-cerber/wp-cerber.php'])) {
+        unset($value->response['wp-cerber/wp-cerber.php']);
+    }
+    return $value;
+}
