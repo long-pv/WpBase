@@ -318,8 +318,11 @@ function dd($data)
 function the_url_search()
 {
     $search = get_site_url();
-    if (pll_default_language() !== LANG) {
-        $search = $search . '/' . LANG . '/';
+
+    if (function_exists('pll_default_language')) {
+        if (pll_default_language() !== LANG) {
+            $search = $search . '/' . LANG . '/';
+        }
     }
 
     echo $search;
