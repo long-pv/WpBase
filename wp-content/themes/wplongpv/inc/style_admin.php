@@ -17,7 +17,8 @@ function custom_style_admin()
         }
 
         /* Dashboard wp cerber */
-        .cerber-msg.crb-announcement.crb-cerber-logo-big, #crb-aside {
+        .cerber-msg.crb-announcement.crb-cerber-logo-big,
+        #crb-aside {
             display: none !important;
         }
     </style>

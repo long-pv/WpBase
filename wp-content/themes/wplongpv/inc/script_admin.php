@@ -3,8 +3,24 @@ add_action('admin_footer', 'custom_script_admin');
 function custom_script_admin()
 {
     global $post_type;
-
-    // required to enter images
+    ?>
+    <!-- Validate post title -->
+    <script>
+        jQuery(document).ready(function ($) {
+            if ($('#post').length > 0) {
+                $('#post').submit(function () {
+                    var title_post = $('#title').val();
+                    if (title_post.trim() === '') {
+                        alert('Please enter "Title".');
+                        $('#title').focus();
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+    <?php
+    // required to enter featured images
     if ($post_type == 'post'):
         ?>
         <script>
@@ -16,12 +32,9 @@ function custom_script_admin()
                         $('html, body').animate({
                             scrollTop: postimagediv.offset().top - 100
                         }, 500);
-                        alert('Please enter Featured image.');
+                        alert('Please enter "Featured image".');
                         return false;
                     }
-                });
-                $('#set-post-thumbnail').on('click', function () {
-                    $('#postimagediv').removeClass('error');
                 });
             });
         </script>
@@ -36,7 +49,7 @@ function custom_script_admin()
                 $('label[for="categorydiv-hide"]').remove();
                 $('#post').submit(function () {
                     if ($('#categorychecklist input[type="checkbox"]:checked').length === 0) {
-                        alert('Please enter category.');
+                        alert('Please enter "Category".');
                         $('html, body').animate({
                             scrollTop: $('#categorydiv').offset().top - 100
                         }, 'slow');
