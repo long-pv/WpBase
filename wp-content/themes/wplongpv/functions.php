@@ -84,3 +84,6 @@ require get_template_directory() . '/inc/style_admin.php';
 
 // auto active plugin
 require get_template_directory() . '/inc/auto_active_plugin.php';
+
+// view post
+require get_template_directory() . '/inc/view_post.php';

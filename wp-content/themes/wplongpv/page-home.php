@@ -18,36 +18,26 @@ get_header();
 ?>
 
 <?php
-$args_news_top = array(
-    'post_type' => 'post',
-    'posts_per_page' => '8',
-    'meta_query' => array(
-        array(
-            'key' => '_thumbnail_id',
-            'compare' => 'EXISTS',
-        ),
-    ),
-);
-$news_top = new WP_Query($args_news_top);
-if ($news_top->have_posts()):
+$featured_article = get_field('featured_article', 'option');
+if (!empty($featured_article) && $featured_article[0]):
     ?>
     <section class="secSpace homePage__top">
         <div class="homePage__topSlider">
             <?php
-            while ($news_top->have_posts()):
-                $news_top->the_post();
+            foreach ($featured_article as $post):
+                setup_postdata($post);
                 ?>
                 <div>
                     <?php get_template_part('template-parts/single/post'); ?>
                 </div>
                 <?php
-            endwhile;
+                wp_reset_postdata();
+            endforeach;
             ?>
         </div>
     </section>
     <?php
 endif;
-wp_reset_postdata();
 ?>
 
 <?php
@@ -66,12 +56,13 @@ if (!empty($top_cat)):
                 <h2 class="secHeading__title">
                     Danh mục
                 </h2>
+                <a class="secHeading__link" href="<?php echo home_url('/danh-sach-bai-viet'); ?>">Xem thêm</a>
             </div>
             <div class="row">
                 <?php
                 foreach ($top_cat as $category):
                     ?>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12">
                         <h3 class="h5 homePage__catsLink">
                             <a href="<?php echo get_category_link($category->term_id) ?>">
                                 <?php echo $category->name . ' (' . $category->count . ')'; ?>
@@ -133,7 +124,10 @@ wp_reset_postdata();
 <?php
 $args_view_top = array(
     'post_type' => 'post',
-    'posts_per_page' => '3',
+    'posts_per_page' => 3,
+    'order' => 'DESC',
+    'meta_key' => 'post_views_count',
+    'orderby' => 'meta_value_num',
     'meta_query' => array(
         array(
             'key' => '_thumbnail_id',
@@ -150,6 +144,7 @@ if ($view_top->have_posts()):
                 <h2 class="secHeading__title">
                     Xem nhiều nhất
                 </h2>
+                <a class="secHeading__link" href="<?php echo home_url('/danh-sach-bai-viet'); ?>">Xem thêm</a>
             </div>
             <div class="row">
                 <?php
