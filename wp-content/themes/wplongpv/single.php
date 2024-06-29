@@ -29,11 +29,11 @@ get_header();
                 $post_next = get_adjacent_post(true, 'news', true);
                 if ($post_prev || $post_next):
                     ?>
-                    <div class="d-flex justify-content-between align-items-stretch mt-5">
+                    <div class="post-single-navigation d-flex align-items-stretch mt-5">
                         <?php
                         if ($post_prev):
                             ?>
-                            <a href="<?php echo get_permalink($post_prev->ID); ?>" class="w-50">
+                            <a href="<?php echo get_permalink($post_prev->ID); ?>" class="mr-auto w-50 h-100 pr-4">
                                 <?php echo get_the_title($post_prev->ID); ?>
                             </a>
                         <?php endif; ?>
@@ -41,7 +41,7 @@ get_header();
                         <?php
                         if ($post_next):
                             ?>
-                            <a href="<?php echo get_permalink($post_next->ID); ?>" class="w-50 text-right">
+                            <a href="<?php echo get_permalink($post_next->ID); ?>" class="ml-auto w-50 h-100 text-right pl-4">
                                 <?php echo get_the_title($post_next->ID); ?>
                             </a>
                         <?php endif; ?>
