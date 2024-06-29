@@ -17,13 +17,13 @@ function register_cpt_post_types()
         ],
     ];
 
-    foreach ($cpt_list as $post_type => $data) {
-        register_cpt($post_type, $data);
-    }
+    // foreach ($cpt_list as $post_type => $data) {
+    //     register_cpt($post_type, $data);
+    // }
 
-    foreach ($cpt_tax as $ctx => $data) {
-        register_ctx($ctx, $data);
-    }
+    // foreach ($cpt_tax as $ctx => $data) {
+    //     register_ctx($ctx, $data);
+    // }
 }
 add_action('init', 'register_cpt_post_types');
 
