@@ -28,5 +28,9 @@ function disable_plugins_update($value)
     if (isset($value->response['advanced-custom-fields-pro/acf.php'])) {
         unset($value->response['advanced-custom-fields-pro/acf.php']);
     }
+    // disable wp cerber
+    if (isset($value->response['wp-cerber/wp-cerber.php'])) {
+        unset($value->response['wp-cerber/wp-cerber.php']);
+    }
     return $value;
 }

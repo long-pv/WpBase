@@ -15,6 +15,11 @@ function custom_style_admin()
         .inline-edit-group.wp-clearfix>.alignleft>input[name="comment_status"]~.checkbox-title {
             display: none !important;
         }
+
+        /* Dashboard wp cerber */
+        .cerber-msg.crb-announcement.crb-cerber-logo-big, #crb-aside {
+            display: none !important;
+        }
     </style>
     <?php
 }
