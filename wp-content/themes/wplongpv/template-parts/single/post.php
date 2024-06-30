@@ -1,15 +1,15 @@
 <?php
 $post_id = get_the_ID();
 $thumbnail_id = get_post_thumbnail_id($post_id);
-$thumbnail_url = wp_get_attachment_image_src($thumbnail_id, 'thumbnail');
 $medium_url = wp_get_attachment_image_src($thumbnail_id, 'medium');
+$large_url = wp_get_attachment_image_src($thumbnail_id, 'large');
 $categories = get_the_category($post_id);
 ?>
 <article id="post-<?php echo $post_id; ?>" class="singlePost">
     <div class="imgGroup">
         <picture>
-            <source media="(min-width:768px)" srcset="<?php echo $medium_url[0]; ?>">
-            <img src="<?php echo $thumbnail_url[0]; ?>" alt="<?php the_title(); ?>">
+            <source media="(min-width:768px)" srcset="<?php echo $large_url[0]; ?>">
+            <img src="<?php echo $medium_url[0]; ?>" alt="<?php the_title(); ?>">
         </picture>
 
         <a class="singlePost__link" href="<?php the_permalink(); ?>"></a>
