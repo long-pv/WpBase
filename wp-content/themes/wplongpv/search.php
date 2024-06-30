@@ -7,14 +7,5 @@
  * @package cltheme
  */
 
-get_header();
-
-wp_breadcrumbs();
-
-// list post
-while (have_posts()):
-    the_post();
-    echo '<br> Post : ' . get_the_title();
-endwhile;
-
-get_footer();
+wp_redirect(home_url());
+exit;

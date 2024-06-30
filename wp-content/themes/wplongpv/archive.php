@@ -28,7 +28,7 @@ $current_category = get_queried_object();
 			while (have_posts()):
 				the_post();
 				?>
-				<div class="col-md-6 col-lg-3 mb-3">
+				<div class="col-md-6 col-lg-4 mb-3">
 					<?php get_template_part('template-parts/single/post'); ?>
 				</div>
 				<?php

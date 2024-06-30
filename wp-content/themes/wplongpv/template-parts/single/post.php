@@ -12,6 +12,8 @@ $categories = get_the_category($post_id);
             <img src="<?php echo $thumbnail_url[0]; ?>" alt="<?php the_title(); ?>">
         </picture>
 
+        <a class="singlePost__link" href="<?php the_permalink(); ?>"></a>
+
         <?php
         if (!empty($categories)):
             $first_category = $categories[0];

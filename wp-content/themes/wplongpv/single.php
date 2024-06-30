@@ -8,8 +8,13 @@
  */
 
 // count view
-set_post_views($post->ID);
-$post_views = get_field('post_views_count', $post->ID);
+$post_id = get_the_ID();
+set_post_views($post_id);
+$post_views = get_field('post_views_count', $post_id);
+$arrPost = [];
+array_push($arrPost, $post_id);
+
+// header
 get_header();
 ?>
 
@@ -51,6 +56,58 @@ get_header();
         </div>
     </div>
 </div>
+
+<?php
+
+$args_latest_posts = array(
+    'post_type' => 'post',
+    'posts_per_page' => '3',
+    'post__not_in' => $arrPost,
+    'meta_query' => array(
+        array(
+            'key' => '_thumbnail_id',
+            'compare' => 'EXISTS',
+        ),
+    ),
+);
+$latest_posts = new WP_Query($args_latest_posts);
+if ($latest_posts->have_posts()):
+    ?>
+    <section class="secSpace homePage__latest bg-light">
+        <div class="container">
+            <div class="secHeading">
+                <h2 class="secHeading__title">
+                    Bài viết liên quan
+                </h2>
+
+                <?php
+                $categories = get_the_category();
+                if (!empty($categories) && $categories[0]):
+                    $category_link = get_category_link($categories[0]);
+                    ?>
+                    <a class="secHeading__link" href="<?php echo $category_link; ?>">Xem thêm</a>
+                    <?php
+                endif;
+                ?>
+            </div>
+            <div class="row">
+                <?php
+                while ($latest_posts->have_posts()):
+                    $latest_posts->the_post();
+                    ?>
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <?php get_template_part('template-parts/single/post'); ?>
+                    </div>
+                    <?php
+                endwhile;
+                ?>
+            </div>
+        </div>
+    </section>
+    <?php
+endif;
+wp_reset_postdata();
+?>
 
 <?php
 get_footer();

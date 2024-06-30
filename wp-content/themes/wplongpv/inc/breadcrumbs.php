@@ -18,7 +18,7 @@ function wp_breadcrumbs()
 	if (!is_home() && !is_front_page() || is_paged()) {
 
 		global $post;
-		
+
 		echo '<nav>';
 		echo '<div id="breadcrumbs" class="breadcrumbs" typeof="BreadcrumbList" vocab="https://schema.org/">';
 
@@ -34,24 +34,9 @@ function wp_breadcrumbs()
 			case is_single() && !is_attachment():
 				$post_type = $post->post_type;
 
-				$arr_post_parent = [
-					[
-						'post_type' => 'post',
-						'label' => __('News', 'cltheme'),
-					],
-					[
-						'post_type' => 'event',
-						'label' => __('Events', 'cltheme'),
-					],
-				];
-
-				foreach ($arr_post_parent as $item) {
-					if ($item['post_type'] && $item['label'] && $item['post_type'] == $post_type) {
-						$id_page = get_field($item['post_type'] . '_' . LANG, 'option') ?? null;
-						if ($id_page) {
-							echo '<a href="' . get_permalink($id_page) . '">' . $item['label'] . '</a>' . $delimiter . ' ';
-						}
-					}
+				$id_page = get_field('br_' . $post_type, 'option') ?? null;
+				if ($id_page) {
+					echo '<a href="' . get_permalink($id_page) . '">' . get_the_title($id_page) . '</a>' . $delimiter . ' ';
 				}
 
 				echo $before . $post->post_title . $after;
