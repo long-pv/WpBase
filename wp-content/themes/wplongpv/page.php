@@ -14,14 +14,18 @@
 
 // header template
 get_header();
+?>
 
-wp_breadcrumbs();
+<div class="container">
+    <div class="secSpace">
+        <?php wp_breadcrumbs(); ?>
+        <div class="editor">
+            <h1 class="h2 mb-4"><?php the_title(); ?></h1>
+            <?php the_content(); ?>
+        </div>
+    </div>
+</div>
 
-// list post
-while (have_posts()):
-    the_post();
-    echo '<br> Post : ' . get_the_title();
-endwhile;
-
+<?php
 // footer template
 get_footer();
