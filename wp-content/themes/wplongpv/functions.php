@@ -53,8 +53,8 @@ function cltheme_scripts()
 	wp_enqueue_script('cltheme-script-vendor', get_template_directory_uri() . '/assets/js/vendor.js', array(), _S_VERSION, true);
 
 	// add select2
-	wp_enqueue_style('cltheme-style-select2', get_template_directory_uri() . '/assets/inc/select2/select2.css', array(), _S_VERSION);
-	wp_enqueue_script('cltheme-script-select2', get_template_directory_uri() . '/assets/inc/select2/select2.js', array(), _S_VERSION, true);
+	// wp_enqueue_style('cltheme-style-select2', get_template_directory_uri() . '/assets/inc/select2/select2.css', array(), _S_VERSION);
+	// wp_enqueue_script('cltheme-script-select2', get_template_directory_uri() . '/assets/inc/select2/select2.js', array(), _S_VERSION, true);
 
 	//add custom main css/js
 	wp_enqueue_style('cltheme-style-main', get_template_directory_uri() . '/assets/css/main.css', array(), _S_VERSION);

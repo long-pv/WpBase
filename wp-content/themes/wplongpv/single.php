@@ -24,7 +24,31 @@ get_header();
         <div class="row justify-content-center">
             <div class="col-lg-9">
                 <div class="editor">
-                    <h1 class="h2 mb-4"><?php the_title(); ?></h1>
+                    <?php
+                    if (has_post_thumbnail()):
+                        $caption = get_the_post_thumbnail_caption(get_the_ID());
+                        ?>
+                        <div class="imgWrap wp-caption mb-4">
+                            <img class="m-auto" src="<?php echo get_the_post_thumbnail_url(); ?>"
+                                alt="<?php the_title(); ?>">
+                            <?php if ($caption): ?>
+                                <p class="wp-caption-text">
+                                    <?php echo $caption; ?>
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                        <?php
+                    endif;
+                    ?>
+
+                    <h1 class="h2 text-center mb-2">
+                        <?php the_title(); ?>
+                    </h1>
+
+                    <div class="text-center mb-3">
+                        <?php echo get_the_date('d/m/Y'); ?>
+                    </div>
+
                     <?php the_content(); ?>
                 </div>
 
