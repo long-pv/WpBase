@@ -299,6 +299,14 @@ function custom_login_logo()
 }
 add_action('login_head', 'custom_login_logo');
 
+// change login logo url
+function custom_login_logo_url()
+{
+    return home_url();
+}
+add_filter('login_headerurl', 'custom_login_logo_url');
+
+
 // prevent access to the author page to get information
 add_action('template_redirect', 'redirect_author_pages');
 function redirect_author_pages()
