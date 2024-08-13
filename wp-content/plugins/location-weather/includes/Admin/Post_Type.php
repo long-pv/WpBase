@@ -70,7 +70,5 @@ class Post_Type {
 				),
 			)
 		);
-
-		flush_rewrite_rules();
 	}
 }

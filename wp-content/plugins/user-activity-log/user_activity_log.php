@@ -5,9 +5,9 @@
  * Description: Log the activity of users and roles to monitor your site with actions
  * Author: Solwin Infotech
  * Author URI: https://www.solwininfotech.com/
- * Version: 2.0
+ * Version: 2.2
  * Requires at least: 5.4
- * Tested up to: 6.5.3
+ * Tested up to: 6.6.1
  * Copyright: Solwin Infotech
  * License: GPLv2 or later
  *
@@ -1415,7 +1415,8 @@ if ( ! function_exists( 'ual_export_user_log' ) ) {
 				$where     .= $wpdb->prepare( ' AND modified_date > %s AND modified_date < %s', $start_time, $end_time );
 			}
 		}
-		$result_log_query = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}ualp_user_activity %1s ORDER BY modified_date desc", $where ) );
+		//Ignore for PHPCS.
+		$result_log_query = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}ualp_user_activity $where ORDER BY modified_date desc" );
 		$data_content     = array();
 		$c                = 0;
 		$date_format      = get_option( 'date_format' );
@@ -1457,7 +1458,7 @@ if ( ! function_exists( 'ual_export_user_log' ) ) {
 				unset( $result_log['post_id'] );
 				unset( $result_log['user_id'] );
 				unset( $result_log['post_title'] );
-				unset( $result_log['action'] );
+				// unset( $result_log['action'] );
 				unset( $result_log['t_session'] );
 				if ( 'yes' != $logged_head ) {
 					foreach ( $result_log as $result_log_key => $result_log_val ) {
@@ -1498,7 +1499,7 @@ if ( ! function_exists( 'ual_export_user_log' ) ) {
 				if ( 'object_type' == $header[ $h ] ) {
 					$header[ $h ] = esc_html__( 'Activity Type', 'user-activity-log' );
 				}
-				if ( 'hook' == $header[ $h ] ) {
+				if ( 'action' == $header[ $h ] ) {
 					$header[ $h ] = esc_html__( 'Activity Hook', 'user-activity-log' );
 				}
 				if ( 'description' == $header[ $h ] ) {

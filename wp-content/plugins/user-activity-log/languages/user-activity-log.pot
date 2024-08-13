@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: User Activity Log\n"
-"POT-Creation-Date: 2024-05-23 15:22+0530\n"
+"POT-Creation-Date: 2024-08-09 18:47+0530\n"
 "PO-Revision-Date: 2017-04-10 13:06+0530\n"
 "Last-Translator: \n"
 "Language-Team: solwininfotech <info@solwininfotech.com>\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Poedit 3.4.4\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop;_e;__;_n;_n:1,2;_x:1,2c;_ex;_nx;"
 "esc_attr_e;_n_noop:1,2;esc_attr__;esc_attr_x;esc_html__;esc_html_e;"
 "esc_html_x\n"
@@ -50,153 +50,153 @@ msgstr ""
 msgid "Tweet about User Activity Log"
 msgstr ""
 
-#: user-functions.php:1288 user-settings-menu.php:22 user_activity_log.php:276
+#: user-functions.php:1289 user-settings-menu.php:22 user_activity_log.php:276
 msgid "Settings"
 msgstr ""
 
-#: user-functions.php:1323
+#: user-functions.php:1324
 msgid "User Activity Log Plugin"
 msgstr ""
 
-#: user-functions.php:1325
+#: user-functions.php:1326
 msgid "Live Documentation"
 msgstr ""
 
-#: user-functions.php:1329
+#: user-functions.php:1330
 msgid "Want more user activity log features?"
 msgstr ""
 
-#: user-functions.php:1331
+#: user-functions.php:1332
 msgid "Upgrade to PRO"
 msgstr ""
 
-#: user-functions.php:1335
+#: user-functions.php:1336
 msgid "Live Preview"
 msgstr ""
 
-#: user-functions.php:1336
+#: user-functions.php:1337
 msgid "Dismiss This Notice"
 msgstr ""
 
-#: user-functions.php:1421 user-settings-menu.php:645
+#: user-functions.php:1422 user-settings-menu.php:646
 msgid "IP address"
 msgstr ""
 
-#: user-functions.php:1422
+#: user-functions.php:1423
 msgid "Network"
 msgstr ""
 
-#: user-functions.php:1423
+#: user-functions.php:1424
 msgid "City"
 msgstr ""
 
-#: user-functions.php:1424
+#: user-functions.php:1425
 msgid "Region"
 msgstr ""
 
-#: user-functions.php:1425
+#: user-functions.php:1426
 msgid "Country"
 msgstr ""
 
-#: user-functions.php:1426
+#: user-functions.php:1427
 msgid "Select Logs to delete"
 msgstr ""
 
-#: user-functions.php:1589
+#: user-functions.php:1590
 msgid "Latest User Activity Logs"
 msgstr ""
 
-#: user-functions.php:1591
+#: user-functions.php:1592
 msgid " User Activity Logs Stats"
 msgstr ""
 
-#: user-functions.php:1613
+#: user-functions.php:1614
 msgctxt "stats: date in rows per day chart"
 msgid "M j"
 msgstr ""
 
-#: user-functions.php:1694 user_activity_log.php:856 user_activity_log.php:870
-#: user_activity_log.php:1496
+#: user-functions.php:1695 user_activity_log.php:856 user_activity_log.php:870
+#: user_activity_log.php:1497
 msgid "Date"
 msgstr ""
 
-#: user-functions.php:1695 user_activity_log.php:857 user_activity_log.php:871
+#: user-functions.php:1696 user_activity_log.php:857 user_activity_log.php:871
 msgid "Author"
 msgstr ""
 
-#: user-functions.php:1696
+#: user-functions.php:1697
 msgid "Activity"
 msgstr ""
 
-#: user-functions.php:1746
+#: user-functions.php:1747
 msgid "No Log found."
 msgstr ""
 
-#: user-functions.php:1989
+#: user-functions.php:1990
 msgid ""
 "If you have a moment, please let us know why you are deactivating. We would "
 "like to help you in fixing the issue."
 msgstr ""
 
-#: user-functions.php:1995
+#: user-functions.php:1996
 msgid "I am going to upgrade to PRO version"
 msgstr ""
 
-#: user-functions.php:2000
+#: user-functions.php:2001
 msgid "The plugin suddenly stopped working"
 msgstr ""
 
-#: user-functions.php:2005
+#: user-functions.php:2006
 msgid "The plugin was not working"
 msgstr ""
 
-#: user-functions.php:2010
+#: user-functions.php:2011
 msgid "Found other better plugin than this plugin"
 msgstr ""
 
-#: user-functions.php:2015
+#: user-functions.php:2016
 msgid "The plugin broke my site completely"
 msgstr ""
 
-#: user-functions.php:2020
+#: user-functions.php:2021
 msgid "No any reason"
 msgstr ""
 
-#: user-functions.php:2025
+#: user-functions.php:2026
 msgid "Other"
 msgstr ""
 
-#: user-functions.php:2031 user_activity_log.php:375
+#: user-functions.php:2032 user_activity_log.php:375
 msgid ""
 "By clicking this button, you agree with the storage and handling of your data "
 "as mentioned above by this website. (GDPR Compliance)"
 msgstr ""
 
-#: user-functions.php:2035
+#: user-functions.php:2036
 msgid "Submit"
 msgstr ""
 
-#: user-functions.php:2037 user-functions.php:2045
+#: user-functions.php:2038 user-functions.php:2046
 msgid "Deactivate"
 msgstr ""
 
-#: user-functions.php:2040
+#: user-functions.php:2041
 msgid "Cancel"
 msgstr ""
 
-#: user-functions.php:2041
+#: user-functions.php:2042
 msgid "Deactivate User Activity Log"
 msgstr ""
 
-#: user-functions.php:2043 user_activity_log.php:380
+#: user-functions.php:2044 user_activity_log.php:380
 msgid "Skip"
 msgstr ""
 
-#: user-functions.php:2050
+#: user-functions.php:2051
 msgid "Would you like to give us a chance to help you?"
 msgstr ""
 
-#: user-functions.php:2052
+#: user-functions.php:2053
 msgid "Create a support ticket"
 msgstr ""
 
@@ -233,7 +233,7 @@ msgid "Custom Event Settings"
 msgstr ""
 
 #: user-settings-menu.php:134 user-settings-menu.php:526
-#: user-settings-menu.php:743
+#: user-settings-menu.php:744
 msgid "Settings saved successfully."
 msgstr ""
 
@@ -333,7 +333,7 @@ msgid "No record found."
 msgstr ""
 
 #: user-settings-menu.php:469 user-settings-menu.php:589
-#: user-settings-menu.php:846
+#: user-settings-menu.php:847
 msgid "Save Changes"
 msgstr ""
 
@@ -361,7 +361,7 @@ msgstr ""
 msgid "Please enter valid email address"
 msgstr ""
 
-#: user-settings-menu.php:547 user-settings-menu.php:643
+#: user-settings-menu.php:547 user-settings-menu.php:644
 msgid "Email"
 msgstr ""
 
@@ -405,214 +405,214 @@ msgstr ""
 msgid "Customize the message as per your requirement"
 msgstr ""
 
-#: user-settings-menu.php:640
+#: user-settings-menu.php:641
 msgid "Username"
 msgstr ""
 
-#: user-settings-menu.php:641
+#: user-settings-menu.php:642
 msgid "Firstname"
 msgstr ""
 
-#: user-settings-menu.php:642
+#: user-settings-menu.php:643
 msgid "Lastname"
 msgstr ""
 
-#: user-settings-menu.php:644
+#: user-settings-menu.php:645
 msgid "Date Time"
 msgstr ""
 
-#: user-settings-menu.php:665
+#: user-settings-menu.php:666
 msgid "User Login Notification"
 msgstr ""
 
-#: user-settings-menu.php:690
+#: user-settings-menu.php:691
 msgid "All activities from the database has been deleted successfully."
 msgstr ""
 
-#: user-settings-menu.php:762
+#: user-settings-menu.php:763
 msgid "Display Option"
 msgstr ""
 
-#: user-settings-menu.php:763
+#: user-settings-menu.php:764
 msgid "There are some basic options for display User Action Log"
 msgstr ""
 
-#: user-settings-menu.php:766
+#: user-settings-menu.php:767
 msgid "Enable IP Address For Log"
 msgstr ""
 
-#: user-settings-menu.php:768
+#: user-settings-menu.php:769
 msgid "Allow IP Address of users to log."
 msgstr ""
 
-#: user-settings-menu.php:773
+#: user-settings-menu.php:774
 msgid "How does User Activity Log get IPs"
 msgstr ""
 
-#: user-settings-menu.php:775
+#: user-settings-menu.php:776
 msgid ""
 "Let Plugin use the most secure method to get visitor IP addresses. Prevents "
 "spoofing and works with most sites. (Recommended)"
 msgstr ""
 
-#: user-settings-menu.php:776
+#: user-settings-menu.php:777
 msgid ""
 "Use the X-Forwarded-For HTTP header. Only use if you have a front-end proxy "
 "or spoofing may result."
 msgstr ""
 
-#: user-settings-menu.php:777
+#: user-settings-menu.php:778
 msgid ""
 "Use the X-Real-IP HTTP header. Only use if you have a front-end proxy or "
 "spoofing may result."
 msgstr ""
 
-#: user-settings-menu.php:778
+#: user-settings-menu.php:779
 msgid "Detected IP(s):"
 msgstr ""
 
-#: user-settings-menu.php:779
+#: user-settings-menu.php:780
 msgid "Your IP with this setting:"
 msgstr ""
 
-#: user-settings-menu.php:784
+#: user-settings-menu.php:785
 msgid "Enable Stats Report on Dashboard Widget"
 msgstr ""
 
-#: user-settings-menu.php:786
+#: user-settings-menu.php:787
 msgid "Display Stats Report on Dashboard Widget."
 msgstr ""
 
-#: user-settings-menu.php:790
+#: user-settings-menu.php:791
 msgid "Keep logs for"
 msgstr ""
 
-#: user-settings-menu.php:792
+#: user-settings-menu.php:793
 msgid "Days"
 msgstr ""
 
-#: user-settings-menu.php:793
+#: user-settings-menu.php:794
 msgid ""
 "Maximum number of days to keep activity log. Leave blank to keep activity log "
 "forever"
 msgstr ""
 
-#: user-settings-menu.php:793
+#: user-settings-menu.php:794
 msgid "not recommended"
 msgstr ""
 
-#: user-settings-menu.php:797
+#: user-settings-menu.php:798
 msgid "Keep Failed Login Logs"
 msgstr ""
 
-#: user-settings-menu.php:805
+#: user-settings-menu.php:806
 msgid "Keep"
 msgstr ""
 
-#: user-settings-menu.php:811
+#: user-settings-menu.php:812
 msgid "Don't Keep"
 msgstr ""
 
-#: user-settings-menu.php:811
+#: user-settings-menu.php:812
 msgid "Not recommended"
 msgstr ""
 
-#: user-settings-menu.php:816
+#: user-settings-menu.php:817
 msgid "Number of failed login for existing user"
 msgstr ""
 
-#: user-settings-menu.php:819 user-settings-menu.php:826
+#: user-settings-menu.php:820 user-settings-menu.php:827
 msgid ""
 "Number of login attempts to log. Enter 0 to log all failed login attempts."
 msgstr ""
 
-#: user-settings-menu.php:823
+#: user-settings-menu.php:824
 msgid "Number of failed login for non existing user"
 msgstr ""
 
-#: user-settings-menu.php:830
+#: user-settings-menu.php:831
 msgid "Delete Log Activities"
 msgstr ""
 
-#: user-settings-menu.php:833
+#: user-settings-menu.php:834
 msgid "Are you sure want to Reset Database?"
 msgstr ""
 
-#: user-settings-menu.php:833
+#: user-settings-menu.php:834
 msgid "Reset Database"
 msgstr ""
 
-#: user-settings-menu.php:834
+#: user-settings-menu.php:835
 msgid "Warning"
 msgstr ""
 
-#: user-settings-menu.php:834
+#: user-settings-menu.php:835
 msgid "Clicking this will delete all activities from the database."
 msgstr ""
 
-#: user-settings-menu.php:838
+#: user-settings-menu.php:839
 msgid "Delete data on deletion of plugin"
 msgstr ""
 
-#: user-settings-menu.php:840
+#: user-settings-menu.php:841
 msgid "Delete data on deletion of plugin."
 msgstr ""
 
-#: user-settings-menu.php:864
+#: user-settings-menu.php:865
 msgid "Database size"
 msgstr ""
 
-#: user-settings-menu.php:875
+#: user-settings-menu.php:876
 msgid "Table name"
 msgstr ""
 
-#: user-settings-menu.php:875
+#: user-settings-menu.php:876
 msgid "Size"
 msgstr ""
 
-#: user-settings-menu.php:875
+#: user-settings-menu.php:876
 msgid "Rows"
 msgstr ""
 
-#: user-settings-menu.php:879
+#: user-settings-menu.php:880
 #, php-format
 msgid "%s MB"
 msgstr ""
 
-#: user-settings-menu.php:881
+#: user-settings-menu.php:882
 #, php-format
 msgid "%s rows"
 msgstr ""
 
-#: user-settings-menu.php:887
+#: user-settings-menu.php:888
 msgid "Active Plugins"
 msgstr ""
 
-#: user-settings-menu.php:891
+#: user-settings-menu.php:892
 msgid "Plugin name"
 msgstr ""
 
-#: user-settings-menu.php:891
+#: user-settings-menu.php:892
 msgid "Plugin file path"
 msgstr ""
 
-#: user-settings-menu.php:891
+#: user-settings-menu.php:892
 msgid "Author / Version"
 msgstr ""
 
-#: user-settings-menu.php:909
+#: user-settings-menu.php:910
 msgid "Visit plugin homepage"
 msgstr ""
 
-#: user-settings-menu.php:938
+#: user-settings-menu.php:939
 msgid "is available"
 msgstr ""
 
-#: user-settings-menu.php:942
+#: user-settings-menu.php:943
 msgid "Network enabled"
 msgstr ""
 
-#: user-settings-menu.php:949
+#: user-settings-menu.php:950
 msgid "by"
 msgstr ""
 
@@ -837,7 +837,7 @@ msgid "User, Role, Action"
 msgstr ""
 
 #: user_activity_log.php:859 user_activity_log.php:873
-#: user_activity_log.php:1492
+#: user_activity_log.php:1493
 msgid "IP Address"
 msgstr ""
 
@@ -850,7 +850,7 @@ msgid "Action"
 msgstr ""
 
 #: user_activity_log.php:863 user_activity_log.php:877
-#: user_activity_log.php:1505
+#: user_activity_log.php:1506
 msgid "Description"
 msgstr ""
 
@@ -974,26 +974,26 @@ msgstr ""
 msgid "Upgrade"
 msgstr ""
 
-#: user_activity_log.php:1479
+#: user_activity_log.php:1480
 msgid "Sr No."
 msgstr ""
 
-#: user_activity_log.php:1482
+#: user_activity_log.php:1483
 msgid "Author Name"
 msgstr ""
 
-#: user_activity_log.php:1485
+#: user_activity_log.php:1486
 msgid "Author Role"
 msgstr ""
 
-#: user_activity_log.php:1488
+#: user_activity_log.php:1489
 msgid "Author E-mail"
 msgstr ""
 
-#: user_activity_log.php:1499
+#: user_activity_log.php:1500
 msgid "Activity Type"
 msgstr ""
 
-#: user_activity_log.php:1502
+#: user_activity_log.php:1503
 msgid "Activity Hook"
 msgstr ""

@@ -609,6 +609,7 @@ if ( ! function_exists( 'ual_send_email' ) ) {
 			$current_user1 = get_user_by( 'login', $login );
 			$current_user  = ! empty( $current_user1->user_login ) ? $current_user1->user_login : '-';
 			$enable_unm    = get_option( 'enable_user_list' );
+			$enable_unm    = isset( $enable_unm ) && is_array( $enable_unm ) ? $enable_unm : [];
 			$c_num         = count( $enable_unm );
 			for ( $i = 0; $i < $c_num; $i++ ) {
 				if ( $enable_unm[ $i ] == $current_user ) {

@@ -11,7 +11,7 @@ $city_name             = ! empty( $custom_name ) ? $custom_name : $weather_data[
 $separator             = ', ';
 $show_location_address = isset( $splw_meta['lw-location-address'] ) ? $splw_meta['lw-location-address'] : true;
 ?>
-<?php if ( $show_location_address || $show_time || $show_date ) : ?>
+<?php if ( is_array( $weather_data ) && ( $show_location_address || $show_time || $show_date ) ) : ?>
 <div class="splw-lite-header">
 	<div class="splw-lite-header-title-wrapper">
 		<?php if ( $show_location_address ) : ?>

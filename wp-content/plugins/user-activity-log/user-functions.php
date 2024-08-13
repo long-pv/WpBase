@@ -360,7 +360,8 @@ if ( ! function_exists( 'ual_shook_wp_insert_comment' ) ) :
 		$com        = get_comment( $comment_id );
 		$post_id    = $com->comment_post_ID;
 		$post_link  = get_the_permalink( $post_id );
-		$post_title = "Comment inserted in <a target='blank' href='$post_link'>" . get_the_title( $post_id ) . '</a>';
+		$post_title = 'Comment inserted in ' . get_the_title( $post_id );
+
 		ual_get_activity_function( $action, $obj_type, $post_id, $post_title );
 	}
 
@@ -379,7 +380,7 @@ if ( ! function_exists( 'ual_shook_edit_comment' ) ) :
 		$com        = get_comment( $comment_id );
 		$post_id    = $com->comment_post_ID;
 		$post_link  = get_the_permalink( $post_id );
-		$post_title = "Comment updated in <a target='blank' href='$post_link'>" . get_the_title( $post_id ) . '</a>';
+		$post_title = 'Comment updated in ' . get_the_title( $post_id );
 		ual_get_activity_function( $action, $obj_type, $post_id, $post_title );
 	}
 

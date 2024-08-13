@@ -457,9 +457,9 @@ class Splw_Help {
 									<span class='splw-pro splw-check-icon'></span>
 								</li>
 								<li class='splw-body'>
-									<span class='splw-title'>Additional Weather Layouts & Templates</span>
+									<span class='splw-title'>Weather Layouts & Templates</span>
 									<span class='splw-free'><b>2</b></span>
-									<span class='splw-pro'><b>17+</b></span>
+									<span class='splw-pro'><b>18+</b></span>
 								</li>
 								<li class='splw-body'>
 									<span class='splw-title'>Display Daily Forecast Up to 16 Days <i class='splw-hot'>hot</i></span>
@@ -468,6 +468,16 @@ class Splw_Help {
 								</li>
 								<li class='splw-body'>
 									<span class='splw-title'>Display Hourly (1h & 3h) Forecast Up to 5 Days <i class='splw-hot'>hot</i></span>
+									<span class='splw-free splw-close-icon'></span>
+									<span class='splw-pro splw-check-icon'></span>
+								</li>
+								<li class='splw-body'>
+									<span class='splw-title'>Display Weather Map <i class='splw-new'>new</i><i class='splw-hot'>hot</i></span>
+									<span class='splw-free splw-close-icon'></span>
+									<span class='splw-pro splw-check-icon'></span>
+								</li>
+								<li class='splw-body'>
+									<span class='splw-title'>Dedicated Customization Options for Weather Map</span>
 									<span class='splw-free splw-close-icon'></span>
 									<span class='splw-pro splw-check-icon'></span>
 								</li>
