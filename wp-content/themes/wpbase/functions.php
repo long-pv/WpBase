@@ -32,6 +32,22 @@ function basetheme_setup()
 			'menu-1' => esc_html__('Primary', 'basetheme'),
 		)
 	);
+
+	// set size image default
+	if (get_option('thumbnail_size_w') != 400) {
+        update_option('thumbnail_size_w', 400);
+        update_option('thumbnail_size_h', 400);
+    }
+
+    if (get_option('medium_size_w') != 800) {
+        update_option('medium_size_w', 800);
+        update_option('medium_size_h', 800);
+    }
+
+    if (get_option('large_size_w') != 1200) {
+        update_option('large_size_w', 1200);
+        update_option('large_size_h', 1200);
+    }
 }
 add_action('after_setup_theme', 'basetheme_setup');
 
