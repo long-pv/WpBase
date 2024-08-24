@@ -444,6 +444,3 @@ function set_default_image_settings_on_login($user_login, $user)
 }
 
 add_action('wp_login', 'set_default_image_settings_on_login', 10, 2);
-
-// Turn off automatic plugin updates
-add_filter('auto_update_plugin', '__return_false');

@@ -81,25 +81,4 @@ add_action('wp_enqueue_scripts', 'basetheme_scripts');
 /**
  * Functions which enhance the theme by hooking into WordPress.
  */
-require get_template_directory() . '/inc/template-functions.php';
-
-// Create CPT
-require get_template_directory() . '/inc/cpt_custom.php';
-
-// Security
-require get_template_directory() . '/inc/security.php';
-
-// Breadcrumbs
-require get_template_directory() . '/inc/breadcrumbs.php';
-
-// Script admin
-require get_template_directory() . '/inc/script_admin.php';
-
-// Style admin
-require get_template_directory() . '/inc/style_admin.php';
-
-// auto active plugin
-require get_template_directory() . '/inc/auto_active_plugin.php';
-
-// view post
-require get_template_directory() . '/inc/view_post.php';
+require get_template_directory() . '/inc/index.php';
