@@ -35,19 +35,19 @@ function basetheme_setup()
 
 	// set size image default
 	if (get_option('thumbnail_size_w') != 400) {
-        update_option('thumbnail_size_w', 400);
-        update_option('thumbnail_size_h', 400);
-    }
+		update_option('thumbnail_size_w', 400);
+		update_option('thumbnail_size_h', 400);
+	}
 
-    if (get_option('medium_size_w') != 800) {
-        update_option('medium_size_w', 800);
-        update_option('medium_size_h', 800);
-    }
+	if (get_option('medium_size_w') != 800) {
+		update_option('medium_size_w', 800);
+		update_option('medium_size_h', 800);
+	}
 
-    if (get_option('large_size_w') != 1200) {
-        update_option('large_size_w', 1200);
-        update_option('large_size_h', 1200);
-    }
+	if (get_option('large_size_w') != 1200) {
+		update_option('large_size_w', 1200);
+		update_option('large_size_h', 1200);
+	}
 }
 add_action('after_setup_theme', 'basetheme_setup');
 
@@ -63,6 +63,10 @@ add_action('after_setup_theme', 'basetheme_content_width', 0);
  */
 function basetheme_scripts()
 {
+	if (is_page_template('page-template_cv.php')) {
+		return false;
+	}
+	
 	wp_enqueue_style('basetheme-style', get_stylesheet_uri(), array(), _S_VERSION);
 
 	// add vendor js

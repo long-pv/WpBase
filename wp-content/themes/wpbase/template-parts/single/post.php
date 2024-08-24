@@ -26,9 +26,23 @@ $categories = get_the_category($post_id);
         ?>
     </div>
     <div class="singlePost__content">
+        <?php
+        $name_author = get_field('name_author', 'option');
+        $link_author = get_field('link_author', 'option');
+        if ($name_author && $link_author):
+            ?>
+            <div class="singlePost__date mb-2">
+                Tác giả:
+                <a href="<?php echo $link_author; ?>">
+                    <?php echo $name_author; ?>
+                </a>
+            </div>
+        <?php endif; ?>
+
         <div class="singlePost__date mb-2">
             <?php echo get_the_date('d/m/Y'); ?>
         </div>
+
         <h3 class="h4 singlePost__title mb-3" data-mh="title">
             <a class="line-2" href="<?php the_permalink(); ?>">
                 <?php the_title(); ?>
