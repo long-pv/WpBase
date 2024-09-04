@@ -1,21 +1,21 @@
 <?php
 function register_cpt_post_types()
 {
-    $cpt_list = [
-        'event' => [
-            'labels' => __('Event', 'basetheme'),
-            'cap' => false,
-            'hierarchical' => false
-        ],
-    ];
+    // $cpt_list = [
+    //     'event' => [
+    //         'labels' => __('Event', 'basetheme'),
+    //         'cap' => false,
+    //         'hierarchical' => false
+    //     ],
+    // ];
 
-    $cpt_tax = [
-        'event_category' => [
-            'labels' => __('Event category', 'basetheme'),
-            'cap' => false,
-            'post_type' => ['event']
-        ],
-    ];
+    // $cpt_tax = [
+    //     'event_category' => [
+    //         'labels' => __('Event category', 'basetheme'),
+    //         'cap' => false,
+    //         'post_type' => ['event']
+    //     ],
+    // ];
 
     // foreach ($cpt_list as $post_type => $data) {
     //     register_cpt($post_type, $data);

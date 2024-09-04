@@ -33,3 +33,13 @@ if (!defined('LARGE_SIZE')) {
 if (!defined('NO_IMAGE')) {
     define('NO_IMAGE', get_template_directory_uri() . '/assets/images/no_image.jpg');
 }
+
+/**
+ * contact form
+ */
+if (!defined('CTF7_LOGIN_ID')) {
+    define('CTF7_LOGIN_ID', 282);
+}
+if (!defined('CTF7_REGISTER_ID')) {
+    define('CTF7_REGISTER_ID', 286);
+}

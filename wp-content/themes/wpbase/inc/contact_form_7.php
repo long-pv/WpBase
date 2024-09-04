@@ -1,14 +1,4 @@
 <?php
-/**
- * define form
- */
-if (!defined('CTF7_LOGIN_ID')) {
-    define('CTF7_LOGIN_ID', 282);
-}
-if (!defined('CTF7_REGISTER_ID')) {
-    define('CTF7_REGISTER_ID', 286);
-}
-
 function add_custom_cf7_script()
 {
     if (!is_admin() && class_exists('WPCF7')) {
