@@ -34,3 +34,8 @@ function disable_plugins_update($value)
     }
     return $value;
 }
+
+/**
+ * auto update plugin
+ */
+add_filter('auto_update_plugin', '__return_false');

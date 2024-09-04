@@ -53,7 +53,7 @@ wp-content/languages/
 wp-content/plugins/*/*.txt
 wp-content/backups-dup-lite/
 wp-content/upgrade/
-wp-content/themes/*/languages/
+# wp-content/themes/*/languages/
 # wp-content/themes/*/assets/css/
 wp-content/themes/*/js
 wp-content/themes/*/style-rtl.css
