@@ -30,6 +30,11 @@ function basetheme_setup()
         update_option('large_size_w', LARGE_SIZE);
         update_option('large_size_h', LARGE_SIZE);
     }
+
+    // Hide Admin Bar for users with 'subscriber' role
+    if (current_user_can('subscriber') && !is_admin()) {
+        show_admin_bar(false);
+    }
 }
 add_action('after_setup_theme', 'basetheme_setup');
 

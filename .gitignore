@@ -60,6 +60,7 @@ wp-content/themes/*/style-rtl.css
 wp-content/ai1wm-backups/
 wp-content/cache/
 wp-content/autoptimize_404_handler.php
+wp-content/upgrade-temp-backup
 
 # wp-content / theme
 wp-content/themes/twentytwentyone
