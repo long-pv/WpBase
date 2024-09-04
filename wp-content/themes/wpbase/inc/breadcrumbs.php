@@ -48,7 +48,7 @@ function wp_breadcrumbs()
 					echo generate_page_parent($parent_id, $delimiter);
 				}
 
-				echo $before . custom_title(get_the_title(), false) . $after;
+				echo $before . get_the_title() . $after;
 				break;
 
 			case is_search():
@@ -73,7 +73,7 @@ function generate_page_parent($parent_id, $delimiter)
 
 	while ($parent_id) {
 		$page = get_post($parent_id);
-		$breadcrumbs[] = '<a href="' . get_permalink($page->ID) . '">' . custom_title(get_the_title($page->ID), false) . '</a>';
+		$breadcrumbs[] = '<a href="' . get_permalink($page->ID) . '">' . get_the_title($page->ID) . '</a>';
 		$parent_id = $page->post_parent;
 	}
 
