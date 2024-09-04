@@ -31,5 +31,5 @@ if (!defined('LARGE_SIZE')) {
  * no image
  */
 if (!defined('NO_IMAGE')) {
-    define('NO_IMAGE', get_template_directory_uri() . '/assets/images/no_image.png');
+    define('NO_IMAGE', get_template_directory_uri() . '/assets/images/no_image.jpg');
 }

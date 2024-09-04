@@ -54,9 +54,7 @@ if ($latest_posts->have_posts()):
                 ?>
             </div>
 
-            <div class="pagination">
-                <?php pagination($latest_posts); ?>
-            </div>
+            <?php pagination($latest_posts); ?>
         </div>
     </div>
     <?php

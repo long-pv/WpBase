@@ -12,6 +12,7 @@ function pagination($query = null)
         $max_pages = $wp_query->max_num_pages;
     }
 
+    echo '<div class="pagination">';
     echo paginate_links(
         array(
             'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
@@ -29,6 +30,7 @@ function pagination($query = null)
             'add_fragment' => '',
         )
     );
+    echo '</div>';
 
     wp_reset_postdata();
 }

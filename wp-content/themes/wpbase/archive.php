@@ -36,9 +36,7 @@ $current_category = get_queried_object();
 			?>
 		</div>
 
-		<div class="pagination">
-			<?php pagination(); ?>
-		</div>
+		<?php pagination(); ?>
 	</div>
 </div>
 <?php
