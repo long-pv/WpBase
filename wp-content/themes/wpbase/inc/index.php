@@ -10,4 +10,5 @@ require get_template_directory() . '/inc/style_admin.php';
 require get_template_directory() . '/inc/view_post.php';
 require get_template_directory() . '/inc/security.php';
 require get_template_directory() . '/inc/template-functions.php';
+require get_template_directory() . '/inc/pagination.php';
 // Other files
