@@ -14,3 +14,4 @@ require get_template_directory() . '/inc/pagination.php';
 require get_template_directory() . '/inc/write_log.php';
 require get_template_directory() . '/inc/get_image_url.php';
 // Other files
+require get_template_directory() . '/inc/contact_form_7.php';

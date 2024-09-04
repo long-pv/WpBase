@@ -1,4 +1,13 @@
 <?php
+function custom_name_block($input)
+{
+	$normalized = str_replace(['_', '-'], ' ', $input);
+	$ucwords = ucwords($normalized);
+	$formatted = str_replace(' ', '', $ucwords);
+
+	return 'section' . $formatted;
+}
+
 $flexible_content = get_field('flexible_content') ?? '';
 
 if ($flexible_content):
