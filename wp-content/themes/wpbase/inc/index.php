@@ -17,3 +17,4 @@ require get_template_directory() . '/inc/contact_form_7.php';
 require get_template_directory() . '/inc/export_csv.php';
 require get_template_directory() . '/inc/load_more_posts.php';
 require get_template_directory() . '/inc/video_popup.php';
+require get_template_directory() . '/inc/fancybox.php';
