@@ -1,0 +1,102 @@
+.categoryBlock {
+    margin-bottom: 0px;
+    position: relative;
+
+    &__list {
+        padding: 0px;
+        margin: 0px;
+    }
+
+    &__item {
+        list-style: none;
+        padding: 24px;
+        height: 100%;
+        position: relative;
+
+        @include media-breakpoint-up(lg) {
+            padding: 12px 16px;
+
+            &.active {
+                background-color: $secondary;
+            }
+        }
+
+        &:last-child {
+            a {
+                border-bottom: 0px;
+            }
+        }
+
+        &.init {
+            position: relative;
+            display: block !important;
+            padding: 0px;
+            border-bottom: 1px solid $primary;
+            border-top: 1px solid $primary;
+
+            .label {
+                font-size: 14px;
+                color: $primary;
+                margin-right: 12px;
+                white-space: nowrap;
+                padding-top: 2px;
+                text-transform: initial;
+            }
+
+            a {
+                color: $primary !important;
+                display: flex;
+                padding: 24px 68px 24px 32px;
+                position: relative;
+                border-bottom: 0px;
+                font-size: 16px;
+                font-weight: 500;
+                text-decoration: none !important;
+            }
+
+            &::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%) rotate(0);
+                right: 17px;
+                height: 24px;
+                width: 24px;
+                background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11.9998 16.7498C11.8078 16.7498 11.6157 16.6768 11.4697 16.5298L4.46975 9.52981C4.17675 9.23681 4.17675 8.76177 4.46975 8.46877C4.76275 8.17577 5.23779 8.17577 5.53079 8.46877L12.0008 14.9387L18.4707 8.46877C18.7637 8.17577 19.2388 8.17577 19.5318 8.46877C19.8248 8.76177 19.8248 9.23681 19.5318 9.52981L12.5318 16.5298C12.3838 16.6768 12.1918 16.7498 11.9998 16.7498Z' fill='%23686868'/%3E%3C/svg%3E%0A");
+                background-position: center center;
+                background-size: contain;
+                background-repeat: no-repeat;
+                z-index: 99;
+                cursor: pointer;
+            }
+        }
+
+        &.active {
+            &::after {
+                transform: translateY(-50%) rotate(-180deg);
+            }
+        }
+
+        &:not(.init) {
+            display: none;
+
+            @include media-breakpoint-up(lg) {
+                display: block;
+            }
+        }
+    }
+
+    &__link {
+        height: 100%;
+        padding: 0px;
+        transition: all 0.5s;
+        width: 100%;
+        color: $primary !important;
+        display: block;
+        font-size: 16px;
+
+        &.active {
+            font-weight: 600;
+        }
+    }
+}
