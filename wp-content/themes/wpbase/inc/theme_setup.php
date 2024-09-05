@@ -58,9 +58,6 @@ function basetheme_scripts()
     // scroll smooth hash id element
     wp_enqueue_script('basetheme-script-scroll_smooth', get_template_directory_uri() . '/assets/js/scroll_smooth.js', array(), _S_VERSION, true);
 
-    // select dropdown by ul li
-    wp_enqueue_script('basetheme-script-dropdown_ul', get_template_directory_uri() . '/assets/js/dropdown_ul.js', array(), _S_VERSION, true);
-
     // wow
     wp_enqueue_style('basetheme-style-wow', get_template_directory_uri() . '/assets/inc/wow/wow.css', array(), _S_VERSION);
     wp_enqueue_script('basetheme-script-wow', get_template_directory_uri() . '/assets/inc/wow/wow.js', array(), _S_VERSION, true);

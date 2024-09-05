@@ -1,30 +1,6 @@
-// <div id="categoryBlock" class="categoryBlock" data-label="Categories:">
-// <div class="selecDropdownCate">
-// <ul class="categoryBlock__list">
-// <li id="catItem-all" class="categoryBlock__item active">
-// <a class="categoryBlock__link active" href="#">
-// View all
-// </a>
-// </li>
-// <li id="catItem-22" class="categoryBlock__item ">
-// <a class="categoryBlock__link " href="#">
-// Blog
-// </a>
-// </li>
-// <li id="catItem-24" class="categoryBlock__item ">
-// <a class="categoryBlock__link " href="#">
-// News
-// </a>
-// </li>
-// </ul>
-// </div>
-// </div>
-
-// style: assets/scss/contents/dropdown_ul
-
 (function ($, window) {
 	var selectDropdownCat = $(".selectDropdownCat ul");
-	if ($(window).width() < 992 && selectDropdownCat.length > 0) {
+	if (selectDropdownCat.length > 0) {
 		let category_label = $(".categoryBlock").data("label");
 
 		selectDropdownCat.each(function () {

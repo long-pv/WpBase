@@ -18,3 +18,4 @@ require get_template_directory() . '/inc/export_csv.php';
 require get_template_directory() . '/inc/load_more_posts.php';
 require get_template_directory() . '/inc/video_popup.php';
 require get_template_directory() . '/inc/fancybox.php';
+require get_template_directory() . '/inc/select_dropdown_by_ul.php';
