@@ -3,6 +3,8 @@ function add_custom_cf7_script()
 {
     if (!is_admin() && class_exists('WPCF7')) {
         ?>
+
+        <!-- contact form 7 custom -->
         <style>
             .wpcf7-pointer-events {
                 pointer-events: none !important;
@@ -25,20 +27,22 @@ function add_custom_cf7_script()
                         var response = event.detail.apiResponse;
                         var contact_form_id = response.contact_form_id;
                         var status = response.status;
+                        var home_url = '<?php echo home_url(); ?>';
 
                         // logic form login
                         if (contact_form_id == <?php echo CTF7_LOGIN_ID; ?> && status == 'mail_sent') {
-                            window.location.href = '<?php echo home_url(); ?>';
+                            window.location.href = home_url;
                         }
                         // logic form register
                         if (contact_form_id == <?php echo CTF7_REGISTER_ID; ?> && status == 'mail_sent') {
-                            window.location.href = '<?php echo home_url(); ?>';
+                            window.location.href = home_url;
                         }
                     },
                     false
                 );
             });
         </script>
+        <!-- end -->
         <?php
     }
 }

@@ -15,3 +15,4 @@ require get_template_directory() . '/inc/get_image_url.php';
 // Other files
 require get_template_directory() . '/inc/contact_form_7.php';
 require get_template_directory() . '/inc/export_csv.php';
+require get_template_directory() . '/inc/load_more_posts.php';

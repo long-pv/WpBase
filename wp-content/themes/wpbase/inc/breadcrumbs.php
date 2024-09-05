@@ -15,7 +15,7 @@ function wp_breadcrumbs()
 	$home = __('Home', 'basetheme');
 	$before = '<span class="current">';
 	$after = '</span>';
-	if (!is_home() && !is_front_page() || is_paged()) {
+	if (!is_admin() && !is_home() && (!is_front_page() || is_paged())) {
 
 		global $post;
 
