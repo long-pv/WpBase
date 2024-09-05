@@ -16,7 +16,7 @@ $categories = get_the_category($post_id);
         if (!empty($categories)):
             $first_category = $categories[0];
             ?>
-            <a href="<?php echo get_category_link($first_category->term_id) ?>" class="singlePost__cat">
+            <a href="<?php echo get_category_link($first_category->term_id) ?>" class="singlePost__cat wow">
                 <?php echo $first_category->name; ?>
             </a>
             <?php
@@ -24,15 +24,15 @@ $categories = get_the_category($post_id);
         ?>
     </div>
     <div class="singlePost__content">
-        <div class="singlePost__date mb-2">
+        <div class="singlePost__date mb-2 wow">
             <?php echo get_the_date('d/m/Y'); ?>
         </div>
-        <h3 class="h4 singlePost__title mb-3" data-mh="title">
+        <h3 class="h4 singlePost__title mb-3 wow" data-mh="title">
             <a class="line-2" href="<?php the_permalink(); ?>">
                 <?php the_title(); ?>
             </a>
         </h3>
-        <p class="singlePost__desc line-3 mb-0">
+        <p class="singlePost__desc line-3 mb-0 wow">
             <?php echo get_the_excerpt(); ?>
         </p>
     </div>

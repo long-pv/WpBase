@@ -55,6 +55,12 @@ function basetheme_scripts()
     // add vendor js
     wp_enqueue_script('basetheme-script-vendor', get_template_directory_uri() . '/assets/js/vendor.js', array(), _S_VERSION, true);
 
+    // wow
+    wp_enqueue_style('basetheme-style-wow', get_template_directory_uri() . '/assets/inc/wow/wow.css', array(), _S_VERSION);
+    wp_enqueue_script('basetheme-script-wow', get_template_directory_uri() . '/assets/inc/wow/wow.js', array(), _S_VERSION, true);
+    wp_enqueue_script('basetheme-script-wow_custom', get_template_directory_uri() . '/assets/inc/wow/index.js', array(), _S_VERSION, true);
+    // end
+
     //add custom main css/js
     wp_enqueue_style('basetheme-style-main', get_template_directory_uri() . '/assets/css/main.css', array(), _S_VERSION);
     wp_enqueue_script('basetheme-script-main', get_template_directory_uri() . '/assets/js/main.js', array(), _S_VERSION, true);
