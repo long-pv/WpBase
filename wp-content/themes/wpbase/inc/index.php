@@ -20,3 +20,4 @@ require get_template_directory() . '/inc/video_popup.php';
 require get_template_directory() . '/inc/fancybox.php';
 require get_template_directory() . '/inc/select_dropdown_by_ul.php';
 require get_template_directory() . '/inc/polylang.php';
+require get_template_directory() . '/inc/accordion.php';
