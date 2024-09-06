@@ -85,6 +85,9 @@ function add_load_more_script()
                             button.text(text_btn);
                             button.prop('disabled', false);
                             button.removeClass('loading');
+
+                            // data mh active
+                            $('.singlePost__title').matchHeight();
                         },
                         error: function () {
                             alert('Error loading posts');
