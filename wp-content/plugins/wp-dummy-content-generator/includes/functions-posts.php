@@ -238,11 +238,23 @@ add_action("wp_ajax_wp_dummy_content_generatorDeletePosts", "wp_dummy_content_ge
 * Action hook to delete posts 
 */
 add_action('admin_post_wp_dummy_content_generator_deleteposts', 'wp_dummy_content_generator_deleteposts');
-function wp_dummy_content_generator_deleteposts(){
-    $request  = $_REQUEST;
-    if ( !current_user_can('manage_options') || ! wp_verify_nonce( $request['nonce'], 'wpdcg-ajax-nonce' ) ) {
-        wp_redirect("admin.php?page=wp_dummy_content_generator-posts&tab=view_posts&status=error");
+
+/**
+ * Handles the deletion of dummy posts.
+ */
+function wp_dummy_content_generator_deleteposts() {
+    $request = $_REQUEST;
+
+    // Check user capabilities and nonce
+    if (!current_user_can('manage_options') || !wp_verify_nonce($request['nonce'], 'wpdcg-ajax-nonce')) {
+        wp_redirect(admin_url('admin.php?page=wp_dummy_content_generator-posts&tab=view_posts&status=error'));
+        exit;
     }
+
+    // Delete fake posts
     wp_dummy_content_generatorDeleteFakePosts();
-    wp_redirect("admin.php?page=wp_dummy_content_generator-posts&tab=view_posts&status=success");
+
+    // Redirect to success page
+    wp_redirect(admin_url('admin.php?page=wp_dummy_content_generator-posts&tab=view_posts&status=success'));
+    exit;
 }
