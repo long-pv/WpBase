@@ -9,7 +9,7 @@ if (!defined('_S_VERSION')) {
 /**
  * get currernt lang.
  */
-if (!defined('_S_VERSION')) {
+if (!defined('LANG')) {
     $lang = function_exists('pll_current_language') ? pll_current_language('slug') : 'en';
     define('LANG', $lang);
 }

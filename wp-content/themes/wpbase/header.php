@@ -74,6 +74,8 @@
 						</svg>
 					</span>
 				</div>
+
+				<?php switch_lang() ?>
 			</div>
 		</div>
 
