@@ -14,18 +14,49 @@
 
 // header template
 get_header();
-?>
 
-<div class="container">
-    <div class="secSpace">
-        <?php wp_breadcrumbs(); ?>
-        <div class="editor">
-            <h1 class="h2 mb-4"><?php the_title(); ?></h1>
-            <?php the_content(); ?>
+while (have_posts()):
+    the_post();
+    ?>
+    <div id="wooPls" class="wooPls secSpace">
+        <div class="container">
+            <div class="wooPls__inner">
+                <?php wp_breadcrumbs(); ?>
+
+                <div class="secHeading">
+                    <h2 class="secHeading__title wow">
+                        <?php the_title(); ?>
+                    </h2>
+                </div>
+
+                <?php
+                // WooCommerce
+                if (class_exists('WooCommerce')) {
+                    if (is_cart()) {
+                        echo do_shortcode('[woocommerce_cart]');
+                    } else if (is_checkout()) {
+                        if (is_wc_endpoint_url('order-received')) {
+                            the_content();
+                        } else {
+                            echo do_shortcode('[woocommerce_checkout]');
+                        }
+                    } else if (is_account_page()) {
+                        echo !is_user_logged_in() ? '<div class="row justify-content-center"><div class="col-lg-5">' : '';
+                        echo do_shortcode('[woocommerce_my_account]');
+                        echo !is_user_logged_in() ? '</div></div>' : '';
+                    } else {
+                        // shop and category
+                        the_content();
+                    }
+                } else {
+                    the_content();
+                }
+                ?>
+            </div>
         </div>
     </div>
-</div>
 
-<?php
+    <?php
+endwhile;
 // footer template
 get_footer();

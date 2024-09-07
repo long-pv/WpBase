@@ -41,16 +41,16 @@ add_action('woocommerce_after_edit_account_form', 'custom_woocommerce_after_edit
 function custom_validate_address_and_phone_fields()
 {
     if (empty($_POST['account_first_name'])) {
-        wc_add_notice(__('<strong>Full name</strong> is a required field.', 'pls'), 'error');
+        wc_add_notice(__('<strong>Full name</strong> is a required field.', 'basetheme'), 'error');
     }
     if (empty($_POST['billing_address_1'])) {
-        wc_add_notice(__('<strong>Address</strong> is a required field.', 'pls'), 'error');
+        wc_add_notice(__('<strong>Address</strong> is a required field.', 'basetheme'), 'error');
     }
     if (empty($_POST['billing_phone'])) {
-        wc_add_notice(__('<strong>Phone</strong> is a required field.', 'pls'), 'error');
+        wc_add_notice(__('<strong>Phone</strong> is a required field.', 'basetheme'), 'error');
     }
     if (empty($_POST['account_email'])) {
-        wc_add_notice(__('<strong>Email</strong> is a required field.', 'pls'), 'error');
+        wc_add_notice(__('<strong>Email</strong> is a required field.', 'basetheme'), 'error');
     }
 }
 add_action('woocommerce_save_account_details_errors', 'custom_validate_address_and_phone_fields');

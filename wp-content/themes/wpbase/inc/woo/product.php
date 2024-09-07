@@ -1,14 +1,15 @@
 <?php
+// Loại bỏ Related products mặc định
 remove_action('woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20);
 
+// thêm tiêu đề của sản phẩm
 add_action('woocommerce_single_product_summary', 'custom_add_title_to_entry_summary', 5);
 function custom_add_title_to_entry_summary()
 {
     the_title('<h1 class="product-title">', '</h1>');
 }
 
-remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
-
+// nếu người dùng chưa đăng nhập sẽ thay đổi link add to cart thành link đăng nhập
 add_filter('woocommerce_loop_add_to_cart_link', 'modify_add_to_cart_url_if_not_logged_in', 10, 2);
 function modify_add_to_cart_url_if_not_logged_in($html, $product)
 {
@@ -23,20 +24,7 @@ function modify_add_to_cart_url_if_not_logged_in($html, $product)
     return $html;
 }
 
-add_action('woocommerce_after_add_to_cart_form', 'custom_hide_add_to_cart_form_for_guests');
-function custom_hide_add_to_cart_form_for_guests()
-{
-    if (!is_user_logged_in()) {
-        ?>
-        <style>
-            .single-product form.cart {
-                display: none !important;
-            }
-        </style>
-        <?php
-    }
-}
-
+// loại bỏ chức năng zoom ảnh ở trang chi tiết
 function disable_woocommerce_zoom_script()
 {
     remove_theme_support('wc-product-gallery-zoom');

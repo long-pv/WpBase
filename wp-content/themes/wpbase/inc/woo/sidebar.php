@@ -2,10 +2,10 @@
 function custom_woocommerce_account_menu_items($items)
 {
     $items = array(
-        'edit-account' => __('Account detail', 'pls'),
-        'edit-account?action=change-pass&p=' => __('Password change', 'pls'),
-        'orders' => __('Orders', 'pls'),
-        'customer-logout' => __('Logout', 'pls'),
+        'edit-account' => __('Account detail', 'basetheme'),
+        'edit-account?action=change-pass&p=' => __('Password change', 'basetheme'),
+        'orders' => __('Orders', 'basetheme'),
+        'customer-logout' => __('Logout', 'basetheme'),
     );
 
     return $items;

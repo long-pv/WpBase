@@ -10,9 +10,9 @@
 get_header();
 ?>
 
-<div id="wooPlsSingle" class="wooPlsSingle secSpace">
+<div id="wooSingleProduct" class="wooSingleProduct secSpace">
     <div class="container">
-        <div class="wooPlsSingle__inner">
+        <div class="wooSingleProduct__inner">
             <?php wp_breadcrumbs(); ?>
             <?php
             while (have_posts()):

@@ -12,20 +12,20 @@ function remove_checkout_fields($fields)
     );
 
     // billing_first_name
-    $fields['billing']['billing_first_name']['label'] = __('Full name', 'pls');
-    $fields['billing']['billing_first_name']['placeholder'] = __('Full name', 'pls');
+    $fields['billing']['billing_first_name']['label'] = __('Full name', 'basetheme');
+    $fields['billing']['billing_first_name']['placeholder'] = __('Full name', 'basetheme');
 
     // billing_address_1
-    $fields['billing']['billing_address_1']['label'] = __('Address', 'pls');
-    $fields['billing']['billing_address_1']['placeholder'] = __('Address', 'pls');
+    $fields['billing']['billing_address_1']['label'] = __('Address', 'basetheme');
+    $fields['billing']['billing_address_1']['placeholder'] = __('Address', 'basetheme');
 
     // billing_email
-    $fields['billing']['billing_email']['label'] = __('Email', 'pls');
-    $fields['billing']['billing_email']['placeholder'] = __('Email', 'pls');
+    $fields['billing']['billing_email']['label'] = __('Email', 'basetheme');
+    $fields['billing']['billing_email']['placeholder'] = __('Email', 'basetheme');
 
     // billing_phone
-    $fields['billing']['billing_phone']['label'] = __('Phone', 'pls');
-    $fields['billing']['billing_phone']['placeholder'] = __('Phone', 'pls');
+    $fields['billing']['billing_phone']['label'] = __('Phone', 'basetheme');
+    $fields['billing']['billing_phone']['placeholder'] = __('Phone', 'basetheme');
 
     foreach ($fields_to_remove as $field) {
         if (isset($fields['billing'][$field])) {
@@ -47,7 +47,7 @@ remove_action('woocommerce_before_checkout_form', 'woocommerce_checkout_coupon_f
 add_filter('woocommerce_get_privacy_policy_text', 'custom_checkout_privacy_policy_text');
 function custom_checkout_privacy_policy_text($text)
 {
-    $text = __('Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.', 'pls');
+    $text = __('Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.', 'basetheme');
     return $text;
 }
 
