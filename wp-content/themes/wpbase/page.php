@@ -18,9 +18,9 @@ get_header();
 while (have_posts()):
     the_post();
     ?>
-    <div id="wooPls" class="wooPls secSpace">
+    <div id="wooTheme" class="wooTheme secSpace">
         <div class="container">
-            <div class="wooPls__inner">
+            <div class="wooTheme__inner">
                 <?php wp_breadcrumbs(); ?>
 
                 <div class="secHeading">

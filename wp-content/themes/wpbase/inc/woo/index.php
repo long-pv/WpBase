@@ -12,3 +12,4 @@ require get_template_directory() . '/inc/woo/login.php';
 require get_template_directory() . '/inc/woo/sidebar.php';
 require get_template_directory() . '/inc/woo/edit-account.php';
 require get_template_directory() . '/inc/woo/shipping.php';
+require get_template_directory() . '/inc/woo/script.php';
