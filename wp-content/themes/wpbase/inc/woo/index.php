@@ -2,6 +2,7 @@
 /**
  * Functions hook include
  */
+require get_template_directory() . '/inc/woo/shortcode.php';
 require get_template_directory() . '/inc/woo/cart.php';
 require get_template_directory() . '/inc/woo/shop.php';
 require get_template_directory() . '/inc/woo/myaccount.php';
@@ -14,3 +15,4 @@ require get_template_directory() . '/inc/woo/edit-account.php';
 require get_template_directory() . '/inc/woo/shipping.php';
 require get_template_directory() . '/inc/woo/script.php';
 require get_template_directory() . '/inc/woo/action_header.php';
+require get_template_directory() . '/inc/woo/woo_title.php';
