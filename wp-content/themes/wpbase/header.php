@@ -56,6 +56,12 @@
 					?>
 				</div>
 
+				<?php
+				if (function_exists('woo_action_header')) {
+					woo_action_header();
+				}
+				?>
+
 				<!-- button toggle menu mobile -->
 				<div class="header__toggle">
 					<span class="header__toggleItem header__toggleItem--open">

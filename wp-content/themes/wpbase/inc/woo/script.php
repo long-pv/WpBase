@@ -6,6 +6,8 @@ function add_custom_woo_script()
         <!-- custom woocommerce -->
         <script type="text/javascript">
             jQuery(document).ready(function ($) {
+                var woo_url_ajax = '<?php echo admin_url('admin-ajax.php'); ?>';
+
                 // tự động cập nhật giỏ hàng khi có thay đổi
                 var btn_update_cart = $('button[name="update_cart"]');
                 btn_update_cart.css('visibility', 'hidden'); // ẩn nút update cart
@@ -14,9 +16,9 @@ function add_custom_woo_script()
                 });
 
                 // tăng số lượng của giỏ hàng
-                $(document).on("wc_fragment_refresh updated_wc_div", function () {
+                $(document).on("wc_fragment_refresh updated_wc_div, added_to_cart", function () {
                     $.ajax({
-                        url: url_ajax,
+                        url: woo_url_ajax,
                         type: "POST",
                         data: {
                             action: "update_cart_count",

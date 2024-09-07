@@ -18,12 +18,12 @@ get_header();
 while (have_posts()):
     the_post();
     ?>
-    <div id="wooTheme" class="wooTheme secSpace">
+    <div class="pageMain secSpace">
         <div class="container">
-            <div class="wooTheme__inner">
+            <div class="pageMain__inner">
                 <?php wp_breadcrumbs(); ?>
 
-                <div class="secHeading">
+                <div class="secHeading text-center">
                     <h2 class="secHeading__title wow">
                         <?php the_title(); ?>
                     </h2>
@@ -31,7 +31,9 @@ while (have_posts()):
 
                 <?php
                 // WooCommerce
-                if (class_exists('WooCommerce')) {
+                if (function_exists('is_woocommerce') && is_woocommerce()):
+                    echo '<div id="wooTheme" class="wooTheme">';
+
                     if (is_cart()) {
                         echo do_shortcode('[woocommerce_cart]');
                     } else if (is_checkout()) {
@@ -48,9 +50,19 @@ while (have_posts()):
                         // shop and category
                         the_content();
                     }
-                } else {
-                    the_content();
-                }
+
+                    echo '</div>';
+                else:
+                    ?>
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10">
+                            <div class="editor">
+                                <?php the_content(); ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php
+                endif;
                 ?>
             </div>
         </div>
