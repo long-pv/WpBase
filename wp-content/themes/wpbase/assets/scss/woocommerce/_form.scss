@@ -1,7 +1,9 @@
 #wooTheme {
 
     .woocommerce-EditAccountForm,
-    .woocommerce-billing-fields__field-wrapper {
+    .woocommerce-billing-fields__field-wrapper,
+    #customer_login,
+    .lost_reset_password {
         p.form-row {
             display: block;
         }
@@ -13,7 +15,7 @@
         input {
             width: 100%;
             height: 40px;
-            border-radius: 8px;
+            border-radius: 0px;
             outline: none !important;
             padding: 8px;
             font-size: 16px;
@@ -44,6 +46,20 @@
                 font-size: 20px;
                 transform: translateY(5px) !important;
                 display: inline-block;
+            }
+        }
+
+        #login_remember {
+            label {
+                font-weight: 400;
+                display: flex;
+                align-items: center;
+                margin-bottom: 0px;
+            }
+
+            #rememberme {
+                width: 16px;
+                height: 16px;
             }
         }
     }
