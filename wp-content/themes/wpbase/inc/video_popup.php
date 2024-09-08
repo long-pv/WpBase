@@ -3,6 +3,7 @@ function add_custom_video_popup_script()
 {
     if (!is_admin()) {
         ?>
+        <!-- modal video -->
         <div class="modal modalVideo fade" id="videoUrl" tabindex="-1" role="dialog" aria-labelledby="videoModalLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
@@ -25,49 +26,6 @@ function add_custom_video_popup_script()
                 </div>
             </div>
         </div>
-
-        <style>
-            .modalVideo__video {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                position: absolute;
-                top: -16px;
-                right: -8px;
-                z-index: 9;
-                border-radius: 50%;
-                width: 30px;
-                height: 30px;
-                background: #fff !important;
-                opacity: 1 !important;
-                outline: none !important;
-            }
-
-            .videoBlock__overlay {
-                position: absolute;
-                top: 0;
-                right: 0;
-                left: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.2);
-            }
-
-            .videoBlock__inner {
-                position: relative;
-                background-size: cover;
-                background-repeat: no-repeat;
-                background-position: center center;
-                cursor: auto;
-                height: 0;
-                padding-bottom: 56%;
-                z-index: 1;
-            }
-
-            .videoBlock__playAction {
-                position: relative;
-                z-index: 10;
-            }
-        </style>
 
         <script type="text/javascript">
             jQuery(document).ready(function ($) {
@@ -93,6 +51,7 @@ function add_custom_video_popup_script()
                 }
             });
         </script>
+        <!-- end -->
         <?php
     }
 }

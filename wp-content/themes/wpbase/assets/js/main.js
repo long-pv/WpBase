@@ -21,25 +21,4 @@
 	if ($("#wpadminbar").length > 0) {
 		$(".header").css("margin-top", $("#wpadminbar").outerHeight(true));
 	}
-
-	// home top
-	if ($(".homePage__topSlider").length > 0) {
-		$(".homePage__topSlider").slick({
-			infinite: true,
-			autoplay: true,
-			autoplaySpeed: 3000,
-			slidesToShow: 4,
-			dots: false,
-			arrows: true,
-
-			responsive: [
-				{
-					breakpoint: 992,
-					settings: {
-						slidesToShow: 1,
-					},
-				},
-			],
-		});
-	}
 })(jQuery, window);

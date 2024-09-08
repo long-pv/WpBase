@@ -22,19 +22,27 @@ $featured_article = get_field('featured_article', 'option');
 if (!empty($featured_article) && $featured_article[0]):
     ?>
     <section class="secSpace homePage__top">
-        <div class="homePage__topSlider">
-            <?php
-            foreach ($featured_article as $post):
-                setup_postdata($post);
-                ?>
-                <div>
-                    <?php get_template_part('template-parts/single/post'); ?>
-                </div>
-                <?php
-                wp_reset_postdata();
-            endforeach;
-            ?>
-        </div>
+        <?php
+        $options = [
+            'type' => 'post',
+            'infinite' => true,
+            'autoplay' => true,
+            'autoplaySpeed' => 3000,
+            'slidesToShow' => 4,
+            'dots' => false,
+            'arrows' => true,
+
+            'responsive' => [
+                [
+                    'breakpoint' => 992,
+                    'settings' => [
+                        'slidesToShow' => 1,
+                    ],
+                ],
+            ],
+        ];
+        render_slider($featured_article, $options, 'topSlider');
+        ?>
     </section>
     <?php
 endif;
