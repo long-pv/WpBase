@@ -19,7 +19,7 @@ function add_custom_slick_sliders_script()
 }
 add_action('wp_footer', 'add_custom_slick_sliders_script', 99);
 
-function render_slider($slides = [], $options = [], $selector = '')
+function render_sliders($slides = [], $options = [], $selector = '')
 {
     if ($slides && $options):
         echo '<section id="' . $selector . '" class="sliders ' . $selector . '" data-slick=\'' . json_encode($options) . '\'>';

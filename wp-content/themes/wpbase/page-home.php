@@ -41,7 +41,7 @@ if (!empty($featured_article) && $featured_article[0]):
                 ],
             ],
         ];
-        render_slider($featured_article, $options, 'topSlider');
+        render_sliders($featured_article, $options, 'topSlider');
         ?>
     </section>
     <?php
