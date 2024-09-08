@@ -56,7 +56,7 @@
                 &::before {
                     content: attr(data-label);
                     float: left;
-                    color: #2E5288 !important;
+                    color: $primary !important;
                     font-weight: 600;
                     font-size: 14px;
                     position: absolute;
