@@ -7,8 +7,8 @@ function add_custom_slick_sliders_script()
         <script type="text/javascript">
             jQuery(document).ready(function ($) {
                 $('.sliders[data-slick]').each(function () {
-                    var $slider = $(this);
-                    var settings = $slider.data('slick') || {};
+                    let $slider = $(this);
+                    let settings = $slider.data('slick') || {};
                     $slider.slick(settings);
                 });
             });
@@ -21,8 +21,8 @@ add_action('wp_footer', 'add_custom_slick_sliders_script', 99);
 
 function render_sliders($slides = [], $options = [], $selector = '')
 {
-    if ($slides && $options):
-        echo '<section id="' . $selector . '" class="sliders ' . $selector . '" data-slick=\'' . json_encode($options) . '\'>';
+    if ($slides):
+        echo '<section class="sliders ' . $selector . '" data-slick=\'' . json_encode($options) . '\'>';
         foreach ($slides as $index => $slide):
             if ($slide) {
                 echo '<div>';

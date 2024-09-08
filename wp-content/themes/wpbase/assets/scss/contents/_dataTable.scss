@@ -1,0 +1,70 @@
+.dataTable {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: none !important;
+
+    thead {
+        background: $primary;
+        color: #ffffff;
+
+        @include media-breakpoint-down(md) {
+            visibility: hidden;
+            height: 0;
+            position: absolute;
+            display: none;
+        }
+
+        th {
+            font-weight: 700 !important;
+            border: none;
+            padding: 8px;
+            vertical-align: middle;
+
+            span {
+                display: inline-block;
+            }
+        }
+    }
+
+    tbody {
+        tr {
+            @include media-breakpoint-down(md) {
+                display: block;
+                margin-bottom: 8px;
+            }
+
+            &:nth-child(odd) td {
+                background-color: #ffffff;
+            }
+
+            &:nth-child(even) td {
+                background-color: rgba($color: $primary, $alpha: 0.2);
+            }
+        }
+
+        td {
+            border: none;
+            padding: 8px;
+            vertical-align: middle;
+
+            @include media-breakpoint-down(md) {
+                display: block;
+                padding-left: 40% !important;
+                position: relative;
+                min-height: 14px;
+
+                &::before {
+                    content: attr(data-label);
+                    float: left;
+                    color: #2E5288 !important;
+                    font-weight: 600;
+                    font-size: 14px;
+                    position: absolute;
+                    width: 38%;
+                    top: 8px;
+                    left: 4px;
+                }
+            }
+        }
+    }
+}
