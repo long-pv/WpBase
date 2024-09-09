@@ -2,4 +2,12 @@
     .woocommerce-form-login__submit {
         float: unset;
     }
+
+    .woocommerce-privacy-policy-text {
+        display: none !important;
+    }
+
+    .g-recaptcha {
+        margin: 16px 0px;
+    }
 }

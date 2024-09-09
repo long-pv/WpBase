@@ -9,19 +9,12 @@
     }
 
     input[name="coupon_code"] {
-        width: 100%;
-        margin-bottom: 8px;
-
-        @include media-breakpoint-up(lg) {
-            width: 200px;
-            margin-bottom: 0px;
-        }
+        // style element
     }
 
     button[name="apply_coupon"],
     button[name="update_cart"] {
-        height: 40px;
-        font-size: 16px;
+        // style element
     }
 
     button[name="update_cart"] {

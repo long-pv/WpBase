@@ -111,14 +111,26 @@ do_action('woocommerce_before_customer_login_form'); ?>
 					<label for="reg_password">
 						<?php esc_html_e('Password', 'woocommerce'); ?>&nbsp;<span class="required">*</span>
 					</label>
-					<input type="password" class="woocommerce-Input woocommerce-Input--text input-text formPls__text"
-						name="password" id="reg_password" autocomplete="new-password" />
+					<input type="password" class="woocommerce-Input woocommerce-Input--text input-text" name="password"
+						id="reg_password" autocomplete="new-password" value="<?php if (!empty($_POST['password']))
+							echo esc_attr($_POST['password']); ?>" />
+				</div>
+
+				<div class="mb-4">
+					<label for="reg_password2">
+						<?php _e('Confirm password', 'basetheme'); ?>&nbsp;<span class="required">*</span>
+					</label>
+					<input type="password" class="woocommerce-Input woocommerce-Input--text input-text" name="password2"
+						id="reg_password2" autocomplete="off" value="<?php if (!empty($_POST['password2']))
+							echo esc_attr($_POST['password2']); ?>" />
 				</div>
 			<?php else: ?>
 				<div class="mb-4">
 					<?php esc_html_e('A link to set a new password will be sent to your email address.', 'woocommerce'); ?>
 				</div>
 			<?php endif; ?>
+
+			<?php do_action('woocommerce_register_form'); ?>
 
 			<div class="mb-4">
 				<?php wp_nonce_field('woocommerce-register', 'woocommerce-register-nonce'); ?>
