@@ -9,19 +9,8 @@
     top: 0px;
     background-color: $white;
 
-    &__nav {
-        @include media-breakpoint-up(xl) {
-            display: flex !important;
-            align-items: center;
-            justify-content: flex-end;
-        }
-    }
-
-    &__navInner {
+    &__inner {
         padding: 8px 0px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
 
         @include media-breakpoint-up(xl) {
             padding: 16px 0px;
@@ -30,14 +19,25 @@
 
     &__logo {
         display: inline-flex;
+        height: 100%;
+        align-items: center;
 
         img {
             height: 40px;
             width: auto;
+            max-width: 100%;
+        }
+    }
 
-            // @include media-breakpoint-up(xl) {
-            //     height: 50px;
-            // }
+    &__navInner {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        height: 100%;
+        gap: 10px;
+
+        @include media-breakpoint-up(xl) {
+            gap: 16px;
         }
     }
 
@@ -47,6 +47,9 @@
         @include media-breakpoint-up(xl) {
             display: block;
             height: 100%;
+            display: flex !important;
+            align-items: center;
+            justify-content: flex-end;
         }
 
         .menu {
@@ -85,8 +88,20 @@
     }
 
     &__toggleItem {
+        width: 24px;
+        height: 24px;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        display: flex;
+
+        &--open {
+            background-image: url("data:image/svg+xml,%3Csvg width='21' height='14' viewBox='0 0 21 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.875 1.07812H19.4723' stroke='%23333333' stroke-width='2' stroke-linecap='round' /%3E%3Cpath d='M1.875 6.74219H19.4723' stroke='%23333333' stroke-width='2' stroke-linecap='round' /%3E%3Cpath d='M1.875 12.4023H19.4723' stroke='%23333333' stroke-width='2' stroke-linecap='round' /%3E%3C/svg%3E");
+        }
+
         &--close {
             display: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18 6L6 18' stroke='%23333333' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' /%3E%3Cpath d='M6 6L18 18' stroke='%23333333' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' /%3E%3C/svg%3E");
         }
     }
 
