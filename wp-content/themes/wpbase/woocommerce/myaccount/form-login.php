@@ -106,6 +106,29 @@ do_action('woocommerce_before_customer_login_form'); ?>
 					value="<?php echo (!empty($_POST['email'])) ? esc_attr(wp_unslash($_POST['email'])) : ''; ?>" />
 			</div>
 
+			<!-- add input form -->
+			<div class="mb-4">
+				<label for="billing_first_name"><?php _e('First Name', 'basetheme'); ?>&nbsp;<span
+						class="required">*</span></label>
+				<input type="text" class="input-text" name="billing_first_name" id="billing_first_name" value="<?php if (!empty($_POST['billing_first_name']))
+					echo esc_attr($_POST['billing_first_name']); ?>" />
+			</div>
+
+			<div class="mb-4">
+				<label for="billing_address_1">
+					<?php _e('Address', 'basetheme'); ?>&nbsp;<span class="required">*</span>
+				</label>
+				<input type="text" class="input-text" name="billing_address_1" id="billing_address_1" value="<?php if (!empty($_POST['billing_address_1']))
+					echo esc_attr($_POST['billing_address_1']); ?>" />
+			</div>
+
+			<div class="mb-4">
+				<label for="billing_phone"><?php _e('Phone', 'woocommerce'); ?>&nbsp;<span class="required">*</span></label>
+				<input type="text" class="input-text" name="billing_phone" id="billing_phone" value="<?php if (!empty($_POST['billing_phone']))
+					echo esc_attr($_POST['billing_phone']); ?>" />
+			</div>
+			<!-- end -->
+
 			<?php if ('no' === get_option('woocommerce_registration_generate_password')): ?>
 				<div class="mb-4">
 					<label for="reg_password">
