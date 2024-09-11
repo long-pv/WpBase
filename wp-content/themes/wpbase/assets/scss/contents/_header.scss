@@ -45,31 +45,114 @@
         display: none;
 
         @include media-breakpoint-up(xl) {
-            display: block;
+            display: block !important;
             height: 100%;
-            display: flex !important;
-            align-items: center;
-            justify-content: flex-end;
         }
 
-        .menu {
+        ul.menu {
             margin: 0px;
             padding: 0px;
             list-style-type: none;
-            display: flex;
-            align-items: center;
-            gap: 32px;
+            margin: 0px -16px;
 
-            li {
-                a {
+            a {
+                text-decoration: none !important;
+                color: $primary;
+
+                &:hover {
+                    color: $secondary !important;
+                }
+            }
+
+            &>li {
+                position: relative;
+                display: inline-block;
+
+                &>a {
                     text-decoration: none;
-                    display: inline-block;
+                    display: block;
                     color: $primary;
+                    padding: 12px;
                     font-size: 14px;
                     font-weight: 500;
+                }
 
-                    &:hover {
-                        text-decoration: underline;
+                // active current
+                &.current-menu-parent,
+                &.current-menu-item,
+                &.current_page_item {
+                    &>a {
+                        color: $secondary;
+                    }
+                }
+
+                &>ul.sub-menu {
+                    display: block;
+                    position: absolute;
+                    list-style-type: none;
+                    padding: 0px;
+                    margin: 0px;
+                    width: 280px;
+                    left: 0px;
+                    top: 200%;
+                    height: 0px;
+                    overflow: hidden;
+                    transition: all 0.3s;
+                    z-index: 99999;
+                    background-color: #ffffff;
+                    box-shadow: 0px 4px 25px 0px rgba(0, 0, 0, 0.16);
+                    -webkit-box-shadow: 0px 4px 25px 0px rgba(0, 0, 0, 0.16);
+                    -moz-box-shadow: 0px 4px 25px 0px rgba(0, 0, 0, 0.16);
+
+                    &>li {
+                        &>a {
+                            display: block;
+                            background: $white;
+                            transition: all 0.3s;
+                            color: $primary;
+                            padding: 12px;
+                            font-size: 14px;
+                        }
+
+                        &.current-menu-parent,
+                        &.current-menu-item,
+                        &.current_page_item {
+                            &>a {
+                                color: $secondary !important;
+                            }
+                        }
+                    }
+                }
+
+                &:hover {
+                    &>.sub-menu {
+                        height: unset;
+                        top: 100%;
+                    }
+                }
+
+                &:last-child {
+                    &>ul.sub-menu {
+                        left: auto;
+                        right: 12px;
+                    }
+                }
+
+                &.menu-item-has-children {
+                    padding-right: 4px;
+
+                    &::before {
+                        content: '';
+                        position: absolute;
+                        right: 0px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        width: 12px;
+                        height: 12px;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3C!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--%3E%3Cpath fill='%23adadad' d='M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/%3E%3C/svg%3E");
+                        background-position: center center;
+                        background-size: contain;
+                        background-repeat: no-repeat;
                     }
                 }
             }
@@ -135,15 +218,15 @@
         &.active {
             transform: translateX(0%);
             right: 0px;
+            transition: all 0.5s;
         }
 
-        ul {
+        ul.menu {
             padding: 0px;
             margin: 0px;
             list-style-type: none;
 
-            li {
-                display: flex;
+            &>li {
                 border-bottom: 1px solid #c0c0c0;
 
                 &:last-child() {
@@ -152,11 +235,41 @@
 
                 a {
                     display: inline-flex;
-                    padding: 16px 0px;
+                    padding: 12px 0px;
                     color: $primary;
 
                     &:hover {
                         text-decoration: none;
+                    }
+                }
+
+                &.current-menu-parent,
+                &.current-menu-item,
+                &.current_page_item {
+                    &>a {
+                        color: $secondary !important;
+                    }
+                }
+
+                &>ul {
+                    padding-left: 16px;
+                    margin: 0px;
+                    list-style-type: none;
+
+                    &>li {
+                        border-bottom: 1px solid #c0c0c0;
+
+                        &:last-child() {
+                            border-bottom: none;
+                        }
+
+                        &.current-menu-parent,
+                        &.current-menu-item,
+                        &.current_page_item {
+                            &>a {
+                                color: $secondary !important;
+                            }
+                        }
                     }
                 }
             }
