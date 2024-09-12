@@ -6,7 +6,11 @@ function woo_action_header()
     ?>
     <div class="header__woo">
         <a href="<?php echo $link_myaccount; ?>" class="header__wooMyaccout">
-            <span class="header__wooIcon header__wooIcon--myAccount"></span>
+            <?php if (is_user_logged_in()): ?>
+                <span class="header__wooIcon header__wooIcon--myAccount"></span>
+            <?php else: ?>
+                <span class="header__wooIcon header__wooIcon--login"></span>
+            <?php endif; ?>
         </a>
 
         <?php if (is_user_logged_in()): ?>
@@ -21,6 +25,10 @@ function woo_action_header()
                         <?php echo $count_cart; ?>
                     </span>
                 <?php endif; ?>
+            </a>
+
+            <a href="<?php echo wp_logout_url(home_url()); ?>" class="header__wooLogout">
+                <span class="header__wooIcon header__wooIcon--logout"></span>
             </a>
         <?php endif; ?>
     </div>

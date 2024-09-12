@@ -49,11 +49,14 @@
             height: 100%;
         }
 
+        $margin_menu_pc: 12px;
+
         ul.menu {
             margin: 0px;
             padding: 0px;
             list-style-type: none;
-            margin: 0px -16px;
+            margin-left: - $margin_menu_pc;
+            margin-right: - $margin_menu_pc;
 
             a {
                 text-decoration: none !important;
@@ -72,7 +75,7 @@
                     text-decoration: none;
                     display: block;
                     color: $primary;
-                    padding: 12px;
+                    padding: 12px $margin_menu_pc;
                     font-size: 14px;
                     font-weight: 500;
                 }
@@ -110,7 +113,7 @@
                             background: $white;
                             transition: all 0.3s;
                             color: $primary;
-                            padding: 12px;
+                            padding: 12px $margin_menu_pc;
                             font-size: 14px;
                         }
 
@@ -134,7 +137,7 @@
                 &:last-child {
                     &>ul.sub-menu {
                         left: auto;
-                        right: 12px;
+                        right: $margin_menu_pc;
                     }
                 }
 
