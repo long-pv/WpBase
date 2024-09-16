@@ -23,6 +23,7 @@ require get_template_directory() . '/inc/polylang.php';
 require get_template_directory() . '/inc/accordion.php';
 require get_template_directory() . '/inc/sliders.php';
 require get_template_directory() . '/inc/datatable.php';
+require get_template_directory() . '/inc/search_ajax.php';
 // woocommerce
 if (class_exists('WooCommerce')) {
     require get_template_directory() . '/inc/woo/index.php';

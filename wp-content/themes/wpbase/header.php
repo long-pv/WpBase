@@ -78,6 +78,8 @@
 								<span class="header__toggleItem header__toggleItem--close"></span>
 							</div>
 							<!-- end -->
+
+							<?php echo do_shortcode('[search_ajax]'); ?>
 						</div>
 					</div>
 				</div>
