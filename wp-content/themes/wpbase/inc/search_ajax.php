@@ -73,9 +73,6 @@ function add_custom_search_ajax_script()
                 // Add an event listener that triggers on each input in the search field.
                 input_search.on('input', function () {
                     let query = $(this).val();
-                    query = query.replace(/<[^>]*>?/gm, '');
-                    query = query.replace(/[^a-zA-Z0-9\s]/g, '');
-                    $(this).val(query);
                     let input_result = $(this).parents('.seachAjax').find('.seachAjax__result');
 
                     if (query.length > 0) {
