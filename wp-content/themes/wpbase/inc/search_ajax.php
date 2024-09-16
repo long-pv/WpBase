@@ -139,7 +139,7 @@ function ajax_search_suggestions()
 
             // Output each result as a list item with a link and occurrence count
             echo '<li>';
-            echo '<a target="_blank" href="' . $permalink . '">' . $result->post_title . '</a>';
+            echo '<a href="' . $permalink . '">' . $result->post_title . '</a>';
             echo ' <br>' . $formatted_date;
             echo '</li>';
         }
