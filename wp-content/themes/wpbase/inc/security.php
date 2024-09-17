@@ -412,11 +412,11 @@ function allow_iframe_script_tags($allowedposttags)
 add_filter("wp_kses_allowed_html", "allow_iframe_script_tags", 1);
 
 // Hide Tags
-function hide_tags()
-{
-    register_taxonomy('post_tag', array());
-}
-add_action('init', 'hide_tags');
+// function hide_tags()
+// {
+//     register_taxonomy('post_tag', array());
+// }
+// add_action('init', 'hide_tags');
 
 // setting image in content editor
 function set_default_image_settings_on_login($user_login, $user)
