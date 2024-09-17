@@ -288,12 +288,14 @@ function disable_default_endpoints($endpoints)
 function custom_login_logo()
 {
     echo '<style type="text/css">
-    h1 a {
-      display: none !important;
+    #login h1 a {
       background-image: url(' . get_template_directory_uri() . '/assets/images/logo_login.svg) !important;
-      height: 80px !important;
+      background-position: center center !important;
+      background-size: contain !important;
       width: 100% !important;
-      background-size: auto !important;
+      height: 80px !important;
+      display: flex !important;
+      background-color: #fff;
     }
   </style>';
 }
