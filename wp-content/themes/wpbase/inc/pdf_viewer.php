@@ -1,5 +1,4 @@
 <?php 
-
 function add_pdf_viewer_script()
 {
     if (!is_admin()) {
