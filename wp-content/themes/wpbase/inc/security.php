@@ -41,7 +41,7 @@ add_filter('xmlrpc_enabled', '__return_false');
 add_filter('upload_size_limit', 'PBP_increase_upload');
 function PBP_increase_upload($bytes)
 {
-    return 524288 * 4;
+    return 524288 * 4 * 100;
 }
 
 // Remove the Comments menu from the Dashboard
@@ -181,11 +181,7 @@ function custom_login_redirect()
 // Apply a filter to the field value before saving
 function custom_modify_text_field($value, $post_id, $field)
 {
-    if ($field["name"] == 'google_analytics') {
-        $value_change = $value;
-    } else {
-        $value_change = custom_replace_value($value);
-    }
+    $value_change = custom_replace_value($value);
 
     return $value_change;
 }
@@ -446,3 +442,28 @@ function set_default_image_settings_on_login($user_login, $user)
 }
 
 add_action('wp_login', 'set_default_image_settings_on_login', 10, 2);
+
+add_action('admin_footer', 'custom_script_admin');
+function custom_script_admin()
+{
+    ?>
+    <script>
+        jQuery(document).ready(function ($) {
+            // Validate post title
+            if ($('#post').length > 0) {
+                $('#post').submit(function () {
+                    var title_post = $('#title').val();
+                    if (title_post.trim() === '') {
+                        alert('Please enter "Title".');
+                        $('#title').focus();
+                        return false;
+                    }
+                });
+            }
+
+            // Prevent users from using weak passwords
+            $(".pw-weak").remove();
+        });
+    </script>
+    <?php
+}

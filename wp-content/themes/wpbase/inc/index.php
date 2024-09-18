@@ -5,7 +5,6 @@ require get_template_directory() . '/inc/theme_setup.php';
 require get_template_directory() . '/inc/auto_active_plugin.php';
 require get_template_directory() . '/inc/breadcrumbs.php';
 require get_template_directory() . '/inc/cpt_custom.php';
-require get_template_directory() . '/inc/script_admin.php';
 require get_template_directory() . '/inc/view_post.php';
 require get_template_directory() . '/inc/security.php';
 require get_template_directory() . '/inc/template-functions.php';
@@ -24,6 +23,7 @@ require get_template_directory() . '/inc/accordion.php';
 require get_template_directory() . '/inc/sliders.php';
 require get_template_directory() . '/inc/datatable.php';
 require get_template_directory() . '/inc/search_ajax.php';
+require get_template_directory() . '/inc/pdf_viewer.php';
 // woocommerce
 if (class_exists('WooCommerce')) {
     require get_template_directory() . '/inc/woo/index.php';

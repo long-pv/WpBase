@@ -44,7 +44,7 @@ if (!defined('CTF7_REGISTER_ID')) {
     define('CTF7_REGISTER_ID', 286);
 }
 
-// secirity define
+// security define
 if (!defined('DISABLE_WP_CRON')) {
     define('DISABLE_WP_CRON', true);
 }
