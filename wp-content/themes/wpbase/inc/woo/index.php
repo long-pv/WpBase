@@ -18,3 +18,4 @@ require get_template_directory() . '/inc/woo/action_header.php';
 require get_template_directory() . '/inc/woo/woo_title.php';
 require get_template_directory() . '/inc/woo/orders.php';
 require get_template_directory() . '/inc/woo/registration.php';
+require get_template_directory() . '/inc/woo/polylang_custom.php';
