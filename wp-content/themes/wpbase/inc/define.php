@@ -45,18 +45,18 @@ if (!defined('CTF7_REGISTER_ID')) {
 }
 
 // security define
-// if (!defined('DISABLE_WP_CRON')) {
-//     define('DISABLE_WP_CRON', true);
-// }
+if (!defined('DISABLE_WP_CRON')) {
+    define('DISABLE_WP_CRON', true);
+}
 
-// if (!defined('AUTOMATIC_UPDATER_DISABLED')) {
-//     define('AUTOMATIC_UPDATER_DISABLED', true);
-// }
+if (!defined('AUTOMATIC_UPDATER_DISABLED')) {
+    define('AUTOMATIC_UPDATER_DISABLED', true);
+}
 
-// if (!defined('WP_AUTO_UPDATE_CORE')) {
-//     define('WP_AUTO_UPDATE_CORE', false);
-// }
+if (!defined('WP_AUTO_UPDATE_CORE')) {
+    define('WP_AUTO_UPDATE_CORE', false);
+}
 
-// if (!defined('DISALLOW_FILE_MODS')) {
-//     define('DISALLOW_FILE_MODS', true);
-// }
+if (!defined('DISALLOW_FILE_MODS')) {
+    define('DISALLOW_FILE_MODS', true);
+}
