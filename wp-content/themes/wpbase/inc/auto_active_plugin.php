@@ -32,6 +32,10 @@ function disable_plugins_update($value)
     if (isset($value->response['wp-cerber/wp-cerber.php'])) {
         unset($value->response['wp-cerber/wp-cerber.php']);
     }
+    // disable All-in-One WP Migration
+    if (isset($value->response['all-in-one-wp-migration-master/all-in-one-wp-migration.php'])) {
+        unset($value->response['all-in-one-wp-migration-master/all-in-one-wp-migration.php']);
+    }
     return $value;
 }
 
