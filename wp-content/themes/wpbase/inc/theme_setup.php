@@ -55,6 +55,9 @@ function basetheme_scripts()
     // add vendor js
     wp_enqueue_script('basetheme-script-vendor', get_template_directory_uri() . '/assets/js/vendor.js', array(), _S_VERSION, true);
 
+    // data mh
+    // <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.matchHeight/0.7.2/jquery.matchHeight.js"></script>
+
     // validate
     wp_enqueue_script('basetheme-script-validate', get_template_directory_uri() . '/assets/inc/validate/validate.js', array(), _S_VERSION, true);
     wp_enqueue_script('basetheme-script-validate_custom', get_template_directory_uri() . '/assets/js/validate.js', array(), _S_VERSION, true);
