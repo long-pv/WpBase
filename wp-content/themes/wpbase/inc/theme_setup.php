@@ -55,6 +55,10 @@ function basetheme_scripts()
     // add vendor js
     wp_enqueue_script('basetheme-script-vendor', get_template_directory_uri() . '/assets/js/vendor.js', array(), _S_VERSION, true);
 
+    // validate
+    wp_enqueue_script('basetheme-script-validate', get_template_directory_uri() . '/assets/inc/validate/validate.js', array(), _S_VERSION, true);
+    wp_enqueue_script('basetheme-script-validate_custom', get_template_directory_uri() . '/assets/js/validate.js', array(), _S_VERSION, true);
+
     // scroll smooth hash id element
     wp_enqueue_script('basetheme-script-scroll_smooth', get_template_directory_uri() . '/assets/js/scroll_smooth.js', array(), _S_VERSION, true);
 
