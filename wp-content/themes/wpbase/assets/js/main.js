@@ -21,4 +21,50 @@
 	if ($("#wpadminbar").length > 0) {
 		$(".header").css("margin-top", $("#wpadminbar").outerHeight(true));
 	}
+
+	// slick hiển thị arrow ngay cả khi có quá ít item
+	function calculateSlidesToShow(selector, itemClass) {
+		var item = $(selector).find(itemClass);
+		item.css("display", "inline-block");
+		var itemCount = item.length;
+		var totalItemWidth = 0;
+		item.each(function () {
+			totalItemWidth += $(this).outerWidth(true);
+		});
+		var sliderWidth = 0;
+		var slidesToShowCount = 0;
+		sliderWidth = $(selector).width();
+		slidesToShowCount = totalItemWidth < sliderWidth ? itemCount : Math.floor(sliderWidth / item.outerWidth(true));
+		return slidesToShowCount;
+	}
+
+	function setupCustomNavigation(selector) {
+		$(selector).on("init", function (event, slick) {
+			var prevButton = $('<button class="slick-prev slick-arrow"></button>');
+			var nextButton = $('<button class="slick-next slick-arrow"></button>');
+			$(selector).append(prevButton, nextButton);
+
+			prevButton.on("click", function () {
+				var currentSlide = slick.slickCurrentSlide();
+				$(selector + ' .slick-slide[data-slick-index="' + (currentSlide - 1) + '"]').click();
+			});
+
+			nextButton.on("click", function () {
+				var currentSlide = slick.slickCurrentSlide();
+				$(selector + ' .slick-slide[data-slick-index="' + (currentSlide + 1) + '"]').click();
+			});
+		});
+	}
+
+	setupCustomNavigation(".slideGalleryAll");
+	$(".slideGalleryAll").slick({
+		variableWidth: true,
+		slidesToScroll: 1,
+		adaptiveHeight: true,
+		focusOnSelect: true,
+		infinite: true,
+		arrows: false,
+		slidesToShow: calculateSlidesToShow(".slideGalleryAll", ".slideGallery__item"),
+	});
+	// end -- slick hiển thị arrow ngay cả khi có quá ít item
 })(jQuery, window);
