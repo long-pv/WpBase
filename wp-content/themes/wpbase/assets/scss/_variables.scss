@@ -1,4 +1,5 @@
 // Bootstrap overrides
+$grid-gutter-width: 32px !default;
 
 //grid breakpoints
 $grid-breakpoints    : (
@@ -16,7 +17,7 @@ $grid-breakpoints    : (
 $container-max-widths: (
   sm                 : 440px,
   md                 : 720px,
-  lg                 : 960px,
+  lg                 : 720px,
   xl                 : 1200px,
   xxl                : 1200px
 );
