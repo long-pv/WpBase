@@ -41,6 +41,44 @@ function add_load_more_script()
     if (!is_admin()):
         ?>
         <!-- Button load more -->
+        <div id="ajax-loader" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+
+        <style>
+            #ajax-loader {
+                position: fixed;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #3498db;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+
         <script type="text/javascript">
             jQuery(document).ready(function ($) {
                 $('.load_more').on('click', function () {
@@ -72,6 +110,7 @@ function add_load_more_script()
                         },
                         beforeSend: function () {
                             button.text('Loading...');
+                            $("#ajax-loader").show();
                         },
                         success: function (data) {
                             if (data) {
@@ -81,22 +120,18 @@ function add_load_more_script()
                                 alert('No more posts');
                             }
 
-                            // Re-enable the button and remove the 'loading' class
-                            button.text(text_btn);
-                            button.prop('disabled', false);
-                            button.removeClass('loading');
-
                             // data mh active
                             $('.singlePost__title').matchHeight();
                         },
                         error: function () {
                             alert('Error loading posts');
-
-                            // Re-enable the button and remove the 'loading' class
+                        },
+                        complete: function () {
                             button.text(text_btn);
                             button.prop('disabled', false);
                             button.removeClass('loading');
-                        }
+                            $("#ajax-loader").hide();
+                        },
                     });
                 });
             });
