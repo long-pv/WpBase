@@ -65,11 +65,15 @@ function basetheme_scripts()
     // scroll smooth hash id element
     wp_enqueue_script('basetheme-script-scroll_smooth', get_template_directory_uri() . '/assets/js/scroll_smooth.js', array(), _S_VERSION, true);
 
-    // wow
+    // wow - effect
     wp_enqueue_style('basetheme-style-wow', get_template_directory_uri() . '/assets/inc/wow/wow.css', array(), _S_VERSION);
     wp_enqueue_script('basetheme-script-wow', get_template_directory_uri() . '/assets/inc/wow/wow.js', array(), _S_VERSION, true);
     wp_enqueue_script('basetheme-script-wow_custom', get_template_directory_uri() . '/assets/inc/wow/index.js', array(), _S_VERSION, true);
     // end
+
+    // intlTelInput
+    wp_enqueue_style('basetheme-style-intlTelInput', 'https://intl-tel-input.com/intl-tel-input/css/intlTelInput.css', array(), _S_VERSION);
+    wp_enqueue_script('basetheme-script-intlTelInput', get_template_directory_uri() . '/assets/inc/intlTelInput/intlTelInput.js', array(), _S_VERSION, true);
 
     //add custom main css/js
     wp_enqueue_style('basetheme-style-main', get_template_directory_uri() . '/assets/css/main.css', array(), _S_VERSION);
