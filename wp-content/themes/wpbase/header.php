@@ -36,14 +36,14 @@
 		<div class="container">
 			<div class="header__inner">
 				<div class="row">
-					<div class="col-6 col-xl-3">
+					<div class="col-6 col-lg-3">
 						<a href="<?php echo home_url(); ?>" class="header__logo">
 							<?php $logo_url = get_template_directory_uri() . '/assets/images/logo.svg'; ?>
 							<img src="<?php echo $logo_url; ?>" alt="logo">
 						</a>
 					</div>
 
-					<div class="col-6 col-xl-9">
+					<div class="col-6 col-lg-9">
 						<div class="header__navInner">
 							<!-- menu PC -->
 							<?php

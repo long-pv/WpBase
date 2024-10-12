@@ -12,7 +12,7 @@
     &__inner {
         padding: 8px 0px;
 
-        @include media-breakpoint-up(xl) {
+        @include media-breakpoint-up(lg) {
             padding: 16px 0px;
         }
     }
@@ -36,7 +36,7 @@
         height: 100%;
         gap: 10px;
 
-        @include media-breakpoint-up(xl) {
+        @include media-breakpoint-up(lg) {
             gap: 16px;
         }
     }
@@ -44,7 +44,7 @@
     &__menupc {
         display: none;
 
-        @include media-breakpoint-up(xl) {
+        @include media-breakpoint-up(lg) {
             display: block !important;
             height: 100%;
         }
@@ -168,7 +168,7 @@
         height: 100%;
         align-items: center;
 
-        @include media-breakpoint-up(xl) {
+        @include media-breakpoint-up(lg) {
             display: none;
         }
     }
@@ -214,7 +214,7 @@
             width: 35%;
         }
 
-        @include media-breakpoint-up(xl) {
+        @include media-breakpoint-up(lg) {
             display: none;
         }
 
