@@ -26,6 +26,7 @@ require get_template_directory() . '/inc/search_ajax.php';
 require get_template_directory() . '/inc/pdf_viewer.php';
 require get_template_directory() . '/inc/countdown_date.php';
 require get_template_directory() . '/inc/intlTelInput.php';
+require get_template_directory() . '/inc/export_pdf/index.php';
 // woocommerce
 if (class_exists('WooCommerce')) {
     require get_template_directory() . '/inc/woo/index.php';
