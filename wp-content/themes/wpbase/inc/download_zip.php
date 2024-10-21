@@ -1,45 +1,62 @@
 <?php
-add_action('wp_ajax_download_pdf', 'download_pdf_function');
-add_action('wp_ajax_nopriv_download_pdf', 'download_pdf_function');
-function download_pdf_function()
+add_action('wp_ajax_download_zip', 'download_zip_handler');
+add_action('wp_ajax_nopriv_download_zip', 'download_zip_handler');
+
+function download_zip_handler()
 {
-    // lấy giá trị
-    $post_id = $_POST['post_id'];
+    if (isset($_POST['post_id'])) {
+        $post_id = sanitize_text_field($_POST['post_id']);
+        $thumbnail_id = get_post_thumbnail_id($post_id);
 
-    ob_start();
-    ?>
+        // Kiểm tra xem bài viết có ảnh đại diện hay không
+        if (empty($thumbnail_id)) {
+            wp_send_json_error('Bài viết không có featured image.');
+            exit;
+        }
+        $file_path = get_attached_file($thumbnail_id);
+        $filename = basename($file_path);
 
-    <body class="pdf" style="padding: 0;margin: 0;font-size: 16px;">
-        <div style="color:red;">Sample pdf</div>
-        <div style="color:red;">ID: <?php echo $post_id; ?></div>
-        <div>Long xemer</div>
-    </body>
+        // Kiểm tra file tồn tại
+        if (!file_exists($file_path)) {
+            wp_send_json_error('Không tìm thấy file ảnh.');
+            exit;
+        }
 
-    <?php
-    $html = ob_get_clean();
+        $zip_file = tempnam(sys_get_temp_dir(), 'pdf_files_') . '.zip';
 
-    // include thư viện
-    require_once __DIR__ . '/vendor/autoload.php';
-    $mpdf = new \Mpdf\Mpdf();
+        $zip = new ZipArchive();
+        if ($zip->open($zip_file, ZipArchive::CREATE) !== TRUE) {
+            wp_send_json_error('Không thể tạo file ZIP.');
+            exit;
+        }
 
-    // lưu file
-    $timestamp = date('Ymd_His');
-    $file_name = 'Download_PDF_' . $timestamp . '.pdf';
-    $mpdf->WriteHTML($html);
-    $mpdf->Output($file_name, 'D');
-    exit;
+        // Thêm ảnh vào ZIP
+        $zip->addFile($file_path, $filename);
+        $zip->close();
+
+        // Gửi header để tải file ZIP
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="download_all.zip"');
+        header('Content-Length: ' . filesize($zip_file));
+        readfile($zip_file);
+        unlink($zip_file);
+        exit;
+    } else {
+        wp_send_json_error('Post ID not provided');
+    }
+    wp_die();
 }
 
-function add_custom_download_pdf_script()
+function add_custom_download_zip_script()
 {
     if (!is_admin()) {
         ?>
         <div id="ajax-loader" style="display: none;">
             <div class="spinner"></div>
         </div>
-        <form id="download-pdf-form" method="post">
-            <input type="hidden" name="post_id" value="123">
-            <button type="submit">Download PDF</button>
+        <form id="download-zip-form" method="post">
+            <input type="hidden" name="post_id" value="1">
+            <button type="submit">Download ZIP</button>
         </form>
 
         <style>
@@ -78,11 +95,11 @@ function add_custom_download_pdf_script()
 
         <script type="text/javascript">
             jQuery(document).ready(function ($) {
-                $('#download-pdf-form').on('submit', function (e) {
+                $('#download-zip-form').on('submit', function (e) {
                     e.preventDefault();
 
                     var formData = new FormData(this);
-                    formData.append('action', 'download_pdf');
+                    formData.append('action', 'download_zip');
 
                     $.ajax({
                         url: '<?php echo admin_url('admin-ajax.php'); ?>',
@@ -98,7 +115,7 @@ function add_custom_download_pdf_script()
                         },
                         success: function (response) {
                             var timestamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15);
-                            var fileName = 'Download_PDF_' + timestamp + '.pdf';
+                            var fileName = 'Download_ZIP_' + timestamp + '.zip';
                             var url = window.URL.createObjectURL(response);
                             var a = document.createElement('a');
                             a.href = url;
@@ -106,10 +123,9 @@ function add_custom_download_pdf_script()
                             document.body.appendChild(a);
                             a.click();
                             a.remove();
-                            window.URL.revokeObjectURL(url);
                         },
                         error: function () {
-                            alert('An error occurred while downloading the PDF.');
+                            alert('An error occurred while downloading the ZIP.');
                         },
                         complete: function () {
                             $("#ajax-loader").hide();
@@ -121,4 +137,4 @@ function add_custom_download_pdf_script()
         <?php
     }
 }
-add_action('wp_footer', 'add_custom_download_pdf_script', 99);
+add_action('wp_footer', 'add_custom_download_zip_script', 99);
