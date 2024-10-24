@@ -1,13 +1,13 @@
 {
     "key": "group_6715bc6b9e42f",
-    "title": "Test",
+    "title": "Page demo",
     "fields": [
         {
-            "key": "field_6715bc6c68351",
-            "label": "Test",
-            "name": "test",
+            "key": "field_6719e920598e9",
+            "label": "Event Calendar",
+            "name": "event_calendar",
             "aria-label": "",
-            "type": "text",
+            "type": "repeater",
             "instructions": "",
             "required": 0,
             "conditional_logic": 0,
@@ -16,19 +16,61 @@
                 "class": "",
                 "id": ""
             },
-            "default_value": "",
-            "maxlength": "",
-            "placeholder": "",
-            "prepend": "",
-            "append": ""
+            "layout": "row",
+            "pagination": 0,
+            "min": 0,
+            "max": 0,
+            "collapsed": "",
+            "button_label": "Add Row",
+            "rows_per_page": 20,
+            "sub_fields": [
+                {
+                    "key": "field_6719e939598ea",
+                    "label": "Start date",
+                    "name": "start_date",
+                    "aria-label": "",
+                    "type": "date_picker",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "display_format": "d\/m\/Y",
+                    "return_format": "d\/m\/Y",
+                    "first_day": 1,
+                    "parent_repeater": "field_6719e920598e9"
+                },
+                {
+                    "key": "field_6719e958598eb",
+                    "label": "End date",
+                    "name": "end_date",
+                    "aria-label": "",
+                    "type": "date_picker",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "display_format": "d\/m\/Y",
+                    "return_format": "d\/m\/Y",
+                    "first_day": 1,
+                    "parent_repeater": "field_6719e920598e9"
+                }
+            ]
         }
     ],
     "location": [
         [
             {
-                "param": "post_type",
+                "param": "page_template",
                 "operator": "==",
-                "value": "post"
+                "value": "page-demo.php"
             }
         ]
     ],
@@ -37,9 +79,15 @@
     "style": "default",
     "label_placement": "top",
     "instruction_placement": "label",
-    "hide_on_screen": "",
+    "hide_on_screen": [
+        "the_content",
+        "excerpt",
+        "discussion",
+        "comments",
+        "featured_image"
+    ],
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1729477751
+    "modified": 1729751422
 }
