@@ -1,0 +1,183 @@
+/* Scroll tab default css*/
+.ui-scroll-tabs-view {
+    z-index: 1;
+    overflow: hidden;
+}
+
+.ui-scroll-tabs-view .ui-widget-header {
+    border: none;
+    background: transparent;
+}
+
+.ui-scroll-tabs-header {
+    position: relative;
+    overflow: hidden;
+}
+
+.ui-scroll-tabs-header .stNavMain {
+    position: absolute;
+    top: 0;
+    z-index: 2;
+    height: 100%;
+    opacity: 0;
+    transition: left .5s, right .5s, opacity .8s;
+    transition-timing-function: swing;
+}
+
+.ui-scroll-tabs-header .stNavMain button {
+    height: 100%;
+}
+
+.ui-scroll-tabs-header .stNavMainLeft {
+    left: -250px;
+}
+
+.ui-scroll-tabs-header .stNavMainLeft.stNavVisible {
+    left: 0;
+    opacity: 1;
+}
+
+.ui-scroll-tabs-header .stNavMainRight {
+    right: -250px;
+}
+
+.ui-scroll-tabs-header .stNavMainRight.stNavVisible {
+    right: 0;
+    opacity: 1;
+}
+
+.ui-scroll-tabs-header ul.ui-tabs-nav {
+    position: relative;
+    white-space: nowrap;
+}
+
+.ui-scroll-tabs-header ul.ui-tabs-nav li {
+    display: inline-block;
+    float: none;
+}
+
+.ui-scroll-tabs-header ul.ui-tabs-nav li.stHasCloseBtn a {
+    padding-right: 0.5em;
+}
+
+.ui-scroll-tabs-header ul.ui-tabs-nav li span.stCloseBtn {
+    float: left;
+    padding: 4px 2px;
+    border: none;
+    cursor: pointer;
+}
+
+/*End of scrolltabs css*/
+
+
+#ajax-loader {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.upload {
+    &_img {
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        z-index: -1;
+    }
+
+    &_btn {
+        display: flex;
+        padding: 24px 8px;
+        justify-content: center;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+        align-self: stretch;
+        border-radius: 4px;
+        border: 1px dashed #C6C6C6;
+        background: #FFF;
+        margin-bottom: 0px;
+        min-height: 150px;
+        position: relative;
+    }
+
+    &_label {
+        color: #000;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+    }
+
+    &_inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+
+    &_icon {
+        display: inline-flex;
+    }
+
+    &_change_file {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        background-position: center center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #FFF;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 24px;
+        display: none;
+    }
+}
+
+.uploaded_btn {
+    border-radius: 4px !important;
+    border: 1px solid #C6C6C6;
+    overflow: hidden;
+
+    .upload_change_file {
+        display: flex !important;
+    }
+
+    .upload_inner {
+        display: none !important;
+    }
+}

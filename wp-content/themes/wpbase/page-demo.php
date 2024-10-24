@@ -63,40 +63,6 @@ get_header();
             <div id="ajax-loader" style="display: none;">
                 <div class="spinner"></div>
             </div>
-
-            <style>
-                #ajax-loader {
-                    position: fixed;
-                    top: 0px;
-                    left: 0px;
-                    width: 100%;
-                    height: 100%;
-                    background-color: rgba(0, 0, 0, 0.5);
-                    z-index: 1000;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .spinner {
-                    border: 4px solid #f3f3f3;
-                    border-top: 4px solid #3498db;
-                    border-radius: 50%;
-                    width: 40px;
-                    height: 40px;
-                    animation: spin 1s linear infinite;
-                }
-
-                @keyframes spin {
-                    0% {
-                        transform: rotate(0deg);
-                    }
-
-                    100% {
-                        transform: rotate(360deg);
-                    }
-                }
-            </style>
         </div>
     </div>
 
@@ -119,79 +85,6 @@ get_header();
     <div class="pb-5">
         <h2>Tabs scroll slider</h2>
         <div>
-            <style>
-                /* Scroll tab default css*/
-                .ui-scroll-tabs-view {
-                    z-index: 1;
-                    overflow: hidden;
-                }
-
-                .ui-scroll-tabs-view .ui-widget-header {
-                    border: none;
-                    background: transparent;
-                }
-
-                .ui-scroll-tabs-header {
-                    position: relative;
-                    overflow: hidden;
-                }
-
-                .ui-scroll-tabs-header .stNavMain {
-                    position: absolute;
-                    top: 0;
-                    z-index: 2;
-                    height: 100%;
-                    opacity: 0;
-                    transition: left .5s, right .5s, opacity .8s;
-                    transition-timing-function: swing;
-                }
-
-                .ui-scroll-tabs-header .stNavMain button {
-                    height: 100%;
-                }
-
-                .ui-scroll-tabs-header .stNavMainLeft {
-                    left: -250px;
-                }
-
-                .ui-scroll-tabs-header .stNavMainLeft.stNavVisible {
-                    left: 0;
-                    opacity: 1;
-                }
-
-                .ui-scroll-tabs-header .stNavMainRight {
-                    right: -250px;
-                }
-
-                .ui-scroll-tabs-header .stNavMainRight.stNavVisible {
-                    right: 0;
-                    opacity: 1;
-                }
-
-                .ui-scroll-tabs-header ul.ui-tabs-nav {
-                    position: relative;
-                    white-space: nowrap;
-                }
-
-                .ui-scroll-tabs-header ul.ui-tabs-nav li {
-                    display: inline-block;
-                    float: none;
-                }
-
-                .ui-scroll-tabs-header ul.ui-tabs-nav li.stHasCloseBtn a {
-                    padding-right: 0.5em;
-                }
-
-                .ui-scroll-tabs-header ul.ui-tabs-nav li span.stCloseBtn {
-                    float: left;
-                    padding: 4px 2px;
-                    border: none;
-                    cursor: pointer;
-                }
-
-                /*End of scrolltabs css*/
-            </style>
-
             <div id="example_1">
                 <ul role="tablist">
                     <li role="tab"><a href="#tabs-1" role="presentation">Tab 1</a></li>
@@ -370,6 +263,40 @@ get_header();
             </div>
         </div>
     </div>
+
+    <div class="pb-5">
+        <h2>Thu gọn nội dung</h2>
+
+        <div class="upload_block" style="width: 300px;">
+            <label class="upload_btn" for="upload_img">
+                <div class="upload_inner">
+                    <div class="upload_icon">
+                        <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M17.5 12.2227C17.9142 12.2227 18.25 11.8869 18.25 11.4727V4.28332L19.9697 6.00299C20.2626 6.29588 20.7374 6.29588 21.0303 6.00299C21.3232 5.71009 21.3232 5.23522 21.0303 4.94233L18.0303 1.94233C17.7374 1.64943 17.2626 1.64943 16.9697 1.94233L13.9697 4.94233C13.6768 5.23522 13.6768 5.71009 13.9697 6.00299C14.2626 6.29588 14.7374 6.29588 15.0303 6.00299L16.75 4.28332V11.4727C16.75 11.8869 17.0858 12.2227 17.5 12.2227Z"
+                                fill="#1A1A1A" />
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M12.5 1.72266L12.4426 1.72266C10.1342 1.72264 8.32519 1.72263 6.91371 1.9124C5.46897 2.10664 4.32895 2.51198 3.43414 3.40679C2.53933 4.3016 2.13399 5.44163 1.93975 6.88636C1.74998 8.29785 1.74999 10.1069 1.75 12.4153V12.53C1.74999 14.8384 1.74998 16.6475 1.93975 18.059C2.13399 19.5037 2.53933 20.6437 3.43414 21.5385C4.32895 22.4333 5.46897 22.8387 6.91371 23.0329C8.32519 23.2227 10.1342 23.2227 12.4426 23.2227H12.5574C14.8658 23.2227 16.6748 23.2227 18.0863 23.0329C19.531 22.8387 20.6711 22.4333 21.5659 21.5385C22.4607 20.6437 22.866 19.5037 23.0603 18.059C23.25 16.6475 23.25 14.8384 23.25 12.53V12.4727C23.25 12.0584 22.9142 11.7227 22.5 11.7227C22.0858 11.7227 21.75 12.0584 21.75 12.4727C21.75 14.8509 21.7484 16.5591 21.5736 17.8591C21.5667 17.9104 21.5596 17.9608 21.5522 18.0105L18.7782 15.5139C17.4788 14.3444 15.5437 14.228 14.1134 15.2332L13.8152 15.4427C13.3182 15.792 12.6421 15.7334 12.2125 15.3039L7.92282 11.0142C6.78741 9.87877 4.96613 9.81813 3.75771 10.8755L3.25098 11.3189C3.25552 9.52661 3.28124 8.16568 3.42637 7.08623C3.59825 5.80783 3.92514 5.03711 4.4948 4.46745C5.06445 3.8978 5.83517 3.5709 7.11358 3.39903C8.41356 3.22425 10.1218 3.22266 12.5 3.22266C12.9142 3.22266 13.25 2.88687 13.25 2.47266C13.25 2.05844 12.9142 1.72266 12.5 1.72266ZM3.42637 17.8591C3.59825 19.1375 3.92514 19.9082 4.4948 20.4779C5.06445 21.0475 5.83517 21.3744 7.11358 21.5463C8.41356 21.7211 10.1218 21.7227 12.5 21.7227C14.8782 21.7227 16.5864 21.7211 17.8864 21.5463C19.1648 21.3744 19.9355 21.0475 20.5052 20.4779C20.7487 20.2343 20.9479 19.954 21.1096 19.6131C21.0707 19.5893 21.0334 19.5616 20.9983 19.53L17.7747 16.6288C16.9951 15.9272 15.834 15.8573 14.9758 16.4604L14.6776 16.67C13.5843 17.4384 12.0968 17.3095 11.1519 16.3646L6.86216 12.0748C6.28515 11.4978 5.35958 11.467 4.74546 12.0044L3.25038 13.3125C3.25296 15.2611 3.27289 16.7175 3.42637 17.8591Z"
+                                fill="#1A1A1A" />
+                        </svg>
+                    </div>
+
+                    <div class="upload_label">
+                        Upload an image from your current device
+                    </div>
+                </div>
+
+                <div class="upload_change_file"
+                    style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.60) 100%),  url('')  lightgray center / cover no-repeat;">
+                    change image
+                </div>
+
+                <input type="file" name="upload_img" class="upload_img" id="upload_img" accept="image/jpeg, image/png">
+                <input type="hidden" name="upload_img_url" autocomplete="off" />
+                <input type="hidden" name="upload_img_height" autocomplete="off" />
+            </label>
+        </div>
+    </div>
 </div>
 </div>
 
@@ -455,5 +382,50 @@ get_footer();
                 }
             },
         }).css('overflow', 'hidden');
+
+        $('input[name="upload_img"]').on("change", function (e) {
+            e.preventDefault();
+            let this_el = $(this);
+            let file = this_el.get(0).files[0];
+            let parent = this_el.closest(".upload_btn");
+            parent.find('input[name="upload_img_url"]').val("");
+            let input_height = parent.find('input[name="upload_img_height"]');
+
+            if (file) {
+                let fileType = file.type;
+                let validImageTypes = ["image/jpeg", "image/png"];
+
+                if ($.inArray(fileType, validImageTypes) < 0) {
+                    alert("Vui lòng chỉ upload ảnh với định dạng JPG hoặc PNG.");
+                    this_el.val("");
+                    return;
+                }
+
+                let reader = new FileReader();
+
+                reader.onload = function (e) {
+                    let img = new Image();
+                    img.onload = function () {
+                        let width = img.width;
+                        let height = img.height;
+                        let w_img_wrap = parent.outerWidth();
+                        let ty_le_anh = height / width;
+                        let h_img_wrap = ty_le_anh * w_img_wrap;
+
+                        parent.css("height", h_img_wrap);
+                        input_height.val(h_img_wrap);
+                        parent.find(".upload_change_file").css("background", `linear-gradient(0deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.60) 100%), url(${e.target.result}) center / cover no-repeat`);
+                        parent.addClass("uploaded_btn");
+                    };
+                    img.src = e.target.result;
+                };
+
+                reader.readAsDataURL(file);
+            } else {
+                parent.removeClass("uploaded_btn");
+                parent.css("height", "unset");
+                input_height.val("");
+            }
+        });
     });
 </script>
