@@ -32,3 +32,5 @@ require get_template_directory() . '/inc/download_zip.php';
 if (class_exists('WooCommerce')) {
     require get_template_directory() . '/inc/woo/index.php';
 }
+
+require get_template_directory() . '/inc/page_demo.php';
