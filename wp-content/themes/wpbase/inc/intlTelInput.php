@@ -11,14 +11,6 @@ function add_custom_intlTelInput_script()
 {
     if (!is_admin()) {
         ?>
-        <!-- input html -->
-        <input type="text" id="phone" name="phone">
-
-        <div class="seclect_country">
-            <input type="text" id="country" name="country">
-        </div>
-
-        <!-- script -->
         <script>
             // Hàm khởi tạo intlTelInput cho các trường nhập số điện thoại
             function initIntlTelInput(selector) {

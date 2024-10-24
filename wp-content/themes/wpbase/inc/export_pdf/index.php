@@ -37,10 +37,6 @@ function add_custom_download_pdf_script()
         <div id="ajax-loader" style="display: none;">
             <div class="spinner"></div>
         </div>
-        <form id="download-pdf-form" method="post">
-            <input type="hidden" name="post_id" value="123">
-            <button type="submit">Download PDF</button>
-        </form>
 
         <style>
             #ajax-loader {

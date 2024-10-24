@@ -54,10 +54,6 @@ function add_custom_download_zip_script()
         <div id="ajax-loader" style="display: none;">
             <div class="spinner"></div>
         </div>
-        <form id="download-zip-form" method="post">
-            <input type="hidden" name="post_id" value="1">
-            <button type="submit">Download ZIP</button>
-        </form>
 
         <style>
             #ajax-loader {
