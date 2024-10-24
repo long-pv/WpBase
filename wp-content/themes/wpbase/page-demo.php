@@ -279,6 +279,97 @@ get_header();
             </a>
         </div>
     </div>
+
+    <div class="pb-5">
+        <h2>View PDF</h2>
+        <?php echo do_shortcode('[custom_pdf_viewer pdf="https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"]'); ?>
+    </div>
+
+    <div class="pb-5">
+        <h2>Thu gọn nội dung</h2>
+
+        <div class="readmore_content">
+            <div class="editor">
+                Lorem ipsum odor amet, consectetuer adipiscing elit. Arcu nullam consequat sagittis pulvinar ante cras
+                lorem. Duis habitant mi neque at lacus dapibus proin. Blandit quisque sapien ullamcorper montes cubilia
+                sed
+                sapien convallis curabitur. Lorem cubilia accumsan blandit mollis at efficitur iaculis torquent. Auctor
+                habitasse inceptos risus senectus feugiat turpis. Morbi suscipit lectus nisi accumsan lobortis sodales
+                pulvinar fringilla.
+
+                Mauris nisl montes in; mi sodales tristique habitant ridiculus. Donec orci libero inceptos in imperdiet.
+                Id
+                commodo elit habitasse dui; malesuada cubilia phasellus sagittis. Fames varius aliquam quis taciti
+                praesent
+                integer sem. Elementum viverra sociosqu ut, aptent taciti rhoncus. Sodales ornare lobortis primis sit
+                torquent sem. Elementum felis mattis a, gravida class pellentesque.
+
+                Sed aliquet bibendum ridiculus lacus; hac elementum id interdum tempus. Justo netus netus aliquam vel
+                mollis
+                vulputate integer? Massa leo penatibus pharetra ipsum senectus sapien orci mauris ridiculus. Convallis
+                ipsum
+                tincidunt ipsum aliquam dolor dictum litora dis. Ante mus mollis; venenatis sed elit nibh. Leo ridiculus
+                ligula neque, rutrum pretium ipsum. Consequat fermentum eget ex dolor; etiam neque.
+
+                Quisque magnis nascetur, molestie ac himenaeos imperdiet nibh. Montes lorem habitant consequat curabitur
+                nibh platea et ex. Morbi aliquam volutpat luctus vivamus mus nisl. Himenaeos cras sagittis gravida
+                luctus
+                maecenas suspendisse et adipiscing. Imperdiet gravida nam fames fusce primis magna est lacinia posuere.
+                Nunc
+                placerat turpis interdum cras a et.
+
+                Leo sodales aliquam per semper pharetra dui id per quam. Dictumst sociosqu dictum enim non dolor.
+                Maximus
+                curabitur felis maximus primis curabitur hac sociosqu vestibulum. Nullam egestas bibendum consectetur
+                penatibus commodo. Finibus cursus litora adipiscing lacinia sed nullam, luctus ante. Lacinia fringilla
+                tempus, ridiculus suspendisse pulvinar ipsum. Dapibus rhoncus donec in justo leo placerat.
+
+                Aliquet ante orci tellus integer eleifend curae proin sed. Facilisis tortor risus urna sodales lacinia
+                aenean malesuada elit. Ultrices duis ut interdum, dignissim iaculis ante imperdiet felis. Convallis mus
+                lectus ridiculus nostra pellentesque. Lobortis gravida malesuada tristique sollicitudin convallis
+                facilisi
+                tortor porta. Habitant lacinia dignissim venenatis tempor ex vivamus. Sapien ligula vehicula fermentum
+                faucibus bibendum mattis lacus. Rhoncus et tincidunt varius nascetur montes pulvinar hendrerit euismod
+                consequat.
+
+                Commodo auctor himenaeos morbi cursus dictumst ac ad tempus. Magna mus porttitor nam ridiculus porttitor
+                purus montes curabitur semper. Viverra cras urna malesuada dictum aenean ultricies condimentum nec nunc.
+                Vehicula elementum turpis orci tellus ex. Ac at suscipit lobortis porta tempor; gravida iaculis dui.
+                Gravida
+                dictum condimentum; proin velit scelerisque risus cubilia sed. Duis sit neque in egestas odio neque
+                blandit
+                platea. Sem sem duis aptent ligula aptent interdum fusce. At habitant nulla senectus mi inceptos. Litora
+                sit
+                imperdiet euismod blandit ex ad volutpat facilisi accumsan.
+
+                Odio sapien odio diam facilisis sagittis condimentum. Tellus aliquet eros morbi auctor velit elit
+                sagittis
+                magna. Sit ridiculus imperdiet mus condimentum maecenas. Suscipit potenti consequat hendrerit nullam;
+                hac
+                gravida a. Vestibulum ipsum inceptos mus dapibus netus maximus cras curae accumsan. Finibus posuere
+                augue;
+                sagittis bibendum sed dignissim. Scelerisque facilisi nisi taciti luctus sed. Nostra id condimentum
+                dictum
+                magna laoreet at.
+
+                Primis fermentum turpis blandit luctus pharetra justo ultrices. Curae himenaeos himenaeos nam efficitur
+                congue. Per tortor curabitur sagittis magnis gravida morbi justo. Nunc rhoncus placerat platea, euismod
+                vestibulum venenatis bibendum. Elit cras fames dignissim ridiculus egestas. Est dictum elementum massa
+                felis
+                placerat elit turpis nostra. Neque purus fames velit eu parturient maecenas viverra diam. Diam odio
+                ornare
+                adipiscing semper commodo porttitor mus feugiat inceptos.
+
+                Auctor vehicula phasellus condimentum habitasse curae ante ligula nibh feugiat. Hac etiam etiam ante mus
+                mauris varius suspendisse. Tempor ullamcorper tincidunt tellus vestibulum augue orci. Vestibulum primis
+                bibendum turpis nam quam, donec malesuada semper. Vehicula hac id sagittis fusce feugiat fames at
+                natoque.
+                Dignissim in neque a phasellus ligula, scelerisque viverra habitant iaculis. Parturient elit maximus id
+                magnis, duis eros. Tellus id ad fusce venenatis odio. Odio aliquet a rutrum faucibus parturient sapien
+                inceptos!
+            </div>
+        </div>
+    </div>
 </div>
 </div>
 
@@ -353,5 +444,16 @@ get_footer();
                 selectTabAfterScroll: true
             }
         });
+
+        $(".readmore_content").readmore({
+            moreLink: '<div class="rm_down"><button class="btn btn-primary">Đọc thêm</button></div>',
+            lessLink: '<div class="rm_up"><button class="btn btn-primary">Thu gọn</button></div>',
+            collapsedHeight: 150,
+            afterToggle: function (trigger, element, expanded) {
+                if (!expanded) {
+                    $("html, body").animate({ scrollTop: element.offset().top }, { duration: 100 });
+                }
+            },
+        }).css('overflow', 'hidden');
     });
 </script>

@@ -71,6 +71,9 @@ function basetheme_scripts()
     wp_enqueue_script('basetheme-script-wow_custom', get_template_directory_uri() . '/assets/inc/wow/index.js', array(), _S_VERSION, true);
     // end
 
+    // readmore Component
+    wp_enqueue_script('basetheme-script-readmore', get_template_directory_uri() . '/assets/js/readmore.js', array(), null, true);
+
     //add custom main css/js
     wp_enqueue_style('basetheme-style-main', get_template_directory_uri() . '/assets/css/main.css', array(), _S_VERSION);
     wp_enqueue_script('basetheme-script-main', get_template_directory_uri() . '/assets/js/main.js', array(), _S_VERSION, true);
