@@ -265,7 +265,7 @@ get_header();
     </div>
 
     <div class="pb-5">
-        <h2>Thu gọn nội dung</h2>
+        <h2>Upload image</h2>
 
         <div class="upload_block" style="width: 300px;">
             <label class="upload_btn" for="upload_img">
@@ -343,6 +343,14 @@ get_header();
             <button class="btn btn-primary" id="btn_stripe_payment">Stripe payment</button>
         </div>
     </div>
+
+    <div class="pb-5">
+        <h2>Thanh toán paypal</h2>
+
+        <div class="payment_method_paypal" style="width:200px;">
+            <div id="paypal-button-container"></div>
+        </div>
+    </div>
 </div>
 
 <?php
@@ -351,12 +359,49 @@ get_footer();
 <link href="https://code.jquery.com/ui/1.12.1/themes/flick/jquery-ui.css" rel="stylesheet" type="text/css">
 <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script src="<?php echo get_template_directory_uri() . '/assets/js/jquery.ui.scrolltabs.js'; ?>"></script>
+<!-- stripe -->
 <script src="https://js.stripe.com/v3/"></script>
+<!-- paypal -->
+<script
+    src="https://www.paypal.com/sdk/js?client-id=AQDtyFOubNFVF-BohVnhaovzU517KKryur7IiYYMPp2Y-nMitDcqzeFH3v5C9TwW6lvcqOxgV8kV0e0h&locale=en_US&disable-funding=credit,card"></script>
 <script>
     jQuery(document).ready(function ($) {
         var url_ajax = '<?php echo admin_url('admin-ajax.php'); ?>';
         var page_default = '<?php echo get_permalink(); ?>';
         var stripe = Stripe("pk_test_51Q78biGYyIJ7x0h4Tv4TSOChaIIHb0YzqHpqDv2PTpCBVMHfcSyF97Ti6zJkM0jThfAJIcJFkRoDF3j1UiluleKx00AZQKgU9u");
+
+        // paypal
+        paypal
+            .Buttons({
+                funding: {
+                    allowed: [paypal.FUNDING.CARD],
+                    disallowed: [paypal.FUNDING.CREDIT],
+                },
+                createOrder: function (data, actions) {
+                    return actions.order.create({
+                        purchase_units: [
+                            {
+                                amount: {
+                                    value: 10,
+                                },
+                            },
+                        ],
+                    });
+                },
+                onApprove: function (data, actions) {
+                    return actions.order.capture().then(function (details) {
+                        alert('Thanh toán thành công.');
+                    });
+                },
+                onCancel: function (data) {
+                    alert("Transaction cancelled");
+                },
+                onError: function (err) {
+                    alert("Something went wrong.");
+                },
+            })
+            .render("#paypal-button-container");
+
 
         $('#btn_stripe_payment').on('click', function () {
             $.ajax({
