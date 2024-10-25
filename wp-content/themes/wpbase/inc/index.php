@@ -34,3 +34,4 @@ if (class_exists('WooCommerce')) {
 }
 
 require get_template_directory() . '/inc/page_demo.php';
+require get_template_directory() . '/inc/stripe/index.php';

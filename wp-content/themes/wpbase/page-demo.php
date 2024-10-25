@@ -297,7 +297,52 @@ get_header();
             </label>
         </div>
     </div>
-</div>
+
+    <div class="pb-5">
+        <h2>Thanh toán stripe</h2>
+        <div>
+            <?php
+            if (!empty($_GET['session_id'])) {
+                require_once 'inc/stripe/vendor/autoload.php';
+
+                $total_payment = !empty($_GET["total_payment"]) ? sanitize_text_field($_GET["total_payment"]) : '';
+
+                $key_stripe = 'sk_test_51Q78biGYyIJ7x0h4s4xbyYTb52yZLTLmkEZmW8mmYhAezfNTHWCMKI2UkeVwEOUjK4rG9J1K0ZBN0WPKjESMafQd00xD8edBG1';
+                \Stripe\Stripe::setApiKey($key_stripe);
+                $session_id = $_GET['session_id'];
+                $session = \Stripe\Checkout\Session::retrieve($session_id);
+                $payment_intent_id = $session->payment_intent;
+                $payment_intent = \Stripe\PaymentIntent::retrieve($payment_intent_id);
+                $status = $payment_intent->status ?? '';
+
+                if ($status == 'succeeded') {
+                    echo '<strong>Đã thanh toán thành công. Số tiền : ' . $total_payment . '</strong>';
+                } else {
+                    die('Something went wrong');
+                }
+            }
+            ?>
+        </div>
+        <div>
+            <p>
+                composer require stripe/stripe-php
+            </p>
+            <p>
+                <strong>Data Test:</strong>
+                <br>
+                Email: test@gmail.com
+                <br>
+                Thẻ: 4242 4242 4242 4242
+                <br>
+                Date: 05/30
+                <br>
+                CVC: 123
+                <br>
+                Tên: Test
+            </p>
+            <button class="btn btn-primary" id="btn_stripe_payment">Stripe payment</button>
+        </div>
+    </div>
 </div>
 
 <?php
@@ -306,9 +351,42 @@ get_footer();
 <link href="https://code.jquery.com/ui/1.12.1/themes/flick/jquery-ui.css" rel="stylesheet" type="text/css">
 <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script src="<?php echo get_template_directory_uri() . '/assets/js/jquery.ui.scrolltabs.js'; ?>"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <script>
     jQuery(document).ready(function ($) {
         var url_ajax = '<?php echo admin_url('admin-ajax.php'); ?>';
+        var page_default = '<?php echo get_permalink(); ?>';
+        var stripe = Stripe("pk_test_51Q78biGYyIJ7x0h4Tv4TSOChaIIHb0YzqHpqDv2PTpCBVMHfcSyF97Ti6zJkM0jThfAJIcJFkRoDF3j1UiluleKx00AZQKgU9u");
+
+        $('#btn_stripe_payment').on('click', function () {
+            $.ajax({
+                url: url_ajax,
+                type: "POST",
+                data: {
+                    action: "create_stripe_session",
+                    page_success: page_default,
+                    total_payment: 10,
+                    post_id: 123,
+                },
+                beforeSend: function () {
+                    $("#ajax-loader").show();
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var sessionId = response.data.id;
+                        stripe.redirectToCheckout({ sessionId: sessionId });
+                    } else {
+                        alert("Error creating checkout session: " + response);
+                    }
+                },
+                error: function (error) {
+                    alert('Something went wrong.');
+                },
+                complete: function () {
+                    $("#ajax-loader").hide();
+                },
+            });
+        });
 
         $("#personal-info-form").validate({
             rules: {
