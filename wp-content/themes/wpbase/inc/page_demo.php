@@ -74,3 +74,18 @@ function send_demo_mail()
 }
 add_action('wp_ajax_send_demo_mail', 'send_demo_mail');
 add_action('wp_ajax_nopriv_send_demo_mail', 'send_demo_mail');
+
+
+function currency_format($price)
+{
+    $price = floatval($price);
+    if (strpos($price, '.') !== false) {
+        list($integer_part, $decimal_part) = explode('.', $price);
+        $integer_part = number_format($integer_part);
+        $price_added = $integer_part . '.' . $decimal_part;
+    } else {
+        $price_added = number_format($price);
+    }
+
+    return $price_added;
+}

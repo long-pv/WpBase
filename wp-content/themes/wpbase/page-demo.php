@@ -357,6 +357,19 @@ get_header();
 
         <button class="btn btn-primary" id="send_mail">Gửi mail demo</button>
     </div>
+
+    <div class="pb-5">
+        <h2>Currency format (hiển thị tiền tệ)</h2>
+        <div>PHP: <?php echo currency_format('10023456789.567'); ?></div>
+        <div>Javascript:
+            <div>
+                <input type="number" id="input_price" value="0">
+            </div>
+            <div>
+                Số tiền đã nhập là: <span id="show_price">0</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php
@@ -375,6 +388,26 @@ get_footer();
         var url_ajax = '<?php echo admin_url('admin-ajax.php'); ?>';
         var page_default = '<?php echo get_permalink(); ?>';
         var stripe = Stripe("pk_test_51Q78biGYyIJ7x0h4Tv4TSOChaIIHb0YzqHpqDv2PTpCBVMHfcSyF97Ti6zJkM0jThfAJIcJFkRoDF3j1UiluleKx00AZQKgU9u");
+
+        $('#input_price').on('change', function () {
+            let val = $(this).val();
+            $('#show_price').text(currency_format(val));
+        });
+
+        function currency_format(price) {
+            price = price ? price : 0;
+            price = parseFloat(price);
+
+            if (Number.isInteger(price)) {
+                return price.toLocaleString("en-US");
+            } else {
+                price = price.toFixed(1).toString();
+                let parts = price.split(".");
+                let integer_part = parseInt(parts[0]).toLocaleString("en-US");
+                let decimal_part = parts[1];
+                return integer_part + "." + decimal_part;
+            }
+        }
 
         $('#send_mail').click(function (e) {
             e.preventDefault();
