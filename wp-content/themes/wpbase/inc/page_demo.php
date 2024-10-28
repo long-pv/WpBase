@@ -43,3 +43,34 @@ function my_acf_load_repeater_end_date($valid, $value, $field, $input_name)
     return $valid;
 }
 add_filter('acf/validate_value/key=field_6719e920598e9', 'my_acf_load_repeater_end_date', 10, 4);
+
+function send_demo_mail()
+{
+    $to = 'emailcuaban@gmail.com';
+    $subject = 'Thư demo từ WordPress';
+    $headers = array('Content-Type: text/html; charset=UTF-8');
+
+    ob_start();
+    ?>
+    <html>
+
+    <body>
+        <h1 style="color: #007bff;">Xin chào!</h1>
+        <p>Đây là một email được gửi từ WordPress.</p>
+        <p style="font-weight: bold;">Chúc bạn một ngày vui vẻ!</p>
+    </body>
+
+    </html>
+    <?php
+    $message = ob_get_clean();
+
+    if (wp_mail($to, $subject, $message, $headers)) {
+        wp_send_json_success('Mail đã được gửi thành công.');
+    } else {
+        wp_send_json_error('Gửi mail thất bại.');
+    }
+
+    wp_die();
+}
+add_action('wp_ajax_send_demo_mail', 'send_demo_mail');
+add_action('wp_ajax_nopriv_send_demo_mail', 'send_demo_mail');

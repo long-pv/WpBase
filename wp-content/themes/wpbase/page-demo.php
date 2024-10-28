@@ -351,6 +351,12 @@ get_header();
             <div id="paypal-button-container"></div>
         </div>
     </div>
+
+    <div class="pb-5">
+        <h2>Gửi mail</h2>
+
+        <button class="btn btn-primary" id="send_mail">Gửi mail demo</button>
+    </div>
 </div>
 
 <?php
@@ -369,6 +375,29 @@ get_footer();
         var url_ajax = '<?php echo admin_url('admin-ajax.php'); ?>';
         var page_default = '<?php echo get_permalink(); ?>';
         var stripe = Stripe("pk_test_51Q78biGYyIJ7x0h4Tv4TSOChaIIHb0YzqHpqDv2PTpCBVMHfcSyF97Ti6zJkM0jThfAJIcJFkRoDF3j1UiluleKx00AZQKgU9u");
+
+        $('#send_mail').click(function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: url_ajax,
+                type: 'POST',
+                data: {
+                    action: 'send_demo_mail',
+                },
+                beforeSend: function () {
+                    $("#ajax-loader").show();
+                },
+                success: function (response) {
+                    alert('Mail đã được gửi thành công!');
+                },
+                error: function (error) {
+                    alert('Something went wrong.');
+                },
+                complete: function () {
+                    $("#ajax-loader").hide();
+                }
+            });
+        });
 
         // paypal
         paypal
