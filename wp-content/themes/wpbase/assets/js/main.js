@@ -67,4 +67,39 @@
 		slidesToShow: calculateSlidesToShow(".slideGalleryAll", ".slideGallery__item"),
 	});
 	// end -- slick hiển thị arrow ngay cả khi có quá ít item
+
+	$(document).on("click", ".favorite_posts", function (e) {
+		e.preventDefault(); // Ngăn chặn hành động mặc định nếu có
+		let $this = $(this);
+		let post_id = $this.data("post_id");
+
+		$.ajax({
+			url: url_ajax,
+			type: "POST",
+			data: {
+				action: "favorite_posts",
+				post_id: post_id,
+			},
+			beforeSend: function () {
+				$("body").append('<div id="ajax-loader"><div class="spinner"></div></div>');
+			},
+			success: function (response) {
+				if (response.success) {
+					if (response.data.status === "added") {
+						$('.favorite_posts[data-post_id="' + post_id + '"]').addClass("active");
+					} else if (response.data.status === "removed") {
+						$('.favorite_posts[data-post_id="' + post_id + '"]').removeClass("active");
+					}
+				} else {
+					alert(response.data.message);
+				}
+			},
+			error: function () {
+				alert("Something went wrong.");
+			},
+			complete: function () {
+				$("body #ajax-loader").remove();
+			},
+		});
+	});
 })(jQuery, window);

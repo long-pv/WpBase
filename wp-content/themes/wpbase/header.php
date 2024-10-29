@@ -24,6 +24,10 @@
 	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap" rel="stylesheet" />
 
 	<?php wp_head(); ?>
+
+	<script>
+		var url_ajax = '<?php echo admin_url('admin-ajax.php'); ?>';
+	</script>
 </head>
 
 <body <?php body_class(); ?>>

@@ -22,6 +22,17 @@ $categories = get_the_category($post_id);
             <?php
         endif;
         ?>
+
+        <?php
+        $user_id = get_current_user_id();
+        if ($user_id):
+            $favorite_posts = get_user_meta($user_id, 'favorite_posts', true) ?? [];
+            $active_class = in_array($post_id, $favorite_posts) ? 'active' : '';
+            ?>
+            <span class="favorite_posts <?php echo $active_class; ?>" data-post_id="<?php echo $post_id; ?>"></span>
+            <?php
+        endif;
+        ?>
     </div>
     <div class="singlePost__content">
         <div class="singlePost__date mb-2 wow">

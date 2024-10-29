@@ -385,7 +385,6 @@ get_footer();
     src="https://www.paypal.com/sdk/js?client-id=AQDtyFOubNFVF-BohVnhaovzU517KKryur7IiYYMPp2Y-nMitDcqzeFH3v5C9TwW6lvcqOxgV8kV0e0h&locale=en_US&disable-funding=credit,card"></script>
 <script>
     jQuery(document).ready(function ($) {
-        var url_ajax = '<?php echo admin_url('admin-ajax.php'); ?>';
         var page_default = '<?php echo get_permalink(); ?>';
         var stripe = Stripe("pk_test_51Q78biGYyIJ7x0h4Tv4TSOChaIIHb0YzqHpqDv2PTpCBVMHfcSyF97Ti6zJkM0jThfAJIcJFkRoDF3j1UiluleKx00AZQKgU9u");
 
