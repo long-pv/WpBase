@@ -48,6 +48,8 @@ dup-installer/
 changed_files/
 
 # wp-content
+wp-content/wpo-cache/
+wp-content/advanced-cache.php
 wp-content/uploads/
 wp-content/languages/
 wp-content/plugins/*/*.txt
