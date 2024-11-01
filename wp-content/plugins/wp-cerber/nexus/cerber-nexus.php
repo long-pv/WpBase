@@ -38,7 +38,7 @@ function nexus_init() {
 		require_once( __DIR__ . '/cerber-nexus-client.php' );
 		if ( nexus_is_valid_request() ) {
 			cerber_load_wp_constants();
-			nexus_slave_process();
+			nexus_client_process();
 		}
 	}
 	elseif ( defined( 'WP_ADMIN' )
@@ -135,7 +135,7 @@ function nexus_site_manager() {
 
 		$token = nexus_the_token();
 
-		$no_slave = wp_nonce_url( add_query_arg( array(
+		$no_client = wp_nonce_url( add_query_arg( array(
 			'cerber_admin_do' => 'nexus_set_role',
 			'nexus_set_role'  => 'none',
 		) ), 'control', 'cerber_nonce' );
@@ -145,7 +145,7 @@ function nexus_site_manager() {
 		echo '<p>' . __( 'The token is unique to this website. Keep it secret. Install the token on your main website to grant access to this website.', 'wp-cerber' ) . ' </p>';
 		echo '<p class="crb-monospace" style="padding:1em; background-color: #fff; border: solid 1px #d6d6d6; word-break: break-all;">' . $token . '</p>';
 		$confirm = ' onclick="return confirm(\'' . __( 'Are you sure? This permanently invalidates the token.', 'wp-cerber' ) . '\');"';
-		echo '<p>' . __( 'To revoke the token and disable remote management, click here:', 'wp-cerber' ) . ' <a href="' . $no_slave . '" ' . $confirm . '>' . __( 'Disable managed mode', 'wp-cerber' ) . '</a>.</p>';
+		echo '<p>' . __( 'To disable remote management and revoke the token, click here:', 'wp-cerber' ) . ' <a href="' . $no_client . '" ' . $confirm . '>' . __( 'Disable managed mode', 'wp-cerber' ) . '</a>.</p>';
 
 		echo '</div>';
 
@@ -176,10 +176,13 @@ function nexus_the_token( $token = '' ) {
 		}
 
 		$ret = @json_decode( str_rot13( urldecode( str_replace( '&', '%', $body ) ) ), true );
+
 		if ( JSON_ERROR_NONE != json_last_error() ) {
 			return false;
 		}
-		if ( empty( $ret['cerber-slave'] ) || 6 > count( $ret['cerber-slave'] ) ) {
+
+		if ( empty( $ret['cerber-slave'] )
+		     || 6 > count( $ret['cerber-slave'] ) ) {
 			return false;
 		}
 
@@ -340,7 +343,7 @@ function nexus_is_valid_request() {
  * @return false|object
  */
 function nexus_get_context() {
-	static $slave, $slave_id;
+	static $client, $client_id;
 
 	if ( ! is_admin()
 	     || ! nexus_is_main() ) {
@@ -356,18 +359,19 @@ function nexus_get_context() {
 		return false;
 	}
 
-	if ( $id === $slave_id && isset( $slave ) ) {
-		return $slave;
+	if ( $id === $client_id
+	     && isset( $client ) ) {
+		return $client;
 	}
 
-	$slave_id = $id;
+	$client_id = $id;
 
-	if ( ! $slave = nexus_get_slave_data( $slave_id ) ) {
-		$slave_id = null;
-		$slave = false;
+	if ( ! $client = nexus_get_client_data( $client_id ) ) {
+		$client_id = null;
+		$client = false;
 	}
 
-	return $slave;
+	return $client;
 }
 
 /**
@@ -445,33 +449,42 @@ function nexus_diag_log( $msg ) {
 	}
 }
 
-function nexus_get_fields( $slave = null ) {
+/**
+ *
+ * @param object $client
+ *
+ * @return array|false
+ */
+function nexus_get_fields( $client = null ) {
+
 	if ( nexus_is_client() ) {
 		$role = nexus_get_role_data();
-		$xf   = $role['slave']['x_field'];
-		$xn   = $role['slave']['x_num'];
+		$xf = $role['slave']['x_field'];
+		$xn = $role['slave']['x_num'];
 	}
 	elseif ( nexus_is_main() ) {
-		if ( ! $slave ) {
-			$slave = nexus_get_context();
+		if ( ! $client ) {
+			$client = nexus_get_context();
 		}
-		$xf    = $slave->x_field;
-		$xn    = $slave->x_num;
+		$xf = $client->x_field;
+		$xn = $client->x_num;
 	}
 	else {
 		return false;
 	}
+
 	if ( ! $xn || ! $xf ) {
 		return false;
 	}
+
 	// Generate a set of field names
-	$ret   = array( $xn, $xf );
+	$ret = array( $xn, $xf );
 
 	$chars = str_split( $xf );
 	for ( $i = count( $chars ) - 2; $i > 0; $i -- ) {
-		$tmp       = $chars;
+		$tmp = $chars;
 		$tmp[ $i ] = '_';
-		$ret[]     = implode( '', $tmp );
+		$ret[] = implode( '', $tmp );
 	}
 
 	/*

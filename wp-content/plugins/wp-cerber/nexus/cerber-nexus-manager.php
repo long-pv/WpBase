@@ -49,18 +49,18 @@ final class CRB_Nexus {
 	private static $last_curl;
 
 	/**
-	 * Sends request to remote website
+	 * Sends request to a remote client website
 	 *
-	 * @param $request array
-	 * @param $slave_id int
+	 * @param array $request
+	 * @param int $client_id
 	 *
 	 * @return bool|mixed
 	 */
-	static function send( $request, $slave_id = null ) {
+	static function send( $request, $client_id = null ) {
 
-		nexus_diag_log( '/\/ Initiating ' . $request['type'] . ' request to the website' . ( ( $slave_id ) ? ' #' . $slave_id : ' from context' ) );
+		nexus_diag_log( '/\/ Initiating ' . $request['type'] . ' request to the website' . ( ( $client_id ) ? ' #' . $client_id : ' from context' ) );
 
-		$website = ( $slave_id ) ? nexus_get_slave_data( $slave_id ) : nexus_get_context();
+		$website = ( $client_id ) ? nexus_get_client_data( $client_id ) : nexus_get_context();
 
 		if ( ! $website ) {
 			return false;
@@ -68,7 +68,7 @@ final class CRB_Nexus {
 
 		$network = CRB_Nexus::net_send_request( $request, $website );
 
-		nexus_update_slave( $website->id, array( 'last_http' => self::$last_http ) );
+		nexus_update_client_data( $website->id, array( 'last_http' => self::$last_http ) );
 
 		if ( ! crb_is_wp_error( $network ) ) {
 
@@ -269,7 +269,7 @@ final class CRB_Nexus {
 		     || empty( $remote->x_field )
 		     || empty( $remote->x_num )
 		     || ( ! $field_names = nexus_get_fields( $remote ) ) ) {
-			return new WP_Error( 'invalid_slave', 'Mandatory fields for connecting to the managed website #' . $remote->id . ' are invalid or missing' );
+			return new WP_Error( 'invalid_client_data', 'Mandatory fields for connecting to the managed website #' . $remote->id . ' are invalid or missing' );
 		}
 
 		array_walk_recursive( $payload, function ( &$e ) {
@@ -462,7 +462,7 @@ add_filter( 'set-screen-option', function ( $status ) {
 } );
 
 function nexus_show_site_edit_form( $site_id ) {
-	$site = nexus_get_slave_data( $site_id );
+	$site = nexus_get_client_data( $site_id );
 	if ( ! $site ) {
 		echo 'Website not found. <a href="' . cerber_admin_link( 'nexus_sites' ) . '">Return to the list</a>.';
 
@@ -473,7 +473,7 @@ function nexus_show_site_edit_form( $site_id ) {
 
 	// We utilize WP settings API routines just to render the edit form
 
-	$edit_fields = nexus_slave_form_fields(); // TODO implement this
+	$edit_fields = nexus_client_form_fields(); // TODO implement this
 
 	$edit_fields = array(
 		'main' => array(
@@ -562,7 +562,7 @@ function nexus_show_site_edit_form( $site_id ) {
 	cerber_show_settings_form( CRB_NX_MANAGED );
 }
 
-function nexus_slave_form_fields() { // TODO implement this
+function nexus_client_form_fields() {
 	return array( 'first_name', 'last_name', 'owner_email', 'owner_phone', 'owner_biz', 'owner_address' );
 }
 
@@ -634,13 +634,13 @@ add_action( 'admin_init', function () {
 			}
 		}
 
-		$new_details = array_intersect_key( $fields, array_flip( nexus_slave_form_fields() ) );
+		$new_details = array_intersect_key( $fields, array_flip( nexus_client_form_fields() ) );
 		$new_details = array_map( 'strip_tags', $new_details );
 
 		$fields = array_replace( $fields, $new_details );
 
 		$fields['group_id'] = $group_id;
-		nexus_update_slave( $site_id, $fields );
+		nexus_update_client_data( $site_id, $fields );
 		nexus_delete_unused( 'nexus_groups', 'group_id' );
 
 		return '';
@@ -648,7 +648,7 @@ add_action( 'admin_init', function () {
 
 }, 0 );
 
-function nexus_add_slave( $token ) {
+function nexus_add_client( $token ) {
 	if ( ! is_super_admin() || ! nexus_is_main() ) {
 		return;
 	}
@@ -716,23 +716,23 @@ function nexus_add_slave( $token ) {
 }
 
 /**
- * @param $id int Slave ID
- * @param $data array Sanitized slave data
+ * @param $id int Remote site ID
+ * @param $data array Sanitized remote site data
  *
- * @return bool|mysqli_result|resource
+ * @return bool
  */
-function nexus_update_slave( $id, $data ) {
+function nexus_update_client_data( $id, $data ) {
 
 	$id = absint( $id );
 	if ( ! $id ) {
 		return false;
 	}
 
-	$old = nexus_get_slave_data( $id );
+	$old = nexus_get_client_data( $id );
 
 	// Details
 	$old_details = ( is_array( $old->details ) ) ? $old->details : array();
-	$details_fields = nexus_slave_form_fields();
+	$details_fields = nexus_client_form_fields();
 	if ( $new_details = array_intersect_key( $data, array_flip( $details_fields ) ) ) {
 		$data['details'] = serialize( array_replace( $old_details, $new_details ) );
 	}
@@ -770,16 +770,20 @@ function nexus_update_slave( $id, $data ) {
 }
 
 /**
- * @param $site_id
+ * Returns remote website data from the local storage
+ *
+ * @param int $site_id
  *
  * @return bool|object
  */
-function nexus_get_slave_data( $site_id ) {
+function nexus_get_client_data( $site_id ) {
 	$site_id = absint( $site_id );
 	$site = cerber_db_get_row( 'SELECT * FROM ' . cerber_get_db_prefix() . CERBER_MS_TABLE . ' WHERE id = ' . $site_id, MYSQL_FETCH_OBJECT );
-	if ( ! $site ) {
+
+    if ( ! $site ) {
 		return false;
 	}
+
 	if ( ! empty( $site->details ) ) {
 		$site->details = crb_unserialize( $site->details );
 	}
@@ -787,7 +791,7 @@ function nexus_get_slave_data( $site_id ) {
 	return $site;
 }
 
-function nexus_get_slaves( $args ) {
+function nexus_get_clients( $args ) {
 	$order = '';
 	if ( isset( $args['orderby'] ) ) {
 		$order = ' ORDER BY ' . $args['orderby'] . ' ';
@@ -800,18 +804,16 @@ function nexus_get_slaves( $args ) {
 }
 
 /**
- * @param $ids integer|array
+ * Deletes client(s) and all remote website data stored locally
+ *
+ * @param $ids integer|integer[]
  *
  * @return bool
  */
-function nexus_delete_slave( $ids ) {
+function nexus_delete_client( $ids ) {
 	if ( ! is_super_admin() ) {
 		return false;
 	}
-	/*$field = ( ! $bulk ) ? 'site_id' : 'ids';
-	if ( ! $ids = cerber_get_get( $field ) ) {
-		return false;
-	}*/
 
 	if ( ! is_array( $ids ) ) {
 		$ids = array( $ids );
@@ -853,10 +855,10 @@ function nexus_show_remote_page() {
 
     /* This code for new settings mechanism
 
-	$slave = nexus_get_context();
+	$client = nexus_get_context();
 	if ( cerber_is_http_post()
 		 && ( $m = cerber_get_post( 'cerber_nexus_seal' ) )
-		 && sha1( $slave->id . '|' . get_current_user_id() ) === $m ) {
+		 && sha1( $client->id . '|' . get_current_user_id() ) === $m ) {
 		$response = CRB_Nexus::send( array(
 			'type' => 'submit',
 			'data' => array(
@@ -946,29 +948,35 @@ function nexus_ajax_router() {
 }
 
 /**
- * @param $request array
- * @param $slave_id int
+ * @param array $request
+ * @param int $client_id
  *
  * @return bool|mixed
  */
-function nexus_send( $request, $slave_id = null ) {
-	return CRB_Nexus::send( $request, $slave_id );
+function nexus_send( $request, $client_id = null ) {
+	return CRB_Nexus::send( $request, $client_id );
 }
 
-function nexus_process_extra( $data, $slave ) {
+/**
+ * @param array $data
+ * @param object $client
+ *
+ * @return void
+ */
+function nexus_process_extra( $data, $client ) {
 
 	$update = array();
 
 	$v = $data['extra']['versions'];
 
-	if ( $slave->plugin_v != $v[0] ) {
+	if ( $client->plugin_v != $v[0] ) {
 		$update['plugin_v'] = $v[0];
 	}
-	if ( $slave->wp_v != $v[1] ) {
+	if ( $client->wp_v != $v[1] ) {
 		$update['wp_v'] = $v[1];
 	}
 
-	if ( isset( $v[6] ) && $slave->site_key != $v[6] ) {
+	if ( isset( $v[6] ) && $client->site_key != $v[6] ) {
 		$update['site_key'] = $v[6];
 	}
 
@@ -977,7 +985,7 @@ function nexus_process_extra( $data, $slave ) {
 		$update['refreshed'] = time();
 
 		$u = $nums['updates']['plugins'] + $nums['updates']['wp'];
-		if ( $slave->updates != $u ) {
+		if ( $client->updates != $u ) {
 			$update['updates'] = $u;
 		}
 
@@ -986,7 +994,7 @@ function nexus_process_extra( $data, $slave ) {
 
 			if ( $nb = crb_array_get( $nums['scan'], 'numbers' ) ) {
 				// TODO move to separate meta table?
-				cerber_update_set( '_nexus_tmp_' . $slave->id, $nb );
+				cerber_update_set( '_nexus_tmp_' . $client->id, $nb );
 			}
 		}
 
@@ -1016,7 +1024,7 @@ function nexus_process_extra( $data, $slave ) {
 		        }
 	        }
 
-			nexus_update_list( $slave->id, 'plugins', $installed );
+			nexus_update_list( $client->id, 'plugins', $installed );
 		}
 
 		// Updates
@@ -1028,9 +1036,9 @@ function nexus_process_extra( $data, $slave ) {
 	}
 
 	if ( $update ) {
-		nexus_update_slave( $slave->id, $update );
+		nexus_update_client_data( $client->id, $update );
 		if ( ! $nums ) {
-			nexus_add_bg_refresh( $slave->id );
+			nexus_add_bg_refresh( $client->id );
 		}
 	}
 
@@ -1073,9 +1081,9 @@ function nexus_set_context() {
 
 	$id = absint( cerber_get_get( 'nexus_site_id' ) );
 
-	if ( $slave = nexus_get_slave_data( $id ) ) {
+	if ( $client = nexus_get_client_data( $id ) ) {
 		if ( crb_get_settings( 'master_swshow' ) ) {
-			cerber_admin_message( sprintf( __( 'You have switched to %s', 'wp-cerber' ), $slave->site_name ) . '. ' . 'To switch back to the main website, click the X icon on the toolbar.' );
+			cerber_admin_message( sprintf( __( 'You have switched to %s', 'wp-cerber' ), $client->site_name ) . '. ' . 'To switch back to the main website, click the X icon on the toolbar.' );
 		}
 
 		$expire = time() + apply_filters( 'auth_cookie_expiration', 14 * DAY_IN_SECONDS, get_current_user_id(), true );
@@ -1132,16 +1140,20 @@ function nexus_set_context() {
 /**
  * A light version of nonce (pre-nonce)
  *
- * @param null $check_it
+ * @param string $check_it
  *
  * @return bool|string
  */
 function nexus_seal( $check_it = null ) {
-	$slave = nexus_get_context();
-	if ( ! $slave || ! $uid = get_current_user_id() ) {
+	$client = nexus_get_context();
+
+    if ( ! $client
+         || ! $uid = get_current_user_id() ) {
 		return false;
 	}
-	$seal = sha1( $slave->id . '|' . $uid . '|' . PHP_VERSION . '|' . PHP_SAPI );
+
+	$seal = sha1( $client->id . '|' . $uid . '|' . PHP_VERSION . '|' . PHP_SAPI );
+
 	if ( $check_it === null ) {
 		return $seal;
 	}
@@ -1156,7 +1168,7 @@ function nexus_do_bulk() {
 	}
 	switch ( cerber_get_bulk_action() ) {
 		case 'nexus_delete_slave':
-			nexus_delete_slave( $ids );
+			nexus_delete_client( $ids );
 			break;
 		case 'nexus_upgrade_plugins':
 			nexus_bg_upgrade( $ids, array() );
@@ -1170,22 +1182,34 @@ function nexus_do_bulk() {
 }
 
 function nexus_bg_upgrade( $ids, $plugins ) {
+	$error = new WP_Error();
+
 	foreach ( $ids as $id ) {
-		cerber_bg_task_add( 'nexus_do_upgrade', array(
-			//'func'  => 'nexus_do_upgrade',
+		$ret = cerber_bg_task_add( 'nexus_do_upgrade', array(
 			'args'       => array( $id, $plugins, false ),
 			'exec_until' => 'stop', // may not be boolean
 		) );
+
+		if ( is_wp_error( $ret ) ) {
+			$error->merge_from( $ret );
+		}
 	}
-	cerber_admin_message( 'A background upgrade task has been launched' );
+
+	if ( $error->has_errors() ) {
+		crb_admin_error_notice( $error );
+
+        return;
+	}
+
+    cerber_admin_message( 'A background upgrade tasks have been launched.' );
 }
 
-function nexus_do_upgrade( $slave_id, $plugins, $display_errors = false ) {
+function nexus_do_upgrade( $client_id, $plugins, $display_errors = false ) {
 	$response = CRB_Nexus::send( array(
 		'type'    => 'sw_upgrade',
 		'sw_type' => 'plugins',
 		'list'    => $plugins
-	), $slave_id );
+	), $client_id );
 
 	if ( ! empty( $response['results'] ) ) {
 		nexus_diag_log( cerber_flat_results( $response['results'], $display_errors ) );
@@ -1197,7 +1221,7 @@ function nexus_do_upgrade( $slave_id, $plugins, $display_errors = false ) {
 	}
 
 	if ( empty( $response ) || ! empty( $response['completed'] ) ) {
-		nexus_add_bg_refresh( $slave_id );
+		nexus_add_bg_refresh( $client_id );
 
 		return 'stop';
 	}
@@ -1249,9 +1273,9 @@ function nexus_schedule_refresh() {
 	}
 }
 
-function nexus_add_bg_refresh( $slave_id ) {
-	cerber_bg_task_add( 'nexus_send', array( 'args' => array( array( 'type' => 'hello' ), $slave_id ) ) );
-	cerber_bg_task_add( 'nexus_refresh_slave_srv', array( 'args' => array( $slave_id ) ) );
+function nexus_add_bg_refresh( $client_id ) {
+	cerber_bg_task_add( 'nexus_send', array( 'args' => array( array( 'type' => 'hello' ), $client_id ) ) );
+	cerber_bg_task_add( 'nexus_refresh_client_servers', array( 'args' => array( $client_id ) ) );
 }
 
 add_action( 'wp_before_admin_bar_render', function () {
@@ -1339,16 +1363,16 @@ add_action( 'wp_before_admin_bar_render', function () {
 		) );
 	}
 
-	if ( $slaves = nexus_get_slaves( array( 'orderby' => 'id', 'order' => 'DESC' ) ) ) {
-		foreach ( $slaves as $slave ) {
-			if ( $current_id === $slave->id ) {
+	if ( $clients = nexus_get_clients( array( 'orderby' => 'id', 'order' => 'DESC' ) ) ) {
+		foreach ( $clients as $client ) {
+			if ( $current_id === $client->id ) {
 				continue;
 			}
 			$wp_admin_bar->add_node( array(
 				'parent' => 'crb_site_switch',
-				'id'     => 'site' . $slave->id,
-				'title'  => $slave->site_name,
-				'href'   => $this_page . '&amp;cerber_admin_do=nexus_switch&nexus_site_id=' . $slave->id,
+				'id'     => 'site' . $client->id,
+				'title'  => $client->site_name,
+				'href'   => $this_page . '&amp;cerber_admin_do=nexus_switch&nexus_site_id=' . $client->id,
 			) );
 		}
 	}
@@ -1409,9 +1433,9 @@ add_action( 'wp_ajax_cerber_master_ajax', function () {
 
 	switch ( crb_array_get( $_REQUEST, 'crb_ajax_do' ) ) {
 		case 'nexus_view_updates':
-			$slave_id = absint( $_REQUEST['managed_site_id'] );
-			//$slave = nexus_get_slave_data( $slave_id );
-			if ( $list = nexus_get_slave_plugins( $slave_id ) ) {
+			$client_id = absint( $_REQUEST['managed_site_id'] );
+
+			if ( $list = nexus_get_client_plugins( $client_id ) ) {
 				$tbody = '';
 
 				foreach ( $list as $item ) {
@@ -1457,10 +1481,10 @@ add_action( 'wp_ajax_cerber_master_ajax', function () {
 			}
 			else {
 				// TODO remove in production
-				//cerber_bg_task_add( array( 'func' => 'nexus_send', 'args' => array( array( 'type' => 'hello' ), $slave_id ) ) );
+				//cerber_bg_task_add( array( 'func' => 'nexus_send', 'args' => array( array( 'type' => 'hello' ), $client_id ) ) );
 
-				$slave = nexus_get_slave_data( $slave_id );
-				$response = array( 'html'   => 'No information available. Refreshed: ' . cerber_auto_date( $slave->refreshed ),
+				$client = nexus_get_client_data( $client_id );
+				$response = array( 'html'   => 'No information available. Refreshed: ' . cerber_auto_date( $client->refreshed ),
 				                   'header' => __( 'Active plugins and updates on', 'wp-cerber' )
 				);
             }
@@ -1471,47 +1495,65 @@ add_action( 'wp_ajax_cerber_master_ajax', function () {
 	exit;
 } );
 
+/**
+ * Returns the list of plugins installed on the remote website
+ *
+ * @param int $client_id
+ * @param bool $sort
+ * @param bool $active_only
+ * @param bool $inc_updates
+ *
+ * @return array
+ */
+function nexus_get_client_plugins( $client_id, $sort = true, $active_only = true, $inc_updates = true ) {
 
-function nexus_get_slave_plugins( $slave_id, $sort = true, $active_only = true, $inc_updates = true ) {
-
-    $slave_id = absint( $slave_id );
+    $client_id = absint( $client_id );
 	$ac = ( $active_only ) ? ' AND status = "1"' : '';
-	$plugins = cerber_db_get_results( 'SELECT * FROM ' . cerber_get_db_prefix() . CERBER_MS_LIST_TABLE . ' lst JOIN ' . cerber_get_db_prefix() . CERBER_SETS_TABLE . ' sts ON (lst.list_item = sts.the_key) WHERE lst.list_key = "plugins" AND lst.site_id = ' . $slave_id . ' ' . $ac );
+	$plugins = cerber_db_get_results( 'SELECT * FROM ' . cerber_get_db_prefix() . CERBER_MS_LIST_TABLE . ' lst JOIN ' . cerber_get_db_prefix() . CERBER_SETS_TABLE . ' sts ON (lst.list_item = sts.the_key) WHERE lst.list_key = "plugins" AND lst.site_id = ' . $client_id . ' ' . $ac );
+
+	if ( ! $plugins ) {
+		return array();
+	}
 
 	$ret = array();
 
-	if ( $plugins ) {
-		foreach ( $plugins as $plugin ) {
-			$p           = array();
-			$data        = crb_unserialize( $plugin['the_value'] );
-			$p['extra']  = $plugin['extra'];
-			$p['status'] = $plugin['status'];
-			$p['Name']   = $data['Name'];
-			$p['data']   = $data;
-			if ( $inc_updates ) {
-				//$p['update'] = cerber_get_set( 'nexus_upd_' . $data['plugin_key'] );
-				$p['update'] = nexus_get_update( $data['plugin_slug'], $data['Version'] );
-			}
-			$ret[] = $p;
-		}
+	foreach ( $plugins as $plugin ) {
+        $p           = array();
+        $data        = crb_unserialize( $plugin['the_value'] );
+        $p['extra']  = $plugin['extra'];
+        $p['status'] = $plugin['status'];
+        $p['Name']   = $data['Name'];
+        $p['data']   = $data;
+        if ( $inc_updates ) {
+            //$p['update'] = cerber_get_set( 'nexus_upd_' . $data['plugin_key'] );
+            $p['update'] = nexus_get_update( $data['plugin_slug'], $data['Version'] );
+        }
+        $ret[] = $p;
+    }
 
-		if ( $sort ) {
-			uasort( $ret, function ( $a, $b ) {
-				return strnatcasecmp( $a['Name'], $b['Name'] );
-			} );
-		}
-	}
+	if ( $sort ) {
+        uasort( $ret, function ( $a, $b ) {
+            return strnatcasecmp( $a['Name'], $b['Name'] );
+        } );
+    }
 
 	return $ret;
 }
 
-function nexus_refresh_slave_srv( $slave_id ) {
+/**
+ * Refreshes stored locally client web server meta data
+ *
+ * @param int $client_id
+ *
+ * @return void
+ */
+function nexus_refresh_client_servers( $client_id ) {
 
-	if ( ! $slave = nexus_get_slave_data( $slave_id ) ) {
+	if ( ! $client = nexus_get_client_data( $client_id ) ) {
 		return;
 	}
 
-	$server_host = parse_url( $slave->site_url, PHP_URL_HOST );
+	$server_host = parse_url( $client->site_url, PHP_URL_HOST );
 	$srv_ip      = @gethostbyname( $server_host );
 
 	if ( ! cerber_is_ip( $srv_ip ) ) {
@@ -1520,8 +1562,8 @@ function nexus_refresh_slave_srv( $slave_id ) {
 
 	$srv_country = lab_get_country( $srv_ip, false );
 
-	if ( $srv_ip != $slave->server_id || $srv_country != $slave->server_country ) {
-		nexus_update_slave( $slave_id, array( 'server_id' => $srv_ip, 'server_country' => $srv_country ) );
+	if ( $srv_ip != $client->server_id || $srv_country != $client->server_country ) {
+		nexus_update_client_data( $client_id, array( 'server_id' => $srv_ip, 'server_country' => $srv_country ) );
 	}
 
 	// Updating servers

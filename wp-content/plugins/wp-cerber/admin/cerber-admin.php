@@ -245,7 +245,9 @@ function cerber_show_scanner() {
 
 function cerber_ref_upload_form() {
 	?>
+
     <div id="crb-ref-upload-dialog" style="display: none;">
+        <div class="crb-popup-inner">
         <p><?php _e( 'We have not found any integrity data to verify', 'wp-cerber' ); ?> <span
                     id="ref-section-name"></span>.</p>
         <p><?php _e( "You have to upload a ZIP archive from which you've installed it. This enables the security scanner to verify the integrity of the code and detect malware.", 'wp-cerber' ); ?></p>
@@ -255,10 +257,11 @@ function cerber_ref_upload_form() {
             <input type="submit" name="submit" value="<?php _e( 'Upload file', 'wp-cerber' ); ?>"
                    class="button button-primary">
             <ul style="list-style: none;">
-                <li style="display:none;" class="crb-status-msg">Uploading the file, please wait&#8230;</li>
-                <li style="display:none;" class="crb-status-msg">Processing the file, please wait&#8230;</li>
+                <li style="display:none;" class="crb-status-msg"><?php _e( 'The file is being uploaded, please wait', 'wp-cerber' ); ?>&#8230;</li>
+                <li style="display:none;" class="crb-status-msg"><?php _e( 'Processing the file, please wait', 'wp-cerber' ); ?>&#8230;</li>
             </ul>
         </form>
+        </div>
     </div>
 
 	<?php
@@ -298,10 +301,6 @@ function cerber_manual_scan() {
 		'cerber_scanner' => $scanner,
 		//'scan'           => cerber_get_scan(), // debug only
 	);
-
-	if ( $scan_do != 'continue_scan' ) {
-		$ret['strings'] = cerber_get_strings();
-	}
 
 	ob_end_clean();
 
@@ -462,7 +461,7 @@ add_action( 'wp_ajax_cerber_view_file', function () {
 	$the_file = cerber_db_get_row( 'SELECT * FROM ' . cerber_get_db_prefix() . CERBER_SCAN_TABLE . ' WHERE scan_id = ' . $scan_id . ' AND file_name = "' . $file_name . '"' );
 
 	if ( $the_file ) {
-		echo '<div id="crb-issue">Issue: ' . cerber_get_issue_label( $the_file['scan_status'] ) . '</div>';
+		echo '<div id="crb-issue">Issue: ' . cerber_get_issue_title( $the_file['scan_status'] ) . '</div>';
 	}
 
 	if ( $paint ) :
@@ -791,7 +790,7 @@ function cerber_quarantine_do( $what, $scan_id, $qfile ) {
 
 	$dir = cerber_get_the_folder( true );
 	if ( crb_is_wp_error( $dir ) ) {
-		cerber_admin_notice( $dir->get_error_message() );
+		crb_admin_error_notice( $dir );
 
 		return;
 	}
@@ -1515,7 +1514,7 @@ function crb_get_file_owner( $file ) {
 			}
 
 			if ( $result ) {
-				$ret = 'Plugin: ' . $result['Name'] . ' ' . $result['Version'] . ' by ' . $result['Author'] . ( $result['AuthorURI'] ? ' (' . $result['AuthorURI'] . ')' : '' );
+				$ret = 'Plugin: ' . $result['Name'] . ' by ' . $result['Author'] . ( $result['AuthorURI'] ? ' (' . $result['AuthorURI'] . ')' : '' );
 			}
 
 			break;

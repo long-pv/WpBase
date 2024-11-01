@@ -293,12 +293,6 @@ class CRB_Nexus_Sites extends WP_List_Table {
 		$switch        = $this->base_switch . '&nexus_site_id=' . $item['id'];
 		$set['switch'] = ' <a href="' . $switch . '">' . __( 'Switch to', 'wp-cerber' ) . '</a>';
 
-		/*$set['delete'] = '<a href="' . wp_nonce_url( add_query_arg( array(
-				'cerber_admin_do' => 'nexus_delete_slave',
-				'site_id'         => $item['id']
-			) ), 'control', 'cerber_nonce' ) . '" ' . $onclick . '>' . __( 'Delete', 'wp-cerber' ) . '</a>';
-		*/
-
 		$url = ( $this->show_url ) ? '<div class="crb-managed-url">' . $item['site_url'] . '</div>' : '';
 
 		return '<strong><a class="row-title" href="' . $switch . '">' . $item['site_name'] . '</a></strong>' . $url . $this->row_actions( $set );
@@ -377,7 +371,7 @@ class CRB_Nexus_Sites extends WP_List_Table {
 				$srv = nexus_get_srv_info( $item['server_id'] );
 
 				if ( ! $srv ) {
-					nexus_refresh_slave_srv( $item['id'] );
+					nexus_refresh_client_servers( $item['id'] );
 					$srv = nexus_get_srv_info( $item['server_id'] );
 					if ( ! $srv ) {
 						return '-';

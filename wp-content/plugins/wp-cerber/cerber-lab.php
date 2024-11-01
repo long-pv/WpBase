@@ -284,6 +284,13 @@ function lab_send_request( $request, $node_id = null, $scheme = null ) {
 		CURLOPT_CAINFO            => ABSPATH . WPINC . '/certificates/ca-bundle.crt',
 	) );
 
+	global $wp_cerber_relay;
+
+	if ( $wp_cerber_relay ) {
+		$headers[] = 'Relay: 1';
+		curl_setopt( $curl, CURLOPT_HTTPHEADER, $headers );
+	}
+
 	cerber_diag_log( 'Sending request to: ' . $url, 'CLOUD' );
 	cerber_diag_log( 'Request body: ' . print_r( $body, 1 ), 'CLOUD' );
 
@@ -337,7 +344,7 @@ function lab_send_request( $request, $node_id = null, $scheme = null ) {
 
 		return false;
 	}
-	elseif ( defined( 'CERBER_CLOUD_DEBUG' ) ) {
+	elseif ( defined( 'CERBER_CLOUD_DEBUG' ) && CERBER_CLOUD_DEBUG ) {
 		cerber_diag_log( 'Response: ' . print_r( $response, 1 ), 'CLOUD' );
 	}
 

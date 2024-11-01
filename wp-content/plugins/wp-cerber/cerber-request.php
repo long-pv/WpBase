@@ -257,18 +257,29 @@ final class CRB_Request {
 	 * @since 9.3.1
 	 */
 	static function get_relative_path() {
+
 		if ( ! isset( self::$the_path ) ) {
-			$path = $_SERVER['REQUEST_URI'];
 
-			if ( $pos = strpos( $path, '?' ) ) {
-				$path = substr( $path, 0, $pos );
+			if ( $path = $_SERVER['PATH_INFO'] ?? '' ) {
+				$path = str_replace( '%', '%25', $path );
+			}
+			elseif ( $path = $_SERVER['REQUEST_URI'] ) {
+
+				if ( $pos = strpos( $path, '?' ) ) {
+					$path = substr( $path, 0, $pos );
+				}
+
+				if ( $pos = strpos( $path, '#' ) ) {
+					$path = substr( $path, 0, $pos );
+				}
+			}
+			else {
+				self::$the_path = '/';
+
+				return self::$the_path;
 			}
 
-			if ( $pos = strpos( $path, '#' ) ) {
-				$path = substr( $path, 0, $pos );
-			}
-
-			$path = urldecode( $path );
+			$path = rawurldecode( $path );
 
 			$end = ( mb_substr( $path, -1, 1 ) == '/' ) ? '/' : '';
 

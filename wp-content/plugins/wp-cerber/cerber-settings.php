@@ -86,6 +86,9 @@ const CRB_PRO_SETTINGS = array(
 	'pb_mask',
 	'pb_format',
 	'scan_media',
+	'scan_abon_pl',
+	'scan_abon_pl_period',
+	'scan_owner_pl',
 	'customcomm'
 );
 
@@ -95,24 +98,25 @@ const CRB_PRO_POLICIES = array(
 	'sess_limit_msg'    => array( 2, '' ),
 	'app_pwd'           => array( 2, 0 ),
 
-	'2faremember'       => array( 2, '' ),
-	'2faemailinfo'      => array( 2, 2 ),
+	'2faremember'  => array( 2, '' ),
+	'2faemailinfo' => array( 2, 2 ),
 
-	'2fasmart'          => array( 1, '' ),
-	'2fanewcountry'     => array( 1, 0 ),
-	'2fanewnet4'        => array( 1, 0 ),
-	'2fanewip'          => array( 1, 0 ),
-	'2fanewua'          => array( 1, 0 ),
-	'2fasessions'       => array( 1, '' ),
-	'note2'             => array( 1, '' ),
-	'2fadays'           => array( 1, '' ),
-	'2falogins'         => array( 1, '' ),
+	'2fasmart'      => array( 1, '' ),
+	'2fanewcountry' => array( 1, 0 ),
+	'2fanewnet4'    => array( 1, 0 ),
+	'2fanewip'      => array( 1, 0 ),
+	'2fanewua'      => array( 1, 0 ),
+	'2fasessions'   => array( 1, '' ),
+	'note2'         => array( 1, '' ),
+	'2fadays'       => array( 1, '' ),
+	'2falogins'     => array( 1, '' ),
 );
 
 /**
  * A set of Cerber settings (WP options)
  *
  * @param bool $all
+ *
  * @return array
  */
 function cerber_get_setting_list( $all = false ) {
@@ -126,25 +130,30 @@ function cerber_get_setting_list( $all = false ) {
 }
 
 /**
- * @param $name string HTML input name
- * @param $list array   List of elements
- * @param null $selected Index of selected element
- * @param string $class HTML class
+ * Generates select input
+ *
+ * @param string $name HTML input name
+ * @param string[] $list List of elements
+ * @param string $selected Index of the selected element
+ * @param string $class HTML Class
  * @param string $id HTML ID
- * @param string $multiple
+ * @param boolean $multiple If true, enables multiple selections
+ * @param string $placeholder Placeholder text
+ * @param string[] $data Data attributes
+ * @param string $atts Other HTML attributes
  *
  * @return string
  */
-function cerber_select( $name, $list, $selected = null, $class = '', $id = '', $multiple = '', $placeholder = '', $data = array(), $atts = '' ) {
+function cerber_select( $name, $list, $selected = null, $class = '', $id = '', $multiple = false, $placeholder = '', $data = array(), $atts = '' ) {
 	$options = array();
 	foreach ( $list as $key => $value ) {
-		$s         = ( $selected == (string) $key ) ? 'selected' : '';
+		$s = ( $selected == (string) $key ) ? 'selected' : '';
 		$options[] = '<option value="' . $key . '" ' . $s . '>' . crb_generic_escape( $value ) . '</option>';
 	}
-	$p      = ( $placeholder ) ? ' data-placeholder="' . $placeholder . '" placeholder="' . $placeholder . '" ' : '';
-	$m      = ( $multiple ) ? ' multiple="multiple" ' : '';
+	$p = ( $placeholder ) ? ' data-placeholder="' . $placeholder . '" placeholder="' . $placeholder . '" ' : '';
+	$m = ( $multiple ) ? ' multiple="multiple" ' : '';
 	$the_id = ( $id ) ? ' id="' . $id . '" ' : '';
-	$d      = '';
+	$d = '';
 	if ( $data ) {
 		foreach ( $data as $att => $val ) {
 			$d .= ' data-' . $att . '="' . $val . '"';
@@ -190,27 +199,27 @@ function crb_get_activity_dd( $first = '' ) {
 }
 
 /**
- * Convert an array to text string by using a given delimiter
+ * Convert an array to text using the specified delimiter.
  *
- * @param array $array
+ * @param array|string $input
  * @param string $delimiter
  *
- * @return array|string
+ * @return string
  */
-function cerber_array2text( $array = array(), $delimiter = '') {
-	if ( empty( $array ) ) {
+function cerber_array2text( $input = array(), $delimiter = '' ): string {
+	if ( empty( $input ) ) {
 		return '';
 	}
 
-	if ( is_array( $array ) ) {
-	    if ($delimiter == ',') $delimiter .= ' ';
-		$ret = implode( $delimiter , $array );
-	}
-	else {
-		$ret = $array;
-    }
+	if ( is_array( $input ) ) {
+		if ( $delimiter === ',' ) {
+			$delimiter .= ' ';
+		}
 
-    return $ret;
+		return implode( $delimiter, $input );
+	}
+
+	return (string) $input;
 }
 
 /**
@@ -225,7 +234,7 @@ function cerber_array2text( $array = array(), $delimiter = '') {
  *
  * @return array
  */
-function cerber_text2array( $text = '', $delimiter = '', $callback = '', $regex = '') {
+function cerber_text2array( $text = '', $delimiter = '', $callback = '', $regex = '' ) {
 
 	if ( empty( $text ) ) {
 		return array();
@@ -272,7 +281,7 @@ function cerber_text2array( $text = '', $delimiter = '', $callback = '', $regex 
  */
 function cerber_get_defaults( $setting = null, $dynamic = true ) {
 	$all_defaults = array(
-		CERBER_OPT    => array(
+		CERBER_OPT       => array(
 			'boot-mode'       => 0,
 			'attempts'        => 5,
 			'period'          => 30,
@@ -324,7 +333,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			//'log_errors'   => 1
 
 		),
-		CERBER_OPT_H => array(
+		CERBER_OPT_H     => array(
 			'stopenum'            => 1,
 			'stopenum_oembed'     => 1,
 			'stopenum_sitemap'    => 0,
@@ -342,7 +351,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'restwhite'           => array( 'oembed', 'wp-site-health' ),
 			'cleanhead'           => 1,
 		),
-		CERBER_OPT_U  => array(
+		CERBER_OPT_U     => array(
 			'authonly'       => 0,
 			'authonlyacl'    => 0,
 			'authonlymsg'    => '',
@@ -364,7 +373,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'pdata_act'      => 0,
 			'pdata_trf'      => array(),
 		),
-		CERBER_OPT_A => array(
+		CERBER_OPT_A     => array(
 			'botscomm'         => 0,
 			'botsreg'          => 0,
 			'botsany'          => 0,
@@ -379,7 +388,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'trashafter'         => 7,
 			'trashafter-enabled' => 0,
 		),
-		CERBER_OPT_C => array(
+		CERBER_OPT_C     => array(
 			'sitekey'          => '',
 			'secretkey'        => '',
 			'invirecap'        => 0,
@@ -396,7 +405,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'recaptcha-number' => 3,
 			'recaptcha-within' => 30,
 		),
-		CERBER_OPT_N => array(
+		CERBER_OPT_N     => array(
 			'notify_above-enabled' => 1,
 			'notify_above'         => 5,
 
@@ -438,7 +447,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'email_report_one_month' => array(),
 
 		),
-		CERBER_OPT_T => array(
+		CERBER_OPT_T     => array(
 			'tienabled'      => 1,
 			'tiipwhite'      => 0,
 			'tiwhite'        => array(),
@@ -463,7 +472,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'tikeeprec'      => 30,
 			'tikeeprec_auth' => 30,
 		),
-		CERBER_OPT_US => array(
+		CERBER_OPT_US    => array(
 			'ds_4acc'       => 0,
 			'ds_regs_roles' => array(),
 			'ds_add_acc'    => array( 'administrator' ),
@@ -474,25 +483,28 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'ds_edit_role'  => array( 'administrator' ),
 			'ds_4roles_acl' => 0,
 		),
-		CERBER_OPT_OS => array(
+		CERBER_OPT_OS    => array(
 			'ds_4opts'       => 0,
 			'ds_4opts_roles' => array( 'administrator' ),
 			'ds_4opts_list'  => array(),
 			'ds_4opts_acl'   => 0,
 		),
-		CERBER_OPT_S  => array(
-			'scan_cpt'      => array(),
-			'scan_uext'     => array( 'tmp', 'temp', 'bak' ),
-			'scan_exclude'  => array(),
-			'scan_inew'     => 1,
-			'scan_imod'     => 1,
-			'scan_chmod'    => 0,
-			'scan_tmp'      => 0,
-			'scan_sess'     => 0,
-			'scan_debug'    => 0,
-			'scan_qcleanup' => '30',
+		CERBER_OPT_S => array(
+			'scan_cpt'            => array(),
+			'scan_uext'           => array( 'tmp', 'temp', 'bak' ),
+			'scan_exclude'        => array(),
+			'scan_inew'           => 1,
+			'scan_imod'           => 1,
+			'scan_chmod'          => 0,
+			'scan_abon_pl'        => 0,
+			'scan_abon_pl_period' => 6,
+			'scan_owner_pl'       => 0,
+			'scan_tmp'            => 0,
+			'scan_sess'           => 0,
+			'scan_debug'          => 0,
+			'scan_qcleanup'       => '30',
 		),
-		CERBER_OPT_E  => array(
+		CERBER_OPT_E     => array(
 			'scan_aquick'        => 0,
 			'scan_afull'         => '0' . rand( 1, 5 ) . ':00',
 			'scan_afull-enabled' => 0,
@@ -502,7 +514,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'scan_ierrors'       => 0,
 			'email-scan'         => array()
 		),
-		CERBER_OPT_P  => array(
+		CERBER_OPT_P     => array(
 			'scan_delunatt'   => 0,
 			'scan_delupl'     => array(),
 			'scan_delunwant'  => 0,
@@ -518,7 +530,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'scan_delexdir'  => array(),
 			'scan_delexext'  => array(),
 		),
-		CERBER_OPT_MA => array(
+		CERBER_OPT_MA    => array(
 			'master_tolist'    => 1,
 			'master_swshow'    => 1,
 			'master_at_site'   => 1,
@@ -528,14 +540,14 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'master_tz'        => 0,
 			'master_diag'      => 0,
 		),
-		CERBER_OPT_SL => array(
+		CERBER_OPT_SL    => array(
 			'slave_ips'    => '',
 			'slave_access' => 2,
 			'slave_diag'   => 0,
 		),
 		'other_settings' => array(
-			'crb_role_policies'  => array(),
-			CRB_ADDON_STS => array(),
+			'crb_role_policies' => array(),
+			CRB_ADDON_STS       => array(),
 		),
 	);
 
@@ -612,10 +624,10 @@ function crb_get_default_pro() {
  */
 function cerber_upgrade_settings( $ver = '' ) {
 
-	if ( $ver && version_compare( '9.3.3', $ver, '>=' ) ) {
+	if ( $ver && version_compare( $ver, '9.3.4', '<' ) ) {
 		$settings = _cerber_get_site_old_options();
 
-		// Run it after all add-ons were loaded
+		// Run it after all add-ons are loaded
 
 		update_site_option( 'cerber_tmp_old_settings', $settings );
 		add_action( 'plugins_loaded', '_cerber_upgrade_addon_settings' );
@@ -630,8 +642,10 @@ function cerber_upgrade_settings( $ver = '' ) {
 
 	// Renaming specific settings if we've changed them in the code (old => new)
 
-	$changes = array( 'notify' => 'notify_above-enabled', // 9.6.1.1
-	                  'above' => 'notify_above' ); // 9.6.1.1
+	$changes = array(
+		'notify' => 'notify_above-enabled', // 9.6.1.1
+		'above'  => 'notify_above' // 9.6.1.1
+	);
 
 	foreach ( $changes as $old => $new ) {
 		if ( isset( $settings[ $old ] ) ) {
@@ -675,14 +689,15 @@ function cerber_upgrade_settings( $ver = '' ) {
 }
 
 /**
- * Returns WP Cerber settings.
- * The replacement for cerber_get_options()
+ * Returns WP Cerber setting if setting ID is specified, or an array of all settings otherwise.
  *
- * @param string $setting_id
- * @param bool $purge_cache Purge static cache
- * @param bool $use_defaults Exclusively for plugin activation process
+ * @param string $setting_id The ID of the WP Cerber setting.
+ * @param bool $purge_cache If true, purges the static cache. Default is false.
+ * @param bool $use_defaults Used exclusively during the plugin activation process. Default is false.
  *
- * @return array|bool|mixed
+ * @return array|mixed|false Returns the setting value if the setting ID is provided and exists.
+ *                           Returns an array of all settings if no setting ID is provided.
+ *                           Returns false if the setting ID is provided but the setting with the given ID doesn't exist.
  */
 function crb_get_settings( $setting_id = '', $purge_cache = false, $use_defaults = true ) {
 	global $wpdb;
@@ -707,14 +722,14 @@ function crb_get_settings( $setting_id = '', $purge_cache = false, $use_defaults
 
 	if ( ! isset( $cache ) || $purge_cache ) {
 
-		$cache  = array();
+		$cache = array();
 
-	    if ( is_multisite() ) {
-		    $sql_new = 'SELECT meta_value FROM ' . $wpdb->sitemeta . ' WHERE meta_key = "' . CERBER_CONFIG . '"';
-	    }
-	    else {
-		    $sql_new = 'SELECT option_value FROM ' . $wpdb->options . ' WHERE option_name = "' . CERBER_CONFIG . '"';
-	    }
+		if ( is_multisite() ) {
+			$sql_new = 'SELECT meta_value FROM ' . $wpdb->sitemeta . ' WHERE meta_key = "' . CERBER_CONFIG . '"';
+		}
+		else {
+			$sql_new = 'SELECT option_value FROM ' . $wpdb->options . ' WHERE option_name = "' . CERBER_CONFIG . '"';
+		}
 
 		$set_new = cerber_db_get_var( $sql_new );
 
@@ -736,7 +751,7 @@ function crb_get_settings( $setting_id = '', $purge_cache = false, $use_defaults
 			$cache = array_merge( $cache, $cf );
 		}
 
-    }
+	}
 
 	if ( ! empty( $setting_id ) ) {
 		return $cache[ $setting_id ] ?? false;
@@ -963,7 +978,7 @@ function cerber_cloud_sync( $data = array() ) {
 		$data = crb_get_settings();
 	}
 
-	$full  = ( empty( $data['scan_afull-enabled'] ) ) ? 0 : 1;
+	$full = ( empty( $data['scan_afull-enabled'] ) ) ? 0 : 1;
 	$quick = absint( $data['scan_aquick'] );
 
 	if ( $quick || $full ) {
@@ -1040,6 +1055,7 @@ function cerber_get_role_policies( $role ) {
 		// @since 9.6
 
 		$cache[ $role ] = $defaults;
+
 		return $defaults;
 	}
 

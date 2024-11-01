@@ -434,6 +434,104 @@ jQuery( function( $ ) {
 
 });
 
+function crb_create_link(href, text, options = {}, dataAttributes = {}) {
+    let link = document.createElement('a');
+
+    link.href = crb_escape_string(href);
+    link.textContent = crb_escape_string(text);
+
+    const { css_class = '', id = '', target = '' } = options;
+
+    if (css_class) {
+        link.className = crb_escape_string(css_class);
+    }
+
+    if (id) {
+        link.id = crb_escape_string(id);
+    }
+
+    if (target) {
+        link.target = crb_escape_string(target);
+    }
+
+    for (let key in dataAttributes) {
+        if (dataAttributes.hasOwnProperty(key)) {
+            link.setAttribute('data-' + crb_escape_string(key), crb_escape_string(dataAttributes[key]));
+        }
+    }
+
+    return link;
+}
+
+/**
+ * Escapes special characters in the given text to prevent XSS attacks when generating output for a web page.
+ *
+ * @param {string} text - The text to escape.
+ * @returns {string} - The escaped text.
+ */
+function crb_escape_string(text) {
+    return String(text).replace(/[<>"']/g, function (m) {
+        return {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
+/**
+ * Recursively escapes special characters within the given array to prevent XSS attacks when generating output for a web page.
+ *
+ * @param {Array} arr - The array to escape elements of.
+ * @returns {Array} - The array with escaped elements.
+ */
+function crb_escape_array_elements(arr) {
+    return arr.map(element => {
+        if (Array.isArray(element)) {
+            return crb_escape_array_elements(element);
+        }
+        else if (typeof element === 'string') {
+            return crb_escape_string(element);
+        }
+        else {
+            return element;
+        }
+    });
+}
+
+/**
+ * Recursively traverses all properties of an object, escaping strings that contain special HTML characters to prevent XSS attacks when generating output for a web page.
+ *
+ * @param {Object} obj - The object to escape the string values for.
+ * @returns {Object} - The object with escaped string values.
+ */
+function crb_escape_object_properties(obj) {
+    if (typeof obj !== 'object' || obj == null) {
+        return obj;
+    }
+
+    let escaped_obj = Array.isArray(obj) ? [] : {};
+
+    for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            let value = obj[key];
+            if (typeof value === 'object' && value !== null) {
+                escaped_obj[key] = crb_escape_object_properties(value);
+            }
+            else if (typeof value === 'string') {
+                escaped_obj[key] = crb_escape_string(value);
+            }
+            else {
+                escaped_obj[key] = value;
+            }
+        }
+    }
+
+    return escaped_obj;
+}
+
+
 /* Storage API */
 
 const crb_sprefix = 'wp_cerber_';

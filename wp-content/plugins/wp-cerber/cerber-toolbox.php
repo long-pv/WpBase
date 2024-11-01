@@ -5,6 +5,8 @@
  *
  */
 
+require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+
 /**
  * Send email notification if  plugin is available
  *
@@ -109,7 +111,7 @@ function crb_plugin_update_notifier( $no_check_freq = false, $no_check_history =
 		}
 
 		$msg = array(
-			__( 'There is a new version of a plugin installed on your website.', 'wp-cerber' ),
+			__( 'There is an update to the plugin installed on your website.', 'wp-cerber' ),
 		);
 
 		if ( $notes ) {
@@ -306,5 +308,468 @@ function crb_once_upgrade_cbla() {
 		$db_errors = array_slice( $db_errors, 0, 10 );
 		cerber_admin_notice( 'Database errors occurred while upgrading user sets to a new format.' );
 		cerber_admin_notice( $db_errors );
+	}
+}
+
+/**
+ * Handles information about a given plugin
+ *
+ * @since 9.6.2.6
+ */
+class CRB_Plugin {
+	/**
+	 * The last network/repo error if any
+	 *
+	 * @var string
+	 */
+	private static $last_error;
+
+
+	/**
+	 * Generates an end-user plugin status report
+	 *
+	 * @param string $slug The plugin slug.
+	 * @param bool $refresh
+	 *
+	 * @return array An array containing the plugin status level and the status messages.
+	 */
+	static function get_plugin_status( string $slug, bool $refresh = false ): array {
+
+		$status = array();
+
+		if ( crb_get_settings( 'scan_abon_pl' ) ) {
+			$period = crb_get_settings( 'scan_abon_pl_period' );
+			$status['plugin_abnd'] = self::get_plugin_repo_status( $slug, $period, $refresh );
+		}
+
+		return $status;
+	}
+
+	/**
+	 * Retrieves plugin ownership data using wordpress.org plugin API and update history of changes if any occurs
+	 *
+	 * @param string $slug Plugin slug
+	 *
+	 * @return array|WP_Error
+	 */
+	static function get_plugin_owner_status( string $slug ) {
+
+		$fresh_data = self::get_plugin_authors( $slug );
+
+		if ( is_wp_error( $fresh_data ) ) {
+			return $fresh_data;
+		}
+
+		$plugin_data = self::get_plugin_data( $slug );
+		$update = false;
+		$ownership = $plugin_data['ownership'] ?? false;
+
+		if ( $ownership && is_array( $ownership ) ) {
+			if ( $ownership['last']['owner'] != $fresh_data['owner'] ) {
+
+				$update = true; // New owner
+
+				if ( count( $ownership['history'] ) > 50 ) {
+					ksort( $ownership['history'] );
+					$ownership['history'] = array_slice( $ownership['history'], - 50 );
+				}
+			}
+		}
+		else {
+			$ownership = array();
+			$update = true;
+		}
+
+		if ( $update ) {
+			$ownership['history'][ time() ] = $fresh_data;
+			$ownership['last'] = $fresh_data;
+			self::update_plugin_data( $slug, array( 'ownership' => $ownership ) );
+		}
+
+		return $ownership;
+	}
+	/**
+	 * Retrieves the author of a plugin from the WordPress.org plugin repository.
+	 *
+	 * @param string $slug The slug of the plugin.
+	 *
+	 * @return array|WP_Error The author of the plugin, or WP_Error object if there is an error.
+	 */
+	static function get_plugin_authors( string $slug ) {
+
+		$plugin_info = plugins_api( 'plugin_information', array( 'slug' => $slug ) );
+
+		if ( is_wp_error( $plugin_info ) ) {
+			return $plugin_info;
+		}
+
+		$author = '';
+
+		if ( empty( $plugin_info->author_profile ) ) {
+			return new WP_Error( 'invalid_plugin_api', 'Unable to retrieve authorship info due to invalid plugin API response received from wordpress.org.' );
+		}
+
+		foreach ( $plugin_info->contributors as $contributor => $data ) {
+			if ( $data['profile'] == $plugin_info->author_profile ) {
+				$author = $contributor;
+				break;
+			}
+		}
+
+		if ( ! $author ) {
+			$author = $plugin_info->author_profile; // Way around
+		}
+
+		return array( 'owner' => $author, 'author_profile' => $plugin_info->author_profile, 'contributors' => $plugin_info->contributors );
+	}
+
+	/**
+	 * Create a plugin abandonment status message based on the information in the plugin repo
+	 *
+	 * @param string $slug Plugin slug.
+	 * @param int $period Number of months to consider the plugin as being abandoned
+	 * @param bool $refresh Force to refresh data stored in the local DB
+	 *
+	 * @return array An array containing the plugin status level and the status messages.
+	 */
+	static function get_plugin_repo_status( string $slug, int $period, bool $refresh = false ): array {
+
+		$status = array();
+		$status['plugin_slug'] = $slug;
+		$status['updated'] = 0;
+
+		$one_month = 30 * DAY_IN_SECONDS;
+
+		// Threshold in UTC rounded to midnight
+
+		$threshold = floor( ( time() - $period * $one_month ) / DAY_IN_SECONDS ) * DAY_IN_SECONDS;
+
+		$data = self::get_plugin_data( $slug );
+
+		// Update stored plugin data if needed
+
+		$update = false;
+
+		if ( ! $repo_data = $data['repo'] ?? false ) {
+			$update = true;
+		}
+		elseif ( $err_code = $repo_data['err_code'] ?? false ) {
+			if ( in_array( $err_code, array( CRB_PL722, CRB_PL724 ) )
+			     || $repo_data['updated_uts'] < ( time() - 24 * 3600 ) ) {
+				$update = true;
+			}
+		}
+		elseif ( $repo_data['updated_uts'] < $threshold ) {
+			$update = true;
+		}
+		elseif ( $repo_data['modified_uts'] <= $threshold ) { // Abandoned candidate, double check it
+			$update = true;
+		}
+
+		if ( $refresh
+		     || ( $update
+		          && ! ( ( $repo_data['updated_uts'] ?? 0 ) > ( time() - 12 * 3600 ) ) ) ) { // Reasonable threshold
+
+			$repo_data = self::update_plugin_repo_data( $slug );
+
+			$status['updated'] = 1;
+		}
+
+		// Generating plugin status message/report
+
+		$msg = '';
+
+		if ( $err_code = $repo_data['err_code'] ?? false ) {
+			if ( in_array( $err_code, array( CRB_PL722, CRB_PL723 ) ) ) {
+				$level = CRB_SEV_NOTICE;
+				$code = CRB_SA221;
+			}
+			else {
+				$level = CRB_SEV_CRITICAL;
+				$code = CRB_SA222;
+			}
+
+			$msg = crb_get_error_msg( $err_code ) . ' ' . self::$last_error;
+		}
+		else {
+
+			// We got valid plugin data from the repo
+
+			if ( $repo_data['modified_uts'] < $threshold ) {
+				$level = CRB_SEV_WARNING;
+				$code = CRB_SA223;
+
+				$time_diff = time() - $repo_data['modified_uts'];
+				$one_year = 365 * DAY_IN_SECONDS;
+
+				if ( $time_diff > $one_year ) {
+					$msg = __( 'It appears this plugin is abandoned, as it has not received any updates for over a year.', 'wp-cerber' );
+				}
+				elseif ( $time_diff >= 2 * $one_month ) {
+					$msg = __( 'It appears this plugin is abandoned, as it has not received any updates for several months.', 'wp-cerber' );
+				}
+				elseif ( $time_diff >= $one_month ) {
+					$msg = __( 'It appears this plugin is abandoned, as it has not received any updates for over a month.', 'wp-cerber' );
+				}
+
+				/* translators: Here %s is the date. */
+				$msg .= ' ' . sprintf( __( 'The last update was on %s', 'wp-cerber' ), cerber_date( $repo_data['modified_uts'], false ) );
+			}
+			else {
+				$msg = 'OK';
+				$level = CRB_SEV_OK;
+				$code = CRB_SA224;
+			}
+		}
+
+		// Ready to show to end-user
+
+		$status['sts_code'] = $code; // Status ID
+		$status['level'] = $level; // Severity
+		$status['status_msg'] = $msg; // Text message
+		$status['repo_data'] = $repo_data;
+
+		return $status;
+	}
+
+	/**
+	 * Retrieves data from the repo and updates the plugin data in the database for the given plugin slug.
+	 *
+	 * @param string $slug The slug of the plugin.
+	 *
+	 * @return array The plugin data retrieved from the repo.
+	 */
+	private static function update_plugin_repo_data( string $slug ): array {
+
+		$repo_data = array();
+
+		$result = self::retrieve_plugin_repo_data( $slug );
+
+		if ( is_wp_error( $result ) ) {
+			$repo_data['err_code'] = $result->get_error_code();
+		}
+		else {
+			$result = self::sanitize( $result );
+			$raw = $result;
+			$repo_data['modified_date'] = $result['dateModified'] ?? '';
+			$repo_data['modified_uts'] = $repo_data['modified_date'] ? strtotime( $repo_data['modified_date'] ) : '';
+			$repo_data['last_version'] = $last_ver = $result['softwareVersion'] ?? '';
+
+			$repo_data['raw_data'] = $raw;
+
+			// Save history of changes
+
+			$log = $repo_data['raw_log'] ?? false;
+
+			if ( ! is_array( $log ) ) {
+				$log = array();
+			}
+
+			if ( ! crb_array_search_row( $log, 'vrs', $last_ver ) ) {
+				$log[] = array( 'vrs' => $last_ver, 'raw' => $repo_data['raw_data'] );
+				$log = array_slice( $log, -10 );
+			}
+
+			$repo_data['raw_log'] = $log;
+		}
+
+		$repo_data['updated_uts'] = time();
+
+		//$data = array( 'repo' => $repo_data );
+		//$key = substr( 'pl_data_' . $slug, 0, 255 );
+		//cerber_update_set( $key, $data );
+
+		self::update_plugin_data( $slug, array( 'repo' => $repo_data ) );
+
+		return $repo_data;
+	}
+
+	/**
+	 * Sanitize and convert all values to strings in the given multi-dimensional array and limit total elements
+	 *
+	 * @param array &$data The input array to be sanitized.
+	 * @param int $max_elements The maximum number of elements allowed in the array.
+	 * @param int $element_count The current count of elements in the array.
+	 * @return array The sanitized and limited array.
+	 *
+	 */
+	static function sanitize( array &$data, int $max_elements = 100, int &$element_count = 0 ): array {
+		$sanitized = [];
+
+		foreach ( $data as $key => $value ) {
+			if ( $element_count >= $max_elements ) {
+				break;
+			}
+
+			if ( is_array( $value ) ) {
+				$sanitized[ $key ] = self::sanitize( $value, $max_elements, $element_count );
+			}
+			else {
+				$value = (string) $value;
+				$sanitized[ $key ] = filter_var( substr( $value, 0, 300 ), FILTER_SANITIZE_STRING );
+			}
+
+			$element_count ++;
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Returns the plugin data stored locally in the DB.
+	 *
+	 * @param string $slug The slug of the plugin.
+	 *
+	 * @return array Plugin data as an array, an empty array if no data.
+	 */
+	static function get_plugin_data( string $slug ): array {
+
+		$key = substr( 'pl_data_' . $slug, 0, 255 );
+		$data = cerber_get_set( $key );
+
+		if ( ! $data || ! is_array( $data ) ) {
+			$data = array();
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Updates the plugin data with the given update array.
+	 *
+	 * @param string $slug The slug of the plugin to update.
+	 * @param array $update The update array to merge with the existing plugin data.
+	 *
+	 * @return bool Returns true if the plugin data is updated successfully, otherwise false.
+	 */
+	static function update_plugin_data( string  $slug, array $update ) {
+
+		$key = substr( 'pl_data_' . $slug, 0, 255 );
+		$data = cerber_get_set( $key );
+
+		if ( ! $data || ! is_array( $data ) ) {
+			$data = array();
+		}
+
+		$data = array_merge( $data, $update );
+
+		return cerber_update_set( $key, $data );
+	}
+
+	/**
+	 * Retrieves plugin data from the WP.ORG repository by the given plugin slug (which is the plugin folder).
+	 *
+	 * @param string $slug The slug of the plugin.
+	 *
+	 * @return array|WP_Error Returns the extracted JSON-LD plugin data from the plugin webpage, or WP_Error object if there is an error.
+	 */
+	static function retrieve_plugin_repo_data( string $slug ) {
+
+		if ( ! $slug = preg_replace( '/[^a-z\-\d_]/i', '', $slug ) ) {
+			return new WP_Error( CRB_PL721 );
+		}
+
+		$network = new CRB_Net();
+
+		$url = 'https://wordpress.org/plugins/' . $slug . '/';
+
+		$result = $network->http_get( array(
+			'host' => 'wordpress.org',
+			'path' => '/plugins/' . $slug . '/'
+		),
+			array(
+				CURLOPT_FOLLOWLOCATION => false,
+			),
+			true );
+
+		if ( is_wp_error( $result ) ) {
+
+			if ( $network->is_host_rate_limited() ) {
+				$err_code = CRB_PL722;
+			}
+			else {
+				switch ( $network->get_code() ) {
+					case 404: // No plugin in the repo
+					case 301: // No plugin in the repo
+						$err_code = CRB_PL723;
+						break;
+					default:
+						$err_code = CRB_PL724;
+						self::$last_error = 'URL: ' . $url . ', ERROR: ' . $result->get_error_message();;
+				}
+			}
+
+			return new WP_Error( $err_code );
+		}
+
+		$html = $network->get_body();
+
+		unset( $network );
+
+		// Extract data from the HTML content
+
+		$json = self::extract_ld_json( $html );
+
+		if ( is_wp_error( $json ) ) {
+			return $json;
+		}
+
+		return self::extract_wp_plugin_data( $json, $slug );
+	}
+
+	/**
+	 * Extracts plugin data from an array of JSON strings.
+	 *
+	 * @param array $payload An array of JSON strings to look for plugin data.
+	 *
+	 * @return array|WP_Error Returns an array containing plugin data, or a WP_Error object if no valid plugin data found.
+	 */
+	private static function extract_wp_plugin_data( array $payload ) {
+
+		foreach ( $payload as $json ) {
+			$decoded = json_decode( $json, true );
+
+			if ( JSON_ERROR_NONE !== json_last_error() ) {
+				continue;
+			}
+
+			// WP.ORG format
+
+			if ( ( $decoded[0]['applicationCategory'] ?? '' ) === 'Plugin' &&
+			     ( $decoded[0]['operatingSystem'] ?? '' ) === 'WordPress' ) {
+				return $decoded[0];
+			}
+		}
+
+		return new WP_Error( CRB_PL725 );
+
+	}
+
+	/**
+	 * Extracts JSON-LD data from HTML content.
+	 *
+	 * @param string $html_content The HTML content to extract JSON-LD data from.
+	 *
+	 * @return array|WP_Error The extracted JSON-LD data as an associative array, or a WP_Error object if extraction fails.
+	 *
+	 * @since 9.6.2.4
+	 */
+	private static function extract_ld_json( string $html_content ) {
+
+		preg_match( '/<head>(.*?)<\/head>/is', $html_content, $matches_head );
+
+		if ( empty( $matches_head[1] ) ) {
+			return new WP_Error( CRB_PL726 );
+		}
+
+		$head_content = $matches_head[1];
+
+		preg_match_all( '/<script type="application\/ld\+json">(.*?)<\/script>/is', $head_content, $matches_script );
+
+		if ( empty( $matches_script[1] ) ) {
+			return new WP_Error( CRB_PL727 );
+		}
+
+		return $matches_script[1];
 	}
 }

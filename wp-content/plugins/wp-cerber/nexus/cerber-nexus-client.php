@@ -143,7 +143,12 @@ function nexus_request_data() {
 	return $crb_master;
 }
 
-function nexus_slave_process() {
+/**
+ * Process request from the main Cerber.Hub website
+ *
+ * @return void
+ */
+function nexus_client_process() {
 
 	if ( ! nexus_is_valid_request() ) {
 		return;
@@ -227,24 +232,6 @@ function nexus_slave_process() {
 function nexus_is_processing() {
 	return ( cerber_get_set( 'processing_master_request' ) ) ? true : false;
 }
-
-/*
-function nexus_render_admin_page_1(){
-	require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-	require_once( ABSPATH . '/wp-admin/includes/template.php' );
-	require_once( ABSPATH . '/wp-includes/pluggable.php' );
-	cerber_load_admin_code();
-	$page_id = 'cerber-recaptcha';
-	//$tab  = 'captcha';
-	if ( empty( $tab ) ) {
-		$tab = $page_id;
-	}
-	cerber_wp_settings_setup( cerber_get_setting_id( $tab ) );
-	// Render inner html
-	$page = cerber_get_admin_page_config( $page_id );
-	call_user_func( $page['callback'], '' );
-	exit;
-}*/
 
 function nexus_render_admin_page( $page, $tab ) {
 	$id = ( empty( $tab ) ) ? $page : $tab;

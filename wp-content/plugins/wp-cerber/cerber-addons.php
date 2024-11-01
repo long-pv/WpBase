@@ -1,26 +1,56 @@
 <?php
-/**
- * Add-ons and events
- *
- */
+/*
+	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+
+    Licenced under the GNU GPL.
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+*/
+
+/*
+
+*========================================================================*
+|                                                                        |
+|	       ATTENTION!  Do not change or edit this file!                  |
+|                                                                        |
+*========================================================================*
+
+*/
+
+// Note: these constant names may not be changed ever
 
 const CRB_ADDON_PAGE = 'cerber-addons';
 const CRB_ADDON_SIGN = '_addon';
 const CRB_BOOT_ADDONS = 'boot_cerber_addons';
 
-// Add-ons API -----------------------------------------------------------------
+
+
+// WP Cerber add-ons API -----------------------------------------------------------------
 
 /**
- * @param string $file Add-on main PHP file to be invoked in if event occurs
- * @param string $addon_id Add-on slug
- * @param string $name Name of the add-on
- * @param string $requires Version of WP Cerber required
- * @param null|array $settings Configuration of the add-on setting fields
- * @param null|callable $cb
+ * @param string $file Add-on PHP file to be loaded after WP Cerber has loaded itself
+ * @param string $addon_id Add-on slug (unique add-on ID)
+ * @param string $name Name of the add-on show in the admin UI
+ * @param string $requires Optional version of WP Cerber required by the add-on
+ * @param callable $settings Optional configuration of the add-on setting fields: a callback function returning the settings fields since 9.6.2.3
+ * @param callable $cb Optional callback function invoked when a website admin saves add-on settings.
  *
  * @return bool
  */
-function cerber_register_addon( $file, $addon_id, $name, $requires, $settings = null, $cb = null ) {
+function cerber_register_addon( $file, $addon_id, $name, $requires = '', $settings = null, $cb = null ) {
 
 	return CRB_Addons::register_addon( $file, $addon_id, $name, $requires, $settings, $cb );
 }
@@ -64,7 +94,10 @@ function cerber_get_addon_settings( $addon_id = '', $setting = '', $purge_cache 
 	return crb_array_get( $ret, $setting, false );
 }
 
-// END of Add-ons API ----------------------------------------------------------
+// END of WP Cerber's add-ons API ----------------------------------------------------------
+
+
+
 
 cerber_add_handler( 'update_settings', function ( $data ) {
 	crb_x_update_add_on_list();
@@ -190,6 +223,7 @@ final class CRB_Events {
 
 final class CRB_Addons {
 	private static $addons = array();
+	private static $tabs = array(); // Add-on tab IDs, they are equal add-on setting screen IDs
 	private static $first = '';
 
 	/**
@@ -197,13 +231,19 @@ final class CRB_Addons {
 	 * @param string $addon_id Add-on slug
 	 * @param string $name Name of the add-on
 	 * @param string $requires Version of WP Cerber required
-	 * @param null|array $settings Configuration of the add-on setting fields
-	 * @param null|callable $cb
+	 * @param callable $settings Configuration of the add-on setting fields
+	 * @param callable $cb Optional callback function invoked when a website admin saves add-on settings.
 	 *
 	 * @return bool
 	 */
-	static function register_addon( $file, $addon_id, $name, $requires, $settings = null, $cb = null ) {
+	static function register_addon( $file, $addon_id, $name, $requires = '', $settings = null, $cb = null ) {
 		if ( isset( self::$addons[ $addon_id ] ) ) {
+			return false;
+		}
+
+		if ( $requires && version_compare( $requires, CERBER_VER, '>' ) ) {
+			crb_admin_notice_interactive( 'This add-on is not active: ' . esc_html( $name ) . '. It requires WP Cerber version ' . esc_html( $requires ) . ' or newer. To solve the issue, please install the latest version of WP Cerber or deactivate the add-on.' );
+
 			return false;
 		}
 
@@ -212,11 +252,14 @@ final class CRB_Addons {
 		}
 
 		self::$addons[ $addon_id ] = array(
-			'file'     => $file,
-			'name'     => $name,
-			'settings' => $settings,
-			'callback' => $cb
+			'file'        => $file,
+			'name'        => $name,
+			'settings'    => $settings,
+			'settings_cb' => $settings,
+			'callback'    => $cb
 		);
+
+		self::$tabs[ $addon_id . CRB_ADDON_SIGN ] = $addon_id . CRB_ADDON_SIGN;
 
 		return true;
 	}
@@ -228,27 +271,146 @@ final class CRB_Addons {
 		return self::$addons;
 	}
 
-	static function update_settings( $form_fields, $id ) {
+	/**
+	 * Returns add-on settings config, if it generates by the specified add-on.
+	 *
+	 * @param $addon_id
+	 *
+	 * @return array
+	 *
+	 * @since 9.6.2.3
+	 */
+	static function get_addon_settings( $addon_id ): array {
+		static $cache = array();
 
-		if ( $addon = self::$addons[ $id ] ?? false ) {
+		if ( ! isset( $cache[ $addon_id ] ) ) {
 
-			$fields = array();
-			foreach ( $addon['settings'] as $section ) {
-				$fields = array_merge( $fields, array_keys( $section['fields'] ) );
+			$config = array();
+
+			if ( $cb = self::$addons[ $addon_id ]['settings_cb'] ?? false ) {
+
+				if ( is_callable( $cb ) ) {
+					$config = call_user_func( $cb ); // New way since 9.6.2.3
+					if ( ! is_array( $config ) ) {
+						$config = false;
+					}
+				}
+				elseif ( is_array( $cb ) ) { // Old way
+					$config = $cb;
+				}
 			}
 
-			$settings = array_merge( array_fill_keys( $fields, '' ), $form_fields );
-			$ret = cerber_settings_update( array( CRB_ADDON_STS => array( $id => $settings ) ) );
-
-			if ( $cb = $addon['callback'] ?? false ) {
-				crb_sanitize_deep( $settings );
-				call_user_func( $cb, $settings );
-			}
-
-			return $ret;
+			$cache[ $addon_id ] = $config;
 		}
 
-		return false;
+		return $cache[ $addon_id ];
+	}
+
+	/**
+	 * Add setting screens (tabs) and related setting sections for all add-ons
+	 *
+	 * @return array[]|false
+	 */
+	static function settings_config() {
+
+		if ( ! self::$addons ) {
+			return false;
+		}
+
+		$settings = array( 'screens' => array(), 'sections' => array() );
+
+		foreach ( self::$addons as $id => $addon ) {
+			if ( ! $config = self::get_addon_settings( $id ) ) {
+				continue;
+			}
+
+			$settings['screens'][ $id . CRB_ADDON_SIGN ] = array_keys( $config ); // Register a setting tab with setting sections
+			$settings['sections'] = array_merge( $settings['sections'], $config ); // Register setting sections
+		}
+
+		return $settings;
+	}
+
+	static function update_settings( $form_fields, $addon_id ) {
+
+		if ( ( ! $addon = self::$addons[ $addon_id ] ?? false )
+		     || ! $config = self::get_addon_settings( $addon_id ) ) {
+			return false;
+		}
+
+		$fields = array();
+
+		foreach ( $config as $section ) {
+			$fields = array_merge( $fields, array_keys( $section['fields'] ) );
+		}
+
+		$new_settings = array_merge( array_fill_keys( $fields, '' ), $form_fields );
+		$all_settings = cerber_get_addon_settings();
+		$save = array_merge( $all_settings, array( $addon_id => $new_settings ) );
+
+		$ret = cerber_settings_update( array( CRB_ADDON_STS => $save ) );
+
+		if ( ( $cb = $addon['callback'] ?? false )
+		     & is_callable( $cb ) ) {
+			crb_sanitize_deep( $new_settings ); // Protect add-on code from unfiltered values
+			call_user_func( $cb, $new_settings );
+		}
+
+		return $ret;
+
+	}
+
+	/**
+	 * Returns add-on tab ID for the specified WP setting screen ID
+	 *
+	 * @param string $screen_id
+	 *
+	 * @return string
+	 *
+	 * @since 9.6.2.1
+	 */
+	static function get_addon_tab( $screen_id ): string {
+		return self::$tabs[ $screen_id ] ?? '';
+	}
+
+	/**
+	 * Returns WP setting screen ID for the specified add-on tab (or the add-on page)
+	 *
+	 * @param string $id
+	 *
+	 * @return string
+	 *
+	 * @since 9.6.2.1
+	 */
+	static function get_setting_screen( $id ): string {
+		if ( ! empty( self::$tabs[ $id ] ) ) {
+			return self::$tabs[ $id ];
+		}
+
+		// If the page ID specified, it means the first tab
+
+		if ( $id == CRB_ADDON_PAGE ) {
+			return reset( self::$tabs );
+		}
+
+		return '';
+	}
+
+	/**
+	 * Returns WP Cerber admin page ID for the specified add-on tab
+	 *
+	 * @param string $tab
+	 *
+	 * @return string
+	 *
+	 * @since 9.6.2.1
+	 */
+	static function get_addon_page( $tab ): string {
+		if ( ! empty( self::$tabs[ $tab ] ) ) {
+			return CRB_ADDON_PAGE;
+		}
+
+		return '';
 	}
 
 	/**
@@ -293,6 +455,38 @@ final class CRB_Addons {
 			}
 		}
 	}
+
+	/**
+	 * Retrieves the configuration for the admin UI of the addons.
+	 *
+	 * @return array|false The configuration array for the admin UI, or false if no addons are available.
+	 */
+	static function get_admin_ui() {
+
+		if ( ! self::$addons ) {
+			return false;
+		}
+
+		$config = array(
+			'title'    => __( 'Add-ons', 'wp-cerber' ),
+			'callback' => function ( $tab, $tab_data ) {
+				cerber_show_settings_form( $tab, $tab_data );
+			},
+		);
+
+		foreach ( self::$addons as $id => $addon ) {
+			$config['tabs'][ $id . CRB_ADDON_SIGN ] = array(
+				'bx-cog',
+				crb_generic_escape( $addon['name'] ),
+				'tab_data' => array(
+					'page_type' => 'addon-settings',
+					'addon_id'  => $id
+				)
+			);
+		}
+
+		return $config;
+	}
 }
 
 function crb_event_handler( $event, $data ) {
@@ -300,68 +494,6 @@ function crb_event_handler( $event, $data ) {
 	CRB_Events::event_handler( $event, $data );
 
 	return;
-}
-
-/////// Admin area pages and settings routines
-
-function crb_addon_admin_page( $page ) {
-
-	if ( $page != CRB_ADDON_PAGE ) {
-		return false;
-	}
-
-	$addons = CRB_Addons::get_all();
-
-	if ( ! $addons ) {
-		return false;
-	}
-
-	$config = array(
-		'title'    => __( 'Add-ons', 'wp-cerber' ),
-		'callback' => function ( $tab, $tab_data ) {
-			cerber_show_settings_form( $tab, $tab_data );
-		},
-	);
-
-	foreach ( $addons as $id => $addon ) {
-		$config['tabs'][ $id . CRB_ADDON_SIGN ] = array(
-			'bx-cog',
-			crb_generic_escape( $addon['name'] ),
-			'tab_data' => array(
-				'page_type' => 'addon-settings',
-				'addon_id'  => $id
-			)
-		);
-	}
-
-	return $config;
-}
-
-function crb_addon_settings_config( $args ) {
-
-	if ( ! $addons = CRB_Addons::get_all() ) {
-		return false;
-	}
-
-	$settings = array( 'screens' => array(), 'sections' => array() );
-
-	foreach ( $addons as $id => $addon ) {
-		$settings['screens'][ $id . CRB_ADDON_SIGN ] = array_keys( $addon['settings'] );
-		$settings['sections'] = array_merge( $settings['sections'], $addon['settings'] );
-	}
-
-	return $settings;
-}
-
-function crb_addon_settings_mapper( &$map ) {
-
-	if ( CRB_Addons::none() ) {
-		return;
-	}
-
-	$map[ CRB_ADDON_PAGE ] = CRB_Addons::get_first() . CRB_ADDON_SIGN;
-
-	//$map[ CRB_ADDON_PAGE ] = 'add_on_settings';
 }
 
 /**
@@ -376,9 +508,14 @@ function _cerber_upgrade_addon_settings(){
 	$old_settings = get_site_option( 'cerber_tmp_old_settings' );
 
 	foreach ( CRB_Addons::get_all() as $addon_id => $addon_conf ) {
+
+		if ( ! $config = CRB_Addons::get_addon_settings( $addon_id ) ) {
+			continue;
+		}
+
 		$fields = array();
 
-		foreach ( $addon_conf['settings'] as $section ) {
+		foreach ( $config as $section ) {
 			$fields = array_merge( $fields, array_keys( $section['fields'] ) );
 		}
 

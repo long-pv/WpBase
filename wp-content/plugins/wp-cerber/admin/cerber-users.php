@@ -280,9 +280,17 @@ add_filter( 'users_list_table_query_args', function ( $args ) {
 	return $args;
 } );
 
+/**
+ * Returns formatted first and last names (or display name)
+ * Adds user login for clarity
+ *
+ * @param WP_User|int $user
+ *
+ * @return string
+ */
 function crb_format_user_name( $user ) {
 	if ( is_integer( $user ) ) {
-		$user = get_userdata( $user );
+		$user = crb_get_userdata( $user );
 	}
 
 	if ( ! $user ) {
@@ -1096,7 +1104,7 @@ function crb_get_user_auth_status( $user ) {
 	if ( $user_ip = crb_is_user_ip_blocked( $user ) ) {
 		$nope = __( 'The IP address of the last failed attempt to log in is blocked', 'wp-cerber' );
 		$remove = cerber_admin_link_add( array( 'cerber_admin_do' => 'lockdel', 'ip' => $user_ip ), true );
-		$nope_more = array( $user_ip, sprintf( __( 'If necessary, <%s>unblock the IP address<%s>.', 'wp-cerber' ), 'a href="' . $remove . '" onclick="return confirm(\'' . __( 'Are you sure?', 'wp-cerber' ) . '\');"', '/a' ) );
+		$nope_more = array( $user_ip, '<a href="' . $remove . '" onclick="return confirm(\'' . __( 'Are you sure?', 'wp-cerber' ) . '\');">'. __( 'If necessary, click here to unblock the IP address.', 'wp-cerber' ).'</a>' );
 
 		return array( $nope, $nope_more, false );
 	}
@@ -1120,7 +1128,7 @@ function crb_get_user_auth_status( $user ) {
 		$knowledge_base = array( CRB_STS_11 => 'antispam', 14 => 'acl', 16 => 'geo' );
 
 		if ( $go = crb_array_get( $knowledge_base, $last_denied->ac_status ) ) {
-			$nope_more[] = sprintf( __( 'If necessary, <%s>check and update settings<%s>.', 'wp-cerber' ), 'a href="' . cerber_admin_link( $go ) . '" target="_blank"', '/a' );
+			$nope_more[] = '<a href="' . cerber_admin_link( $go ) . '" target="_blank">' . __( 'If necessary, check and update settings.', 'wp-cerber' ) . '</a>';
 		}
 	}
 

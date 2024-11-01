@@ -333,7 +333,7 @@ final class CRB_Explainer {
 		}
 
 		if ( $title ) {
-			return $title . ' [ <a href="' . cerber_admin_link( $tab ) . $bm . '" target="_blank">' . __( 'Manage', 'wp-cerber' ) . '</a> ]';
+			return $title . ' [&nbsp;<a href="' . cerber_admin_link( $tab ) . $bm . '" target="_blank">' . __( 'Manage', 'wp-cerber' ) . '</a>&nbsp;]';
 		}
 
 		return '';
@@ -516,7 +516,7 @@ final class CRB_Wisdom {
 			return;
 		}
 
-		cerber_bg_task_add( 'crb_azoth_check_update', array( 'load_admin' => 1, 'args' => array( get_current_user_id() ) ) );
+		cerber_bg_task_add( array( 'CRB_Wisdom', 'load_remote_file' ), array( 'load_admin' => 1, 'args' => array( get_current_user_id() ) ) );
 
 		set_site_transient( 'cerber_update_kb', 1, 24 * 3600 );
 	}
@@ -546,18 +546,4 @@ final class CRB_Wisdom {
 		return $user_locale;
 	}
 
-}
-
-/**
- * Wrapper for CRB_Wisdom::load_remote_file()
- * It's used with cerber_bg_task_add() since it can't handle class methods as callbacks
- *
- * @param $user_id
- *
- * @return void
- *
- * @since 9.6.1.3
- */
-function crb_azoth_check_update( $user_id ) {
-	CRB_Wisdom::load_remote_file( $user_id );
 }

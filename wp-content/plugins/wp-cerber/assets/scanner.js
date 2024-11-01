@@ -37,7 +37,7 @@ jQuery( function( $ ) {
     let crb_scan_note = $("#crb-scan-note");
     let crb_scan_browser = $("#crb-browse-files > tbody");
 
-    let crb_txt_strings = [];
+    //let crb_txt_strings = [];
     let crb_the_file;
     let crb_row_id = 0; // For local parent -> child relationship
 
@@ -197,7 +197,7 @@ jQuery( function( $ ) {
                 cerber_scan_load_data(); // Refresh issues
             }
 
-            cerber_popup_show('The scan is finished', '<p style="text-align: center;">The scan is finished. Please review the results.</p><p style="text-align: center;"><a href="https://wpcerber.com/wordpress-integrity-checker/" target="_blank">Scanner documentation on wpcerber.com</a></p>');
+            cerber_popup_show('The scan has finished', '<p style="text-align: center;">The scan has finished. Please review the results.</p><p style="text-align: center;"><a href="https://wpcerber.com/wordpress-integrity-checker/" target="_blank">Scanner documentation on wpcerber.com</a></p>');
         }
     }
 
@@ -248,7 +248,7 @@ jQuery( function( $ ) {
             let progress = scanner_data.progress?.step || '';
             progress = progress ? ' - ' + progress + '%' : '';
 
-            crb_scan_message.text((crb_scan_msg_steps[scanner_data.step] || '') + ' ' + progress);
+            crb_scan_message.text((crb_scan_msg_steps[scanner_data.scan_stage] || '') + ' ' + progress);
         }
 
         if (crb_scan_message.text()) {
@@ -257,120 +257,109 @@ jQuery( function( $ ) {
 
         cerber_update_bar();
 
-        // Displaying issues
+        // Displaying results
 
-        var issues;
-        if (!scanner_data.issues && scanner_data.step_issues) {
-            issues = scanner_data.step_issues;
-        }
-        else {
-            issues = scanner_data.issues;
-        }
+        let scan_sections = scanner_data.issues || scanner_data.step_issues;
 
-        $.each(issues, function (section_id, section_data) {
-            var the_items = [];
+        $.each(scan_sections, function (section_id, section_data) {
 
-            if (!this.issues.length) {
-                //return;
-            }
+            let the_items = [];
 
-            // Avoid JS undefined error with an old data set
-            var vul_list;
-            if (typeof section_data.sec_details !== 'undefined') {
-                vul_list = section_data.sec_details.vul_list;
-            }
+            //let vul_list = section_data.sec_details?.vul_list;
 
-            var section_name = section_data.name;
-            var setype = section_data.setype;
+            const section_name = section_data.name;
+            const setype = section_data.setype;
+            let version = section_data.sec_details.obj_version || '';
 
-            var section_header_class = 'crb-scan-section';
+            let section_header_class = 'crb-scan-section';
+
             if (section_data.container) {
-                section_header_class = section_header_class + ' section-' + section_data.container;
+                section_header_class += ' section-' + section_data.container;
             }
 
-            var section_items = [];
+            let section_items = [];
 
-            var target_section = crb_scan_browser.find('#' + section_id);
+            let target_section = crb_scan_browser.find('#' + section_id);
+            let parent_section_id  = (target_section.length ? target_section.data('row-id') : crb_row_id);
 
-            var parent_section_id  = (target_section.length ? target_section.data('row-id') : crb_row_id);
-
-            var section_header = '<tr id="' + section_id + '" class="' + section_header_class + '" data-row-id="' + crb_row_id + '" data-section-name="' + section_name + '" data-setype="' + setype + '"><td></td><td colspan = 5><span>' + section_name + '</span></td></tr>';
+            let section_labels = '';
+            let section_details = '';
+            let section_top_issues = [];
 
             $.each(section_data.issues, function (index, single_issue) {
-                let issue_type_id = single_issue[0];
-                let f_name = single_issue[1];
-                let risk = single_issue[2];
-                let extra_issue = (single_issue[3] ? single_issue[3] : 0 );
-                let ilist = '';
 
-                // New way
+                const [issue_type_id, extra_issue = 0] = single_issue.ii ? single_issue.ii : [single_issue[0], single_issue[3] ?? 0];
+                const ilist = single_issue.ii ? '[' + single_issue.ii.join(',') + ']' : '';
+                const risk = single_issue[2];
+                let label = '';
+                let action_link = '';
+                let action_link_html = '';
 
-                if (typeof single_issue.ii !== "undefined") {
-                    issue_type_id = single_issue.ii[0];
-                    if (typeof single_issue.ii[1] !== "undefined") {
-                        extra_issue = (single_issue.ii[1] ? single_issue.ii[1] : 0);
+                if (crb_scan_top_issues.includes(issue_type_id)) {
+
+                    // Section header -------------------------
+
+                    section_top_issues.push(issue_type_id);
+
+                    label = crb_scan_msg_labels[issue_type_id];
+
+                    if ( label ) {
+                        section_labels += '<span class="crb-it-' + issue_type_id + ' scan-ilabel">' + label + '</span>';
                     }
 
-                    ilist = '[' + single_issue.ii.join(',') + ']';
-                }
-
-                let isize = (single_issue.data.size ? single_issue.data.size : "");
-                let itime = (single_issue.data.time ? single_issue.data.time : "" );
-                let version = (single_issue.data.version ? single_issue.data.version : "" );
-
-                let full_name = '';
-                let css_classes = '';
-                if (single_issue.data.name) {
-                    full_name = single_issue.data.name;
-                    css_classes += ' cursor-pointer';
-                }
-
-                if (issue_type_id < CERBER_LDE ) {
-                    // Section -------------------------
-
-                    if (issue_type_id === 4) {
-                        return; // skip 4
+                    if (issue_type_id === 1) {
+                        return;
                     }
 
-                    let extra = '';
+                    let issue_info = single_issue.data?.msg_html ||
+                        (single_issue.data?.msg ? crb_escape_string(single_issue.data.msg) :
+                            crb_scan_msg_issues[issue_type_id] || 'Unknown issue');
 
-                    if (vul_list) {
-                        extra += '<span class="crb-it-4 scan-ilabel">' + crb_scan_msg_issues[4] + '</span>';
+                    if ([100, 101].includes(issue_type_id)) {
+                        action_link = crb_create_link('#', 'Plugin Details',
+                            {'css_class': 'crb-issue-link'},
+                            {'itype': issue_type_id, 'plugin-slug': section_data.sec_details.plugin?.plugin_slug});
                     }
 
-                    if (issue_type_id === 5) {
-                        extra += ' &mdash; ';
-                        extra += '<span class="crb-it-' + issue_type_id + '">' + crb_scan_msg_issues[issue_type_id] + '</span>';
-                        extra += ' &mdash; <a href="#" class="crb-issue-link" data-itype="' + issue_type_id + '" data-section-name="' + section_name + ' v. ' + version + '">' + crb_txt_strings['explain'][9] + '</a>';
-                    }
-                    else {
-                        extra += '<span class="crb-it-' + issue_type_id + ' scan-ilabel">' + crb_scan_msg_issues[issue_type_id] + '</span>';
+                    if ([5].includes(issue_type_id)) {
+                        action_link = crb_create_link('#', crb_txt_strings['explain'][9],
+                            {'css_class': 'crb-issue-link'},
+                            {'itype': issue_type_id, 'section-name': section_name + ' v. ' + version});
                     }
 
-                    let under = '';
-                    if (vul_list) {
-                        $.each(vul_list, function (index, vuln) {
-                            //under += '<i style="font-size: 125%; vertical-align: middle; margin-left: -2px;" class="crb-icon crb-icon-bxs-error-circle"></i> ' + vuln.n + '. Please update the plugins as soon as possible.<br/>';
-                            under += vuln.vu_info + '<br/>';
-                        });
-                        //under += 'Please update the plugins as soon as possible.<br/>';
-                        under = '<p class="crb-list-vlnb">' + under + '</p>';
-                    }
+                    action_link_html = action_link ? ' [ ' + action_link.outerHTML + ' ]' : '';
 
-                    section_header = '<tr id="' + section_id + '" class="' + section_header_class + '" data-row-id="' + crb_row_id + '" data-section-name="' + section_name + '" data-setype="' + setype + '"><td></td><td colspan = 5><span>' + section_name + '</span>' + extra + under + '</td></tr>';
+                    section_details += '<li class="crb-it-' + issue_type_id + '">' + issue_info + action_link_html + '</li>';
+
                 }
                 else {
+
                     // Single file issue ----------------
+
+                    const file_name = single_issue[1];
+                    const full_file_name = single_issue.data?.name ?? '';
+                    let css_classes = full_file_name ? 'cursor-pointer' : '';
+                    const isize = single_issue.data?.size ?? "";
+                    const itime = single_issue.data?.time ?? "";
+
                     let rbox = (single_issue.data.fd_allowed ? '<input type="checkbox">' : '');
-                    section_items.push('<tr class="crb-item-file" data-prid="' + parent_section_id + '" data-ilist="' + ilist + '" data-itype="' + issue_type_id + '" data-iextra="' + extra_issue + '" data-file_name="' + full_name + '"><td>' + rbox + '</td><td data-short="' + f_name + '" class="' + css_classes + '">' + f_name + '</td><td>' + cerber_get_issue_labels(index, single_issue) + '</td><td class="risk' + risk + '"><span>' + crb_scan_msg_risks[risk] + '</span></td><td>' + isize + '</td><td>' + itime + '</td></tr>');
+                    section_items.push('<tr class="crb-item-file" data-prid="' + parent_section_id + '" data-ilist="' + ilist + '" data-itype="' + issue_type_id + '" data-iextra="' + extra_issue + '" data-file_name="' + full_file_name + '"><td>&nbsp;' + rbox + '&nbsp;</td><td data-short="' + file_name + '" class="' + css_classes + '">' + file_name + '</td><td>' + cerber_get_issue_labels(index, single_issue) + '</td><td class="risk' + risk + '"><span>' + crb_scan_msg_risks[risk] + '</span></td><td>' + isize + '</td><td>' + itime + '</td></tr>');
                 }
 
             });
 
             if (target_section.length) {
+                // Add to the existing section
                 target_section.after(section_items);
             }
             else {
+                // Add a new section
+                if (section_details) {
+                    section_details = '<ul class="crb-scan-section-issues">' + section_details + '</ul>';
+                }
+
+                let section_header = '<tr id="' + section_id + '" class="' + section_header_class + '" data-row-id="' + crb_row_id + '" data-section-name="' + crb_escape_string(section_name) + '" data-setype="' + setype + '" data-top-section-issues="[' + section_top_issues.join(', ') + ']"><td></td><td colspan = 5><span>' + section_name + '</span>' + section_labels + section_details + '</td></tr>';
+
                 section_items.unshift(section_header);
                 $.merge(the_items, section_items);
                 crb_row_id++;
@@ -412,7 +401,7 @@ jQuery( function( $ ) {
         }
 
         scanner_data = crb_response.cerber_scanner;
-        console.log('Step ' + scanner_data.step);
+        console.log('Step: ' + scanner_data.step + ', stage: ' + scanner_data.scan_stage);
 
         if (scanner_data.issues) {
             all_issues = scanner_data.issues;
@@ -424,9 +413,9 @@ jQuery( function( $ ) {
         }
 
         window.crb_scan_id = scanner_data.scan_id;
-        if (crb_response.strings) {
-            crb_txt_strings = crb_response.strings;
-        }
+
+        //crb_txt_strings = crb_response.strings || [];
+        //crb_txt_strings = crb_escape_object_properties(crb_txt_strings);
 
         if (scanner_data.errors && scanner_data.errors.length) {
             scanner_data.errors.forEach(function (item, index) {
@@ -518,7 +507,7 @@ jQuery( function( $ ) {
 
     // Enable/disable file controls
     function cerber_file_controls() {
-        var b = crb_file_controls.find(':button');
+        let b = crb_file_controls.find(':button');
         if (crb_scan_browser.find('input[type=checkbox]').length) {
             b.show();
         }
@@ -526,7 +515,7 @@ jQuery( function( $ ) {
             b.hide();
         }
 
-        var a = crb_scan_controls.find('a');
+        let a = crb_scan_controls.find('a');
         if (crb_scan_browser.find('.crb-item-file').length) {
             a.show();
         }
@@ -550,28 +539,9 @@ jQuery( function( $ ) {
         crb_scan_progress.show();
         crb_scan_progress.width('100%');
 
-        if (scanner_data.scanned.files > 0) {
-            percentage = 30 + (scanner_data.scanned.files / scanner_data.total.files) * 70;
-        }
-        else {
-            if (scanner_data.step < 3) {
-                percentage = 10;
-            }
-            else {
-                percentage = 10 + crb_scan_requests * 5;
-            }
-        }
+        let percentage = Number(scanner_data.progress?.entire_scan) || 0;
 
         crb_scan_bar.animate({width: percentage + '%'}, 1000);
-
-        //var bar_width = (percentage*crb_scan_bar.parent().width()/100)+'px';
-        //crb_scan_bar.width('100px');
-        //crb_scan_bar.find('div').animate({width: bar_width}, 1000);
-        ///crb_scan_bar.animate({width: bar_width}, 1000);
-
-        //crb_scan_bar.find('div').animate({width: percentage + '%'}, 1000);
-        //crb_scan_bar.animate({width: percentage + '%'}, 1000);
-
     }
 
     // Rate limiting helper
@@ -671,32 +641,60 @@ jQuery( function( $ ) {
     }
 
 
-    // Filtering
+    // Filtering issues
 
     crb_scan_filter.on('click', 'span', function (event) {
+
         if (!$(this).hasClass('crb-scan-flon')) {
             return;
         }
 
-        if (crb_all_rows === null) {
+        // Toggle visibility
+
+        if ($(this).hasClass('crb-scan-filter-ed')) {
+            crb_all_rows.not('.crb-scan-container').show();
+            $(this).removeClass("crb-scan-filter-ed");
+            return;
+        }
+
+        $(this).addClass( "crb-scan-filter-ed" );
+
+        // -----------------
+
+        if (crb_scan_in_progress || crb_all_rows === null) {
             crb_all_rows = crb_scan_browser.find('tr');
             crb_all_sections = crb_scan_browser.children('.crb-scan-section');
         }
 
         crb_all_rows.hide();
 
-        // Single issues
+        // Single issues by issue type
+
         let show_issues = $(this).data('itype-list');
-        if (typeof show_issues !== 'undefined') {
+        if (show_issues && show_issues.length > 0) {
 
             $(show_issues).each(function (index, value) {
-                //let filtered_rows = all_rows.filter('.crb-item-file').filter('[data-itype=' + value + '],[data-iextra=' + value + ']');
+
+                // Show single file issues
+
                 let filtered_rows = crb_all_rows.filter('.crb-item-file').filter(function (index, element) {
                     let ilist = $(element).data('ilist');
                     return !!ilist.includes(value);
                 });
+
                 filtered_rows.show();
+
+                // Show section header if any top issue
+
+                let filtered_sections = crb_all_sections.filter(function (index, element) {
+                    let section_issues = $(element).data('top-section-issues');
+                    return !!section_issues.includes(value);
+                });
+
+                filtered_sections.show();
             });
+
+            // Show section header if a children became visible
 
             crb_all_sections.each(function () {
                 let children = $(this).nextAll('.crb-item-file').filter(':visible').first();
@@ -711,9 +709,10 @@ jQuery( function( $ ) {
             });
         }
 
-        // Whole sections
+        // Entire sections by section type
+
         let show_sections = $(this).data('setype-list');
-        if (typeof show_sections !== 'undefined') {
+        if (show_sections && show_sections.length > 0) {
             $(show_sections).each(function (index, value) {
                 let filtered_sections = crb_all_rows.filter('.crb-scan-section[data-setype=' + value + ']');
                 filtered_sections.show();
@@ -726,19 +725,35 @@ jQuery( function( $ ) {
 
     });
 
-    // Popups for an issue
+    // Pop-ups for the scan issues
 
     crb_scan_browser.on('click', 'a', function (event) {
-        if ($(this).data('itype') === 5) {
-            $('#ref-section-name').text($(this).data('section-name'));
-            crb_enable_ref_form();
-            crb_upload_form_ul.children().hide();
-            tb_show(crb_txt_strings['explain'][8], '#TB_inline?width=420&height=400&inlineId=crb-ref-upload-dialog');
-            $('#TB_closeWindowButton').blur();
+
+        let itype = $(this).data('itype');
+        let isd = $(this).data('isd');
+
+        if (!itype && !isd) {
+            return;
         }
-        else {
-            cerber_issue_popup(this);
+
+        switch (itype) {
+            case 5:
+                $('#ref-section-name').text($(this).data('section-name'));
+                crb_enable_ref_form();
+                crb_upload_form_ul.children().hide();
+                tb_show(crb_txt_strings['explain'][8], '#TB_inline?width=520&height=400&inlineId=crb-ref-upload-dialog');
+                $('#TB_closeWindowButton').blur();
+                break;
+            case 100:
+            case 101:
+                let slug = $(this).data('plugin-slug');
+                tb_show('Plugin Details', crb_admin_url + 'plugin-install.php?tab=plugin-information&plugin=' + slug + '&TB_iframe=true&width=772&height=562');
+                $('#TB_closeWindowButton').blur();
+                break;
+            default:
+                cerber_issue_popup(this);
         }
+
         event.preventDefault();
     });
 
@@ -963,18 +978,16 @@ jQuery( function( $ ) {
     // File viewer
 
     crb_scan_browser.on('click', 'td', function (event) {
-        if (typeof $(this).data('short') === "undefined" || $(this).data('short') === '') {
-            return;
-        }
-        //var file_name = $(this).data('file-name');
+
+        let short = $(this).data('short');
         let file_name = $(this).closest('tr').data('file_name');
 
-        if (!file_name.length) {
+        if (typeof short === "undefined" || short === '' || !file_name?.length) {
             return;
         }
 
-        var view_width = window.innerWidth * 0.8;
-        var view_height = window.innerHeight * 0.8;
+        let view_width = window.innerWidth * 0.8;
+        let view_height = window.innerHeight * 0.8;
 
         tb_show("File: " + file_name, ajaxurl + '?action=cerber_view_file&ajax_nonce=' + crb_ajax_nonce + '&file=' + file_name + '&scan_id=' + window.crb_scan_id + '&sheight=' + view_height + '&width=' + view_width + '&height=' + view_height + '&TB_iframe=1');
         $('#TB_closeWindowButton').blur();

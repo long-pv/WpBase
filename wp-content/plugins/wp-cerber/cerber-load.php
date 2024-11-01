@@ -126,6 +126,8 @@ const CRB_TRF_PARAMS = array(
 
 require_once( __DIR__ . '/cerber-pluggable.php' );
 require_once( __DIR__ . '/cerber-common.php' );
+require_once( __DIR__ . '/cerber-codex.php' );
+require_once( __DIR__ . '/net/cerber-net.php' );
 require_once( __DIR__ . '/cerber-settings.php' );
 include_once( __DIR__ . '/cerber-request.php' );
 require_once( __DIR__ . '/cerber-lab.php' );
@@ -1331,28 +1333,20 @@ function crb_login_error( $username = '', $act = null, $status = null ) {
 	// Create with a message identical to the default WP
 
 	if ( ! is_email( $username ) ) {
-		return new WP_Error(
-			'incorrect_password',
-			sprintf(
+		$msg =
 			/* translators: Here %s is a user login. */
-				__( '<strong>Error</strong>: The password you entered for the username %s is incorrect.' ),
-				'<strong>' . $username . '</strong>'
-			) .
-			' <a href="' . wp_lostpassword_url() . '">' .
-			__( 'Lost your password?' ) .
-			'</a>' );
+			__( 'The password you entered for the username %s is incorrect.', 'wp-cerber' );
+	}
+	else {
+		$msg =
+			/* translators: Here %s is an email address. */
+			__( 'The password you entered for the email address %s is incorrect.', 'wp-cerber' );
 	}
 
 	return new WP_Error(
 		'incorrect_password',
-		sprintf(
-		/* translators: Here %s is an email address. */
-			__( '<strong>Error</strong>: The password you entered for the email address %s is incorrect.' ),
-			'<strong>' . $username . '</strong>'
-		) .
-		' <a href="' . wp_lostpassword_url() . '">' .
-		__( 'Lost your password?' ) .
-		'</a>' );
+		'<strong>' . __( 'Error', 'wp-cerber' ) . ':</strong> ' . sprintf( $msg, '<strong>' . $username . '</strong>' )
+		. ' <a href="' . wp_lostpassword_url() . '"> ' . __( 'Lost your password?' ) . '</a>' );
 }
 
 add_action( 'wp_login', function ( $login, $user ) {
@@ -2523,11 +2517,10 @@ add_action( 'init', function () {
 
 	// Load translations
 
-	$use_eng = false;
+	if ( is_admin()
+         && crb_get_settings( 'admin_lang' ) ) {
 
-	if ( is_admin() && crb_get_settings( 'admin_lang' ) ) {
-
-		$use_eng = true;
+        // Do not load translations, use untranslated English phrases from the plugin code
 
 		add_filter( 'override_load_textdomain', function ( $val, $domain, $mofile ) {
 			if ( $domain == 'wp-cerber' ) {
@@ -2537,10 +2530,31 @@ add_action( 'init', function () {
 			return $val;
 		}, 100, 3 );
 	}
+	else {
 
-	if ( ! $use_eng ) {
+		add_filter( 'load_textdomain_mofile', function ( $mofile, $domain ) {
+
+			if ( $domain == 'wp-cerber'
+			     && strpos( $mofile, WP_LANG_DIR . '/plugins/' ) === 0 ) {
+
+				// Force WP to load translations from the WP Cerber folder
+
+				$cerber_mofile = cerber_plugin_dir() . '/languages/' . basename( $mofile );
+
+				if ( file_exists( $cerber_mofile ) ) {
+					return $cerber_mofile;
+				}
+			}
+
+			return $mofile;
+		}, PHP_INT_MAX, 2 );
+
+        // Now load the translations from a file
+
 		load_plugin_textdomain( 'wp-cerber', false, 'wp-cerber/languages' );
 	}
+
+    // ====================================================
 
 	if ( crb_get_settings( 'nologinlang' ) ) {
 		add_filter( 'login_display_language_dropdown', '__return_false' );
@@ -4545,7 +4559,8 @@ function cerber_file_log( $user_login, $ip ) {
 			@fwrite( $log, date( 'M j H:i:s ' ) . $_SERVER['SERVER_NAME'] . ' Cerber(' . $_SERVER['HTTP_HOST'] . ')[' . $pid . ']: Authentication failure for ' . $user_login . ' from ' . $ip . "\n" );
 			@fclose( $log );
 		}
-	} else {
+	}
+    elseif ( function_exists( 'syslog' ) ) {
 		@openlog( 'Cerber(' . $_SERVER['HTTP_HOST'] . ')', LOG_NDELAY | LOG_PID, defined( 'CERBER_LOG_FACILITY' ) ? CERBER_LOG_FACILITY : LOG_AUTH );
 		@syslog( LOG_NOTICE, 'Authentication failure for ' . $user_login . ' from ' . $ip );
 		@closelog();
@@ -5696,23 +5711,29 @@ class CRB_Messaging {
 	public function process_email_errors( $error ) {
 
         $this->error = true;
-        $data = $error->get_error_data();
+        $mailer_data = $error->get_error_data();
 
 		if ( is_admin()
 		     && crb_get_query_params( 'cerber_admin_do' ) ) {
-			cerber_admin_notice( strip_tags( $error->get_error_message() ) . ' (' . ( $data['phpmailer_exception_code'] ?? '' ) . ')' );
+			cerber_admin_notice( strip_tags( $error->get_error_message() ) . ' (' . ( $mailer_data['phpmailer_exception_code'] ?? '' ) . ')' );
 		}
 		else {
+
+			$to = $mailer_data['to'] ?? array();
+
+			if ( ! is_array( $to ) ) {
+				$to = array( $to );
+			}
 
 			$save = array(
 				time(),
 				cerber_get_remote_ip(),
 				strip_tags( $error->get_error_message() ),
-				$data['phpmailer_exception_code'] ?? '',
+				$mailer_data['phpmailer_exception_code'] ?? '',
 				isset( $this->mailer->Host ) ? $this->mailer->Host : '',
 				isset( $this->mailer->Username ) ? $this->mailer->Username : '',
-                $data['to'] ?? '',
-				$data['subject'] ?? '',
+				$to,
+				$mailer_data['subject'] ?? '',
 			);
 
 			cerber_update_set( 'last_email_error', $save );
@@ -6200,6 +6221,15 @@ add_action( 'cerber_bg_launcher', function () {
 
 } );
 
+/**
+ * Executes background tasks stored in the queue
+ *
+ * @param array $filter The list of tasks to execute, if empty all tasks will be executed
+ *
+ * @return array The list of executed task IDs
+ *
+ * @since 8.6.4
+ */
 function cerber_bg_task_launcher( $filter = null ) {
 	$ret = array();
 
@@ -6208,46 +6238,23 @@ function cerber_bg_task_launcher( $filter = null ) {
 	}
 
 	if ( $filter ) {
-		$exec_it = array_intersect_key( $task_list, $filter );
-	}
-	else {
-		$exec_it = $task_list;
+		$task_list = array_intersect_key( $task_list, $filter );
 	}
 
-	if ( empty( $exec_it ) ) {
+	if ( empty( $task_list ) ) {
 		return $ret;
 	}
 
-	$safe_func = array(
-		'nexus_send',
-		'nexus_do_upgrade',
-		'_crb_ds_background',
-		'nexus_refresh_slave_srv',
-		'_crb_qr_total_sync',
-		'crb_sessions_sync_all',
-		'cerber_upgrade_deferred',
-		'cerber_daily_run',
-		'cerber_do_hourly_2',
-        'crb_azoth_check_update'
-	);
-
-	foreach ( $exec_it as $task_id => $task ) {
+	foreach ( $task_list as $task_id => $task ) {
 
 		$func = crb_array_get( $task, 'func' );
 
-		if ( ! empty( $task['load_admin'] ) ) {
-			cerber_load_admin_code();
-		}
-
-        if ( ! in_array( $func, $safe_func ) ) {
-			cerber_error_log( 'Function ' . $func . ' is not in the safe list', 'BG TASK' );
-			cerber_bg_task_delete( $task_id );
-			continue;
-		}
-
 		if ( ! is_callable( $func ) ) {
-			cerber_error_log( 'Function ' . $func . ' is not available (not defined)', 'BG TASK' );
+			$err = 'Function ' . crb_make_callable_name( $func ) . ' is not callable or not defined';
+			$ret[ $task_id ] = $err;
+			cerber_error_log( $err, 'BG TASK' );
 			cerber_bg_task_delete( $task_id );
+
 			continue;
 		}
 
@@ -6255,15 +6262,19 @@ function cerber_bg_task_launcher( $filter = null ) {
 			cerber_bg_task_delete( $task_id );
 		}
 
+		if ( ! empty( $task['load_admin'] ) ) {
+			cerber_load_admin_code();
+		}
+
 		// Ready to lunch the task
 
 		$args = crb_array_get( $task, 'args', array() );
 
-		nexus_diag_log( 'Launching bg task: ' . $func );
+		nexus_diag_log( 'Launching bg task: ' . crb_make_callable_name( $func ) );
 
 		ob_start();
 		$result = call_user_func_array( $func, $args );
-		$echo   = ob_get_clean();
+		$output = ob_get_clean();
 
 		if ( isset( $task['exec_until'] ) ) {
 			if ( $task['exec_until'] === $result ) {
@@ -6272,66 +6283,81 @@ function cerber_bg_task_launcher( $filter = null ) {
 		}
 
 		if ( empty( $task['return'] ) ) {
-			$echo   = ( $echo ) ? ' there was an output ' . strlen( $echo ) . ' bytes length' : 'no output';
+			$output   = ( $output ) ? 'there was an output ' . mb_strlen( $output ) . ' bytes length' : 'no output';
 			$result = 1;
 		}
 
-		$ret[ $task_id ] = array( $result, crb_array_get( $task, 'run_js' ), $echo );
+		$ret[ $task_id ] = array( $result, crb_array_get( $task, 'run_js' ), $output );
 	}
 
 	return $ret;
 }
 
+/**
+ * Returns all background tasks
+ *
+ * @return array
+ *
+ * @since 8.6.4
+ */
 function cerber_bg_task_get_all() {
-	$list = cerber_get_set( '_background_tasks' );
+	$tasks = cerber_get_set( '_background_tasks' );
 
-	if ( ! $list ) {
-		$list = array();
+	if ( ! $tasks || ! is_array( $tasks ) ) {
+		$tasks = array();
 	}
 
-	return $list;
+	return $tasks;
 }
 
 /**
- * @param callable $func Function must be in the safe list in cerber_bg_task_launcher().
- * @param array $config
- * @param bool $priority
- * @param int $limit
+ * Adds a background task to the queue
  *
- * @return bool
+ * @param callable $func Function must be in the safe list in cerber_bg_task_launcher().
+ * @param array $config 'args' => Parameters to call the function
+ * @param bool $priority If true, put the taks in the beginning of the queue
+ *
+ * @return bool|WP_Error True if the task was added, WP_Error otherwise
  *
  * @since 8.6.4
  *
  */
-function cerber_bg_task_add( $func, $config = array(), $priority = false, $limit = 60 ) {
+function cerber_bg_task_add( $func, $config = array(), $priority = false ) {
 
 	if ( ! is_callable( $func ) ) {
-		cerber_error_log( 'Function ' . $func . ' is not callable', 'BG TASK' );
-
-		return false;
+		return new WP_Error( 'bg_tasks_nope', 'Specified function ' . crb_make_callable_name( $func ) . ' is not callable or not defined.' );
 	}
 
 	$list = cerber_bg_task_get_all();
 
 	$config['func'] = $func;
 
-	$id = sha1( serialize( $config ) );
+	$task_id = sha1( serialize( $config ) );
 
-	if ( isset( $list[ $id ] ) ) {
+	if ( isset( $list[ $task_id ] ) ) {
 		return false;
 	}
 
 	if ( $priority ) {
-		$list = array( $id => $config ) + $list;
+		$list = array( $task_id => $config ) + $list;
 	}
 	else {
-		$list[ $id ] = $config;
+		$list[ $task_id ] = $config;
 	}
 
 	return cerber_update_set( '_background_tasks', $list );
 }
 
-function cerber_bg_task_delete( $task_id ) {
+/**
+ * Deletes a background task from the queue
+ *
+ * @param string $task_id Task ID
+ *
+ * @return bool True on success
+ *
+ * @since 8.6.4
+ */
+function cerber_bg_task_delete( $task_id = '' ) {
 
 	if ( ! $list = cerber_bg_task_get_all() ) {
 		return false;
@@ -6346,6 +6372,45 @@ function cerber_bg_task_delete( $task_id ) {
 	return cerber_update_set( '_background_tasks', $list );
 }
 
+/**
+ * Generates a callable name to be used in diagnostic messages
+ *
+ * @param callable $cb
+ *
+ * @return string
+ *
+ * @since 9.6.2.1
+ */
+function crb_make_callable_name( $cb ) {
+	if ( is_string( $cb ) ) {
+		return $cb;
+	}
+
+	if ( is_array( $cb ) ) {
+		if ( count( $cb ) === 2 ) {
+			if ( is_object( $cb[0] ) ) {
+				// Instance method call
+				return get_class( $cb[0] ) . '::' . $cb[1];
+			}
+			else {
+				// Static class method call
+				return $cb[0] . '::' . $cb[1];
+			}
+		}
+
+		return print_r( $cb, true );
+	}
+
+	if ( $cb instanceof Closure ) {
+		return 'Closure';
+	}
+
+	if ( is_object( $cb ) ) {
+		return print_r( $cb, true );
+	}
+
+	return (string) $cb;
+}
 /**
  * Log activity
  *

@@ -186,33 +186,6 @@ function crb_get_admin_base(){
  * @return string Full URL, safe to use in any HTML context (including attributes)
  */
 function cerber_admin_link( $tab = '', $args = array(), $add_nonce = false, $encode = true ) {
-	static $mapping;
-
-	if ( ! $mapping ) {
-		$mapping = array(
-			'antispam'         => 'cerber-recaptcha',
-			'captcha'          => 'cerber-recaptcha',
-			'cerber-recaptcha' => 'cerber-recaptcha',
-
-			'imex'       => 'cerber-tools',
-			'diagnostic' => 'cerber-tools',
-			'license'    => 'cerber-tools',
-			'diag-log'   => 'cerber-tools',
-			'change-log' => 'cerber-tools',
-
-			'traffic'     => 'cerber-traffic',
-			'ti_settings' => 'cerber-traffic',
-
-			'user_shield'   => 'cerber-shield',
-			'opt_shield'    => 'cerber-shield',
-			'cerber-shield' => 'cerber-shield',
-
-			'geo' => 'cerber-rules',
-
-			'role_policies'   => 'cerber-users',
-			'global_policies' => 'cerber-users',
-		);
-	}
 
 	if ( $tab ) {
 		$tab = preg_replace( '/[^\w\-]+/', '', $tab );
@@ -220,13 +193,14 @@ function cerber_admin_link( $tab = '', $args = array(), $add_nonce = false, $enc
 
 	if ( empty( $args['page'] ) ) {
 
-		// TODO: look up the page in tabs config
-		// $config = cerber_get_admin_page_config();
+		if ( ! function_exists( 'crb_determine_page' ) ) {
+			cerber_load_admin_code();
+		}
 
-		if ( $page = $mapping[ $tab ] ?? '' ) {
+		if ( $page = crb_determine_page( $tab ) ) {
 			$tab = ( $tab == $page ) ? '' : $tab;
 		}
-		else {
+		elseif ( ! $page = CRB_Addons::get_addon_page( $tab ) ) {
 			if ( list( $prefix ) = explode( '_', $tab, 2 ) ) {
 				if ( $prefix == 'scan' ) {
 					$page = 'cerber-integrity';
@@ -820,7 +794,7 @@ function cerber_issue_monitor() {
 		$notices['wordpress'] = sprintf( __( 'WP Cerber requires WordPress %s or higher. You are running %s.', 'wp-cerber' ), CERBER_REQ_WP, cerber_get_wp_version() );
 	}
 
-	if ( defined( 'CERBER_CLOUD_DEBUG' ) ) {
+	if ( defined( 'CERBER_CLOUD_DEBUG' ) && CERBER_CLOUD_DEBUG ) {
 		$notices['cloud'] = 'Diagnostic logging of cloud requests is enabled (CERBER_CLOUD_DEBUG).';
 	}
 
@@ -1166,26 +1140,23 @@ function crb_multi_search_key( $array, $needle ) {
 }
 
 /**
- * array_column() implementation for PHP < 5.5
+ * Search for a row in a given multidimensional array based on a specific column and value
  *
- * @param array $arr Multidimensional array
- * @param string $column Column key
+ * @param array $array The multidimensional array to search in
+ * @param string $column The column to search for within each row
+ * @param mixed $value The value to match against in the specified column
  *
- * @return array
+ * @return array The row that matches the specified column and value, or an empty array if no match is found
  */
-function crb_array_column( $arr = array(), $column = '' ) {
-	global $x_column;
-	$x_column = $column;
+function crb_array_search_row( array $array, string $column, $value ): array {
+	foreach ( $array as $row ) {
+		if ( isset( $row[ $column ] )
+		     && $row[ $column ] == $value ) {
+			return $row;
+		}
+	}
 
-	$ret = array_map( function ( $element ) {
-		global $x_column;
-
-		return $element[ $x_column ];
-	}, $arr );
-
-	$ret = array_values( $ret );
-
-	return $ret;
+	return [];
 }
 
 /**
@@ -1499,6 +1470,32 @@ function crb_esc_js( $val ) {
 	$safe_text = str_replace( "\n", '\\n', addslashes( $safe_text ) );
 
 	return $safe_text;
+}
+
+/**
+ * Generates JSON code with standard JS escaping for built-in values (mostly UI phrases)
+ * For untrusted data sources and user inputs use strict crb_esc_js()
+ *
+ * @param string $var_name Name of the JavaScript variable to output.
+ * @param array $array Data to be encoded as a JSON string.
+ *
+ * @return string JavaScript code defining a variable with the JSON-encoded data.
+ *
+ * @since 9.6.2.6
+ */
+function crb_generate_safe_json( $var_name, $array ) {
+	if ( ! $json = json_encode( $array, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE ) ) {
+		$json = '[]';
+	}
+
+	if ( is_admin() ) {
+		$error = ( JSON_ERROR_NONE != json_last_error() ) ? '<!-- JSON ENCODING ERROR: ' . json_last_error_msg() . ' --> ' : '';
+	}
+	else {
+		$error = '<!-- JSON ERROR OCCURRED -->';
+	}
+
+	return 'var ' . $var_name . ' = ' . $json . '; ' . $error . "\n";
 }
 
 /**
@@ -2019,6 +2016,8 @@ function crb_user_blocked_by( $meta ) {
 }
 
 /**
+ * Should be used as a last-resort since it loads pluggable function bundled with WordPress and this can prevent defining those functions by another plugin.
+ *
  * @return bool
  *
  * @since 8.8
@@ -2591,6 +2590,43 @@ function cerber_db_error_log( $errors = array() ) {
 }
 
 /**
+ * Extracts and saves error message(s) to show them as admin error messages
+ *
+ * @param WP_Error $err
+ *
+ * @since 9.6.2.1
+ */
+function crb_admin_error_notice( $err ) {
+
+	if ( ! $messages = $err->get_error_messages() ) {
+		return;
+	}
+
+	array_walk( $messages, function ( &$msg ) {
+		$msg = __( 'ERROR:', 'wp-cerber' ) . ' ' . $msg;
+	} );
+
+	cerber_admin_notice( $messages );
+}
+
+/**
+ * Add red admin error message(s) to be displayed if a website admin is logged in and the admin page is being displayed
+ *
+ * @param string|array $msg
+ *
+ * @since 9.6.2.3
+ */
+function crb_admin_notice_interactive( $msg ) {
+	if ( ! is_admin()
+	     || ! crb_is_user_logged_in()
+	     || ! is_super_admin() ) {
+		return false;
+	}
+
+	cerber_admin_notice( $msg );
+}
+
+/**
  * Add red admin error message(s) to be displayed in the dashboard
  *
  * @param string|array $msg
@@ -2661,22 +2697,6 @@ function crb_admin_add_msg( $messages, $prepend = false, $type = 'admin_message'
 	}
 
 	cerber_update_set( $type, $set );
-}
-
-/**
- * @param string $id
- *
- * @return void
- *
- * @since 9.5.1
- */
-function crb_clear_admin_notice( $id = '' ) {
-	$set = cerber_get_set( 'admin_notice' );
-
-	if ( isset( $set[ $id ] ) ) {
-		unset( $set[ $id ] );
-		cerber_update_set( 'admin_notice', $set );
-	}
 }
 
 function crb_clear_admin_msg() {
@@ -3136,7 +3156,7 @@ function cerber_db_get_errors( $erase = false, $flat = true ) {
 		CRB_Globals::$db_errors = array();
 	}
 
-	$ret = CRB_Globals::$db_errors;
+	$ret = (array) CRB_Globals::$db_errors;
 
 	if ( $erase ) {
 		CRB_Globals::$db_errors = array();
@@ -3508,21 +3528,21 @@ function crb_get_mysql_var( $var ) {
 }
 
 /**
- * Retrieve a value from the key-value storage
+ * Retrieve a value from the WP Cerber key-value storage
  *
- * @param string $key
- * @param integer $id
- * @param bool $unserialize
- * @param bool $use_cache
+ * @param string $key Maximum length is 255 chars ASCII
+ * @param integer $id Optional, default is 0. Can be used as a second key.
+ * @param bool $unserialize Unserialize the value or not
+ * @param bool $use_cache Retrieve the value from the local cache
  *
  * @return bool|array|string
  */
 function cerber_get_set( $key, $id = null, $unserialize = true, $use_cache = null ) {
-	if ( ! $key ) {
+
+	if ( ! $key = preg_replace( CRB_SANITIZE_KEY, '', $key ) ) {
 		return false;
 	}
 
-	$key = preg_replace( CRB_SANITIZE_KEY, '', $key );
 	$cache_key = 'crb#' . $key . '#';
 
 	$id = ( $id !== null ) ? absint( $id ) : 0;
@@ -3582,11 +3602,10 @@ function cerber_get_set( $key, $id = null, $unserialize = true, $use_cache = nul
  */
 function cerber_update_set( $key, $value, $id = null, $serialize = true, $expires = null, $use_cache = null ) {
 
-	if ( ! $key ) {
+	if ( ! $key = preg_replace( CRB_SANITIZE_KEY, '', $key ) ) {
 		return false;
 	}
 
-	$key = preg_replace( CRB_SANITIZE_KEY, '', $key );
 	$cache_key = 'crb#' . $key . '#';
 
 	$expires = ( $expires !== null ) ? absint( $expires ) : 0;
@@ -3633,7 +3652,10 @@ function cerber_update_set( $key, $value, $id = null, $serialize = true, $expire
  */
 function cerber_delete_set( $key, $id = null ) {
 
-	$key = preg_replace( CRB_SANITIZE_KEY, '', $key );
+	if ( ! $key = preg_replace( CRB_SANITIZE_KEY, '', $key ) ) {
+		return false;
+	}
+
 	$cache_key = 'crb#' . $key . '#';
 
 	$id = ( $id !== null ) ? absint( $id ) : 0;
@@ -4296,14 +4318,28 @@ function crb_arrays_similar( &$arr, $fields ) {
 	return true;
 }
 
-function cerber_get_html_label( $iid ) {
-	//$css['scan-ilabel'] = 'color: #fff; margin-left: 6px; display: inline-block; line-height: 1em; padding: 3px 5px; font-size: 92%;';
+/**
+ * Creates HTML code for labels formated for email messages using in-line CSS styles and the given issue ID
+ *
+ * @param int $iid The ID of the scan issue
+ *
+ * @return string The HTML code of the label
+ */
+function cerber_get_html_label( int $iid ) {
 
-	$c = ( $iid == 1 ) ? '#33be84' : '#dc2f34';
+	$c = ( $iid == CERBER_FOK ) ? '#33be84' : '#e94045';
 
-	return '<span style="background-color: ' . $c . '; color: #fff; margin-left: 6px; display: inline-block; line-height: 1em; padding: 3px 5px; font-size: 92%;">' . cerber_get_issue_label( $iid ) . '</span>';
+	return '<span style="background-color: ' . $c . '; color: #fff; margin-left: 6px; display: inline-block; line-height: 1em; padding: 3px 5px; font-size: 92%;">' . cerber_get_issue_labels( $iid ) . '</span>';
 }
 
+/**
+ * Returns all HTTP headers from the request
+ *
+ * If the getallheaders() function is not available on the web server, it parses the headers from the $_SERVER.
+ *
+ * @return array An associative array of the HTTP headers
+ *
+ */
 function crb_getallheaders() {
 	static $headers;
 
@@ -4362,7 +4398,7 @@ function crb_is_request_header( $search_header ) {
 }
 
 /**
- * @param $msg
+ * @param string|array $msg
  * @param string $source
  */
 function cerber_error_log( $msg, $source = '' ) {
@@ -4382,11 +4418,11 @@ function cerber_error_log( $msg, $source = '' ) {
  */
 function cerber_diag_log( $msg, $source = '', $error = false ) {
 
-	if ( $source == 'CLOUD' ) {
-		if ( ! defined( 'CERBER_CLOUD_DEBUG' )
-		     || ( ! defined( 'WP_ADMIN' ) && ! defined( 'WP_NETWORK_ADMIN' ) ) ) {
-			return false;
-		}
+	if ( $source == 'CLOUD'
+	     && ( ! defined( 'CERBER_CLOUD_DEBUG' )
+	          || ! CERBER_CLOUD_DEBUG
+	          || ( ! defined( 'WP_ADMIN' ) && ! defined( 'WP_NETWORK_ADMIN' ) ) ) ) {
+		return false;
 	}
 
 	if ( ! $msg
@@ -5426,6 +5462,7 @@ function crb_get_last_user_login( $user_id ) {
  *
  */
 function crb_configure_curl( $curl, $params, $setting = 'main_use_proxy' ) {
+	global $wp_cerber_relay;
 
 	if ( crb_get_settings( $setting ) ) {
 		if ( defined( 'WP_PROXY_HOST' ) && defined( 'WP_PROXY_PORT' ) ) {
@@ -5439,9 +5476,58 @@ function crb_configure_curl( $curl, $params, $setting = 'main_use_proxy' ) {
 				$params[ CURLOPT_PROXYUSERPWD ] = WP_PROXY_USERNAME . ':' . WP_PROXY_PASSWORD;
 			}
 		}
+
+		$wp_cerber_relay = 1;
+	}
+	else {
+		$wp_cerber_relay = 0;
 	}
 
-	return curl_setopt_array( $curl, $params );
+	try {
+		if ( ! curl_setopt_array( $curl, $params ) ) {
+			throw new Exception( 'Failed to set cURL options.' );
+		}
+	}
+	catch ( Throwable $e ) {
+
+		if ( defined( 'CERBER_NETWORK_DEBUG' ) && CERBER_NETWORK_DEBUG ) {
+			cerber_error_log( $e->getMessage() . '. Error thrown on line ' . $e->getLine() . ' in file ' . $e->getFile() . '. cURL options provided: ' . print_r( $params, 1 ), 'NETWORK' );
+		}
+
+		return false;
+	}
+
+	return true;
+
+}
+
+/**
+ * Returns the slug of a plugin based on the path to its main PHP file.
+ *
+ * @param string $path The path to the main plugin file (absolute or relative).
+
+ * @return string The plugin slug.
+ *
+ * @since 9.6.2.6
+ */
+function crb_get_plugin_slug( string $path ): string {
+
+	if ( strpos( $path, WP_PLUGIN_DIR ) === 0 ) {
+		$path = str_replace( WP_PLUGIN_DIR, '', $path );
+		$path = ltrim( $path, '/' );
+	}
+
+	if ( strpos( $path, '/' ) ) {
+		$plugin_slug = dirname( $path );
+	}
+	elseif ( $path === 'hello.php' ) {
+		$plugin_slug = 'hello-dolly';
+	}
+	else {
+		$plugin_slug = preg_replace( '/\.php$/', '', $path );
+	}
+
+	return $plugin_slug;
 }
 
 /**

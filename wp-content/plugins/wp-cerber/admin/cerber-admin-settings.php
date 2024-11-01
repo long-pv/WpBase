@@ -87,7 +87,7 @@ function cerber_settings_config( $args = array() ) {
 		'nexus_master'  => array( 'master_settings' ),
 	);
 
-	$add = crb_addon_settings_config( $args );
+	$add = CRB_Addons::settings_config();
 
 	if ( ! empty( $add['screens'] ) ) {
 		$screens = array_merge( $screens, $add['screens'] );
@@ -432,9 +432,16 @@ function cerber_settings_config( $args = array() ) {
 						'enabler' => array( 'cerberlab' ),
 					),
 					'usefile'      => array(
-						'title' => __( 'Use file', 'wp-cerber' ),
-						'label' => __( 'Write failed login attempts to the file', 'wp-cerber' ),
-						'type'  => 'checkbox',
+						'title'      => __( 'Use file', 'wp-cerber' ),
+						'label'      => __( 'Write failed login attempts to the system log file', 'wp-cerber' ),
+						'type'       => 'checkbox',
+						'row_attr'   => function ( &$att ) {
+							$att['classes'][] = ( defined( 'CERBER_FAIL_LOG' ) || function_exists( 'syslog' ) ) ? '' : 'crb-disabled-colors';
+						},
+						'pre_render' => function ( &$val, &$att ) {
+							$att['disabled'] = ( defined( 'CERBER_FAIL_LOG' ) || function_exists( 'syslog' ) ) ? 0 : 1;
+						},
+						'doclink'    => 'https://wpcerber.com/how-to-protect-wordpress-with-fail2ban/'
 					),
 				),
 			),
@@ -514,13 +521,12 @@ function cerber_settings_config( $args = array() ) {
 						'rollback'   => function () {
 							return ! empty( CRB_Globals::$htaccess_failure['main'] );
 						},
+						'row_attr'   => function ( &$att ) {
+							$att['classes'][] = crb_is_apache_mod_loaded( 'mod_rewrite' ) ? '' : 'crb-disabled-colors';
+						},
 						'pre_render' => function ( &$val, &$att ) {
 							$att['disabled'] = crb_is_apache_mod_loaded( 'mod_rewrite' ) ? 0 : 1;
 						},
-						// TODO: must be united with the function above in case of disabled inputs
-						'row_attr'   => function ( &$att ) {
-							$att['classes'][] = crb_is_apache_mod_loaded( 'mod_rewrite' ) ? '' : 'crb-disabled-colors';
-						}
 					),
 					'phpnoupl'            => array(
 						'title'     => __( 'Disable PHP in uploads', 'wp-cerber' ),
@@ -1190,7 +1196,7 @@ function cerber_settings_config( $args = array() ) {
 				'desc'    => __( 'Traffic Inspector is a context-aware web application firewall (WAF) that protects your website by recognizing and denying malicious HTTP requests', 'wp-cerber' ),
 				'doclink' => 'https://wpcerber.com/traffic-inspector-in-a-nutshell/',
 				'fields'  => array(
-					'tienabled' => array(
+					'tienabled'      => array(
 						'title' => __( 'Firewall inspection mode', 'wp-cerber' ),
 						'type'  => 'select',
 						'set'   => array(
@@ -1199,13 +1205,13 @@ function cerber_settings_config( $args = array() ) {
 							__( 'Maximum security', 'wp-cerber' )
 						),
 					),
-					'tiipwhite' => array(
+					'tiipwhite'      => array(
 						'title'   => __( 'Use White IP Access List', 'wp-cerber' ),
 						'label'   => __( 'Use less restrictive security filters for IP addresses in the White IP Access List', 'wp-cerber' ),
 						'type'    => 'checkbox',
 						'enabler' => array( 'tienabled', '[1,2]' ),
 					),
-					'tiwhite'   => array(
+					'tiwhite'        => array(
 						'title'      => __( 'Exclude these locations from inspection by the firewall', 'wp-cerber' ),
 						'type'       => 'textarea',
 						'delimiter'  => "\n",
@@ -1228,13 +1234,13 @@ function cerber_settings_config( $args = array() ) {
 							return $val;
 						},
 					),
-					'tiwhite_header'   => array(
-						'title'      => __( 'Exclude requests with these HTTP headers from inspection by the firewall', 'wp-cerber' ),
-						'type'       => 'textarea',
-						'delimiter'  => "\n",
-						'list'       => true,
-						'label'      => __( 'Specify colon-separated name and value pairs to exclude matching requests from firewall inspection. One header per line.', 'wp-cerber' ),
-						'enabler'    => array( 'tienabled', '[1,2]' ),
+					'tiwhite_header' => array(
+						'title'     => __( 'Exclude requests with these HTTP headers from inspection by the firewall', 'wp-cerber' ),
+						'type'      => 'textarea',
+						'delimiter' => "\n",
+						'list'      => true,
+						'label'     => __( 'Specify colon-separated name and value pairs to exclude matching requests from firewall inspection. One header per line.', 'wp-cerber' ),
+						'enabler'   => array( 'tienabled', '[1,2]' ),
 					),
 				),
 			),
@@ -1396,7 +1402,7 @@ function cerber_settings_config( $args = array() ) {
 				'doclink' => 'https://wpcerber.com/wordpress-security-scanner/',
 				'fields'  => array(
 					'scan_inew'    => array(
-						'title' => __( 'Monitor new files', 'wp-cerber' ),
+						'title' => __( 'Scan for new files', 'wp-cerber' ),
 						'type'  => 'select',
 						'set'   => array(
 							0 => __( 'Disabled', 'wp-cerber' ),
@@ -1405,7 +1411,7 @@ function cerber_settings_config( $args = array() ) {
 						)
 					),
 					'scan_imod'    => array(
-						'title' => __( 'Monitor modified files', 'wp-cerber' ),
+						'title' => __( 'Scan for file modifications', 'wp-cerber' ),
 						'type'  => 'select',
 						'set'   => array(
 							0 => __( 'Disabled', 'wp-cerber' ),
@@ -1413,12 +1419,30 @@ function cerber_settings_config( $args = array() ) {
 							2 => __( 'All files', 'wp-cerber' ),
 						)
 					),
+					'scan_abon_pl'    => array(
+						'title' => __( 'Scan for abandoned plugins', 'wp-cerber' ),
+						'label' => __( 'Detect and report plugins that received no updates for the specified period of time', 'wp-cerber' ),
+						'type'  => 'checkbox',
+					),
+					'scan_abon_pl_period'    => array(
+						'title'   => __( 'Months without updates to flag plugin as abandoned', 'wp-cerber' ),
+						'type'    => 'digits',
+						'min_val' => 1,
+						'enabler' => array( 'scan_abon_pl' ),
+					),
+					'scan_owner_pl'    => array(
+						'title' => __( 'Scan for plugin ownership changes', 'wp-cerber' ),
+						'label' => __( 'Detect and report plugins with changes in ownership', 'wp-cerber' ),
+						'type'  => 'checkbox',
+					),
 					'scan_tmp'     => array(
-						'title' => __( "Scan web server's temporary directories", 'wp-cerber' ),
+						'title' => __( "Scan temporary directories", 'wp-cerber' ),
+						'label' => __( 'Scan web server temporary directories for malicious files', 'wp-cerber' ),
 						'type'  => 'checkbox',
 					),
 					'scan_sess'    => array(
-						'title' => __( 'Scan the sessions directory', 'wp-cerber' ),
+						'title' => __( 'Scan sessions directory', 'wp-cerber' ),
+						'label' => __( 'Scan the web server sessions directory for malicious files', 'wp-cerber' ),
 						'type'  => 'checkbox',
 					),
 					'scan_uext'    => array(
@@ -1504,7 +1528,7 @@ function cerber_settings_config( $args = array() ) {
 							           1 => __( 'Low severity', 'wp-cerber' ),
 							           2 => __( 'Medium severity', 'wp-cerber' ),
 							           3 => __( 'High severity', 'wp-cerber' )
-						           ) + cerber_get_issue_label( array( CERBER_IMD, CERBER_UXT, 50, 51, CERBER_VULN ) ),
+						           ) + cerber_get_issue_title( array( CERBER_IMD, CERBER_UXT, 50, 51, CERBER_VULN, CERBER_ABP, CERBER_CHO ) ),
 					),
 					'scan_relimit' => array(
 						'title' => __( 'Send email report', 'wp-cerber' ),
@@ -1706,22 +1730,22 @@ function cerber_settings_config( $args = array() ) {
 				'name'   => __( 'Adjust anti-spam engine', 'wp-cerber' ),
 				'desc'   => __( 'These settings enable you to fine-tune the behavior of anti-spam algorithms and avoid false positives', 'wp-cerber' ),
 				'fields' => array(
-					'botssafe'    => array(
+					'botssafe'         => array(
 						'title' => __( 'Safe mode', 'wp-cerber' ),
 						'label' => __( 'Use less restrictive policies (allow AJAX)', 'wp-cerber' ),
 						'type'  => 'checkbox',
 					),
-					'botsnoauth'  => array(
+					'botsnoauth'       => array(
 						'title' => __( 'Logged-in users', 'wp-cerber' ),
 						'label' => __( 'Disable bot detection engine for logged-in users', 'wp-cerber' ),
 						'type'  => 'checkbox',
 					),
-					'botsipwhite' => array(
+					'botsipwhite'      => array(
 						'title' => __( 'Use White IP Access List', 'wp-cerber' ),
 						'label' => __( 'Disable bot detection engine for IP addresses in the White IP Access List', 'wp-cerber' ),
 						'type'  => 'checkbox',
 					),
-					'botswhite'   => array(
+					'botswhite'        => array(
 						'title'     => __( 'Exclude these locations from scanning for spam', 'wp-cerber' ),
 						'label'     => __( 'Specify any part of a query string or path to exclude matching requests from inspection by the anti-spam engine. One exception per line.', 'wp-cerber' ) . ' ' . __( 'To specify a REGEX pattern, enclose the exception in two braces.', 'wp-cerber' ),
 						'type'      => 'textarea',
@@ -1962,7 +1986,7 @@ function cerber_settings_config( $args = array() ) {
 				$field['section_name'] = $sect['name'] ?? '';
 				$field['section_id'] = $section_id;
 				$field['screen_id'] = $section_to_screen[ $section_id ];
-				$field['tab_id'] = crb_setting2tab( $section_to_screen[ $section_id ] );
+				$field['tab_id'] = crb_screen2tab( $section_to_screen[ $section_id ] );
 
                 return $field;
 			}
@@ -2061,7 +2085,7 @@ function cerber_wp_settings_setup( $screen_id, $sections = array() ) {
 
 			$config['type'] = $config['type'] ?? 'text';
 
-			$class = array( 'crb-setting-row' ); // Setting row (tr) class, to specify the input class use 'input_class'
+			$row_class = array( 'crb-setting-row' ); // Setting row (tr) class, to specify the input class use 'input_class'
     		$attrs = array();
 
 			if ( ( $row_attr = ( $config['row_attr'] ?? false ) )
@@ -2071,22 +2095,22 @@ function cerber_wp_settings_setup( $screen_id, $sections = array() ) {
 			}
 
 			if ( $class_list = $attrs['classes'] ?? false ) {
-				$class = array_merge( $class, $class_list );
+				$row_class = array_merge( $row_class, $class_list );
 			}
 
 			if ( isset( $config['enabler'] ) ) {
-				$class[] = 'crb-font-normal';
+				$row_class[] = 'crb-font-normal';
 			}
 
 			if ( $config['type'] == 'hidden' ) {
-				$class[] = 'crb-display-none';
+				$row_class[] = 'crb-display-none';
 			}
 
 			if ( isset( $config['enabler'] ) ) {
-				$class[] = crb_check_enabler( $config, crb_get_settings( $config['enabler'][0] ) );
+				$row_class[] = crb_check_enabler( $config, crb_get_settings( $config['enabler'][0] ) );
 			}
 
-			$config['class'] = implode( ' ', $class );
+			$config['class'] = implode( ' ', $row_class ); // Classes for the single setting row
 
 			add_settings_field( $field, crb_array_get( $config, 'title', '' ), 'cerber_field_show', $option, $section_id, $config );
 		}
@@ -2112,46 +2136,54 @@ function cerber_get_setting_id( $tab = null ) {
 		$id = crb_admin_get_page();
 	}
 
-	return crb_settings_map( $id );
+	return crb_get_setting_screen( $id );
 }
 
 /**
- * Mapper: tab => WP Settings ID
+ * Mapping: tab/page => WP Settings screen ID
+ * Some tab ID (page ID) don't match WP setting names directly
  *
- * @param string $id
+ * @param string $id Page or Tab ID which is a URL parameter
  *
  * @return string
  *
- * @since 9.6.1.2
  */
-function crb_settings_map( $id ) {
+function crb_get_setting_screen( $id ) {
 
-	// Mapping: some tab id (or page id) doesn't match WP setting names
-	// tab => wp settings id
+	if ( isset( CRB_WP_SETTING_MAP[ $id ] ) ) {
+		return CRB_WP_SETTING_MAP[ $id ];
+	}
 
-	$map = CRB_WP_SETTING_MAP;
+	if ( $screen = CRB_Addons::get_setting_screen( $id ) ) {
+		return $screen;
+	}
 
-	crb_addon_settings_mapper( $map );
-
-	return $map[ $id ] ?? $id;
+    return $id;
 }
 
 /**
  * Reverse mapping: WP Setting screen ID => tab
  *
- * @param string $id
+ * @param string $screen_id
  *
  * @return string
  */
-function crb_setting2tab( $id ) {
+function crb_screen2tab( $screen_id ) {
+	static $map;
 
-	$map = CRB_WP_SETTING_MAP;
+	if ( ! $map ) {
+		$map = array_flip( CRB_WP_SETTING_MAP );
+	}
 
-	crb_addon_settings_mapper( $map );
+	if ( isset( $map[ $screen_id ] ) ) {
+		return $map[ $screen_id ];
+	}
 
-	$map = array_flip( $map );
+	if ( $tab = CRB_Addons::get_addon_tab( $screen_id ) ) {
+		return $tab;
+	}
 
-	return $map[ $id ] ?? $id;
+	return $screen_id;
 }
 
 /**
@@ -2664,7 +2696,7 @@ function crb_pre_update_main( $new, $old, $option ) {
 		$ret = cerber_set_boot_mode( $new['boot-mode'] );
 
 		if ( crb_is_wp_error( $ret ) ) {
-			cerber_admin_notice( __( 'ERROR:', 'wp-cerber' ) . ' ' . $ret->get_error_message() );
+			crb_admin_error_notice( $ret );
 			cerber_admin_notice( __( 'Plugin initialization mode has not been changed', 'wp-cerber' ) );
 			$new['boot-mode'] = $old['boot-mode'];
 		}
@@ -2970,11 +3002,11 @@ function cerber_process_settings_form() {
 		// Fields extracted from the settings config
 		$fields_one = array_fill_keys( array_keys( crb_get_settings_fields( $group ) ), '' );
 
-        // Fields extracted from from default values
+        // Fields extracted from default values
 		$defs = cerber_get_defaults();
 		$fields_two = array_fill_keys( array_keys( $defs[ 'cerber-' . $group ] ), '' );
 
-        // For best coverage we combine them
+        // For the best coverage we combine them
 		$fields = array_merge( $fields_one, $fields_two );
 
 		$new_settings = array_merge( $fields, $post_fields );
@@ -3474,7 +3506,7 @@ function crb_htaccess_admin( $file ) {
 
 	if ( crb_is_wp_error( $result ) ) {
 		CRB_Globals::$htaccess_failure[ $file ] = true;
-		cerber_admin_notice( $result->get_error_message() );
+		crb_admin_error_notice( $result );
 
 		return false;
 	}

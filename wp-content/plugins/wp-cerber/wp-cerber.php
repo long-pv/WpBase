@@ -6,7 +6,7 @@
 	Author: Cerber Tech Inc.
 	Author URI: https://talk.wpcerber.com
 	Update URI: https://downloads.wpcerber.com/versions/wp-cerber.json
-	Version: 9.6.2
+	Version: 9.6.3
 	Text Domain: wp-cerber
 	Domain Path: /languages
 	Network: true
@@ -31,7 +31,7 @@
 
 */
 
-const CERBER_VER = '9.6.2';
+const CERBER_VER = '9.6.3';
 const CERBER_PLUGIN_ID = 'wp-cerber/wp-cerber.php';
 
 function cerber_plugin_file() {
@@ -42,6 +42,11 @@ function cerber_plugin_data() {
 	return get_plugin_data( __FILE__ );
 }
 
+/**
+ * Returns the folder where WP Cerber is installed. No trailing slash.
+ *
+ * @return string
+ */
 function cerber_plugin_dir() {
 
 	return __DIR__;
