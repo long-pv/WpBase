@@ -30,3 +30,20 @@ function disable_woocommerce_zoom_script()
     remove_theme_support('wc-product-gallery-zoom');
 }
 add_action('wp_enqueue_scripts', 'disable_woocommerce_zoom_script', 20);
+
+add_action('admin_menu', 'remove_product_reviews_menu');
+function remove_product_reviews_menu()
+{
+    remove_submenu_page('edit.php?post_type=product', 'product-reviews');
+}
+
+add_filter('woocommerce_admin_features', function ($features) {
+    return array_values(
+        array_filter($features, function ($feature) {
+            return !in_array($feature, ['marketing', 'analytics', 'analytics-dashboard', 'wcpay']);
+        })
+    );
+});
+
+// Tắt chức năng Coupons
+add_filter('woocommerce_coupons_enabled', '__return_false');
