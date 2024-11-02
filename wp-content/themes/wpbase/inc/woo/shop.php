@@ -1,29 +1,31 @@
 <?php
-// thay đổi số cột hiển thị
-add_filter('loop_shop_columns', 'custom_loop_shop_columns', 99);
-function custom_loop_shop_columns()
+// Xử lý dịch ordering woocommerce
+add_filter('woocommerce_catalog_orderby', 'custom_woocommerce_catalog_orderby');
+function custom_woocommerce_catalog_orderby($sortby)
 {
-    return 3;
+    $sortby = array(
+        'menu_order' => 'Thứ tự mặc định',
+        // 'popularity' => 'Phổ biến',
+        // 'rating' => 'Xếp hạng cao',
+        // 'date' => 'Mới nhất',
+        'price' => 'Giá: Thấp đến Cao',
+        'price-desc' => 'Giá: Cao đến Thấp',
+    );
+
+    return $sortby;
 }
 
-// thay đổi số lượng hiển thị sản phẩm
-add_action('pre_get_posts', 'custom_product_query', 99);
-function custom_product_query($query)
+
+// kích hoạt template mặc định trong theme
+add_action('after_setup_theme', 'yourtheme_woocommerce_support');
+function yourtheme_woocommerce_support()
 {
-    if (!is_admin() && (is_shop() || is_product_taxonomy() || is_product_category() || is_product_tag())) {
-        $query->set('posts_per_page', 9);
-    }
+    add_theme_support('woocommerce');
 }
 
-// Chỉnh sửa các tham số phân trang
-add_filter('woocommerce_pagination_args', 'custom_woocommerce_pagination_args', 99);
-function custom_woocommerce_pagination_args($args)
+// số lượng sản phẩm trong 1 category
+add_filter('loop_shop_per_page', 'set_products_per_page', 20);
+function set_products_per_page($cols)
 {
-    $args['prev_text'] = __('Prev', 'basetheme');
-    $args['next_text'] = __('Next', 'basetheme');
-    $args['type'] = 'plan';
-    $args['end_size'] = 2;
-    $args['mid_size'] = 1;
-
-    return $args;
+    return 20;
 }
