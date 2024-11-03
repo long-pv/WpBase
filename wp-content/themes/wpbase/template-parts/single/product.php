@@ -51,6 +51,13 @@ global $product;
             <?php endif; ?>
         </div>
 
+        <div class="productItem__quick-view">
+            <a href="javascript:void(0);" class="quick-view-button"
+                data-product_id="<?php echo esc_attr($product->get_id()); ?>">
+                Xem Nhanh
+            </a>
+        </div>
+
         <!-- Nút Add to Cart -->
         <div class="productItem__add-to-cart">
             <?php woocommerce_template_loop_add_to_cart(); ?>

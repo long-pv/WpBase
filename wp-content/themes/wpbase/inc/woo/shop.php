@@ -111,3 +111,33 @@ function title_like_posts_where($where, $query)
     return $where;
 }
 add_filter('posts_where', 'title_like_posts_where', 10, 2);
+
+function load_quick_view()
+{
+    $product_id = intval($_POST['product_id']);
+    $product = wc_get_product($product_id);
+
+    if (!$product) {
+        wp_send_json_error();
+    }
+    ?>
+    <div class="quick-view-image">
+        <?php echo $product->get_image(); ?>
+    </div>
+    <div class="quick-view-info">
+        <h2><?php echo $product->get_name(); ?></h2>
+        <p><?php echo $product->get_short_description(); ?></p>
+        <div class="quick-view-price">
+            <?php echo $product->get_price_html(); ?>
+        </div>
+        <div class="quick-view-view-details">
+            <a href="<?php echo get_permalink($product_id); ?>" class="button view-details">
+                Xem chi tiết
+            </a>
+        </div>
+    </div>
+    <?php
+    die();
+}
+add_action('wp_ajax_load_quick_view', 'load_quick_view');
+add_action('wp_ajax_nopriv_load_quick_view', 'load_quick_view');
