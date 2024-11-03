@@ -12,27 +12,29 @@
         </div>
 
         <!-- Lựa chọn danh mục (Radio Button) -->
-        <div class="filter-item">
-            <label>Danh mục sản phẩm</label>
-            <?php
-            $categories = get_terms(array(
-                'taxonomy' => 'product_cat',
-                'hide_empty' => true,
-            ));
-            foreach ($categories as $category): ?>
+        <?php if (is_post_type_archive('product')): ?>
+            <div class="filter-item">
+                <label>Danh mục sản phẩm</label>
+                <?php
+                $categories = get_terms(array(
+                    'taxonomy' => 'product_cat',
+                    'hide_empty' => true,
+                ));
+                foreach ($categories as $category): ?>
+                    <div>
+                        <input type="radio" id="cat_<?php echo esc_attr($category->slug); ?>" name="product_cat"
+                            value="<?php echo esc_attr($category->slug); ?>" <?php checked(isset($_GET['product_cat']) && $_GET['product_cat'] == $category->slug); ?>>
+                        <label for="cat_<?php echo esc_attr($category->slug); ?>">
+                            <?php echo esc_html($category->name); ?>
+                        </label>
+                    </div>
+                <?php endforeach; ?>
                 <div>
-                    <input type="radio" id="cat_<?php echo esc_attr($category->slug); ?>" name="product_cat"
-                        value="<?php echo esc_attr($category->slug); ?>" <?php checked(isset($_GET['product_cat']) && $_GET['product_cat'] == $category->slug); ?>>
-                    <label for="cat_<?php echo esc_attr($category->slug); ?>">
-                        <?php echo esc_html($category->name); ?>
-                    </label>
+                    <input type="radio" id="cat_all" name="product_cat" value="" <?php checked(!isset($_GET['product_cat']) || $_GET['product_cat'] == ''); ?>>
+                    <label for="cat_all">Tất cả danh mục</label>
                 </div>
-            <?php endforeach; ?>
-            <div>
-                <input type="radio" id="cat_all" name="product_cat" value="" <?php checked(!isset($_GET['product_cat']) || $_GET['product_cat'] == ''); ?>>
-                <label for="cat_all">Tất cả danh mục</label>
             </div>
-        </div>
+        <?php endif; ?>
 
         <?php
         $selected_tags = isset($_GET['product_tags']) ? $_GET['product_tags'] : [];

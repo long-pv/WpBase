@@ -33,7 +33,7 @@ function set_products_per_page($cols)
 
 function custom_product_filter_query($query)
 {
-    if (!is_admin() && $query->is_main_query() && is_post_type_archive('product')) {
+    if (!is_admin() && $query->is_main_query() && (is_post_type_archive('product') || is_product_category())) {
         // Lọc theo tên sản phẩm với tiêu đề chính xác hơn
         if (!empty($_GET['title'])) {
             $title = sanitize_text_field($_GET['title']);
@@ -41,7 +41,7 @@ function custom_product_filter_query($query)
         }
 
         // Lọc theo danh mục sản phẩm
-        if (!empty($_GET['product_cat'])) {
+        if (is_post_type_archive('product') && !empty($_GET['product_cat'])) {
             $product_cat = sanitize_text_field($_GET['product_cat']);
             $query->set('tax_query', array(
                 array(
