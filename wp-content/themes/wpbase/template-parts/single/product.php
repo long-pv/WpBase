@@ -50,5 +50,10 @@ global $product;
                 <span class="regular-price"><?php echo wc_price($regular_price); ?></span>
             <?php endif; ?>
         </div>
+
+        <!-- Nút Add to Cart -->
+        <div class="productItem__add-to-cart">
+            <?php woocommerce_template_loop_add_to_cart(); ?>
+        </div>
     </div>
 </article>

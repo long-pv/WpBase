@@ -57,6 +57,6 @@ if (!defined('WP_AUTO_UPDATE_CORE')) {
     define('WP_AUTO_UPDATE_CORE', false);
 }
 
-if (!defined('DISALLOW_FILE_MODS')) {
-    define('DISALLOW_FILE_MODS', true);
-}
+// if (!defined('DISALLOW_FILE_MODS')) {
+//     define('DISALLOW_FILE_MODS', true);
+// }

@@ -365,3 +365,30 @@
     display: flex;
     justify-content: space-between;
 }
+
+.price-slider {
+    margin: 20px 0;
+}
+
+#slider-range-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+#slider-range {
+    margin: 10px 0;
+}
+
+.price-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.price-range-inputs input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ddd;
+    padding: 5px;
+}

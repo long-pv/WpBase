@@ -20,41 +20,61 @@ get_header();
 
                 <?php woocommerce_catalog_ordering(); ?>
             </div>
-            <?php if ($total_products): ?>
-                <div class="list-product-cat row list_product">
-                    <?php while (have_posts()):
-                        the_post(); ?>
-                        <div class="col-lg-3 col-md-6">
-                            <?php get_template_part('template-parts/single/product'); ?>
-                        </div>
-                    <?php endwhile; ?>
+
+            <div class="row">
+                <div class="col-lg-3">
+                    <?php get_template_part('template-parts/sidebar-product'); ?>
                 </div>
-                <?php pagination(); ?>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-
-<section class="secSpace desc_home" style="background-color:#fff;">
-    <div class="container">
-        <div class="block">
-            <div class="content-post clearfix readmore_content">
-                <div class="term-description">
-                    <?php
-                    $term_id = get_queried_object_id(); // Lấy ID của danh mục hiện tại
-                    $category_description = get_term_meta($term_id, 'category_description', true);
-
-                    if (!empty($category_description)): ?>
-                        <div class="editor">
-                            <?php echo $category_description; ?>
+                <div class="col-lg-9">
+                    <?php if ($total_products): ?>
+                        <div class="list-product-cat row list_product">
+                            <?php while (have_posts()):
+                                the_post(); ?>
+                                <div class="col-lg-4 col-md-6">
+                                    <?php get_template_part('template-parts/single/product'); ?>
+                                </div>
+                            <?php endwhile; ?>
                         </div>
+                        <?php pagination(); ?>
+                        <?php
+                    else:
+                        ?>
+                        <h3>Không có kết quả nào.</h3>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
-</section>
-<!--  -->
+</div>
 
 <?php
 get_footer();
+?>
+<!-- jQuery UI -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script>
+    jQuery(document).ready(function ($) {
+        var minPrice = parseFloat($("#slider-range").data("min"));
+        var maxPrice = parseFloat($("#slider-range").data("max"));
+
+        var minVal = $("#min-price").val() ? parseFloat($("#min-price").val()) : minPrice;
+        var maxVal = $("#max-price").val() ? parseFloat($("#max-price").val()) : maxPrice;
+
+        $("#slider-range").slider({
+            range: true,
+            min: minPrice,
+            max: maxPrice,
+            values: [minVal, maxVal],
+            slide: function (event, ui) {
+                $("#min-price").val(ui.values[0]);
+                $("#max-price").val(ui.values[1]);
+                $("#min-label").text("$" + ui.values[0]);
+                $("#max-label").text("$" + ui.values[1]);
+            }
+        });
+
+        $("#min-label").text("$" + minVal);
+        $("#max-label").text("$" + maxVal);
+    });
+</script>
