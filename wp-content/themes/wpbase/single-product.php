@@ -11,6 +11,9 @@ $product_id = get_the_ID();
 $product = wc_get_product($product_id);
 set_post_views($product_id);
 $terms = wp_get_post_terms($product_id, 'product_cat');
+$categories = array_filter($terms, function ($term) {
+	return $term->taxonomy === 'product_cat';
+});
 get_header();
 ?>
 
@@ -18,6 +21,15 @@ get_header();
 <section class="secSpace">
 	<div class="container">
 		<?php wp_breadcrumbs(); ?>
+
+		<?php
+		if (!empty($_POST['add-to-cart']) && $_POST['add-to-cart'] == $product_id) {
+			echo '<p>Đơn hàng đã được thêm vào giỏ hàng.</p>';
+			$cart_url = wc_get_cart_url();
+			echo '<a href="' . esc_url($cart_url) . '">Xem giỏ hàng</a>';
+		}
+		?>
+
 		<div class="product_info_wrap">
 			<div class="row">
 				<div class="col-lg-6">
@@ -142,37 +154,48 @@ get_header();
 						<?php endif; ?>
 
 						<?php
-						if ($product->is_in_stock()):
-							?>
-							<form class="cart" method="post" enctype='multipart/form-data'>
-								<input type="number" name="quantity" value="1" min="1" step="1" />
+						if ($product->is_type('variable')) {
+							woocommerce_variable_add_to_cart();
+						} else {
+							$product_attributes = $product->get_attributes();
 
-								<input type="hidden" name="add-to-cart" value="<?php echo $product_id; ?>">
+							if (!empty($product_attributes)) {
+								echo '<div class="product-attributes">';
+								foreach ($product_attributes as $attribute_name => $attribute) {
+									echo '<div class="attribute">';
+									echo '<strong>' . wc_attribute_label($attribute_name) . ': </strong>';
 
-								<button type="submit" class="button alt">
-									Add to cart
-								</button>
-							</form>
+									if ($attribute->is_taxonomy()) {
+										$terms = wc_get_product_terms($product->get_id(), $attribute_name, array('fields' => 'names'));
+										echo implode(', ', $terms);
+									} else {
+										echo implode(', ', $attribute->get_options());
+									}
 
-							<!-- mua ngay -->
-							<?php
-							$buy_now_url = wc_get_checkout_url() . '?add-to-cart=' . $product_id . '&quantity=1';
-							?>
-							<a href="<?php echo $buy_now_url; ?>" class="button btn_buy_now">
-								Buy Now
-							</a>
-							<?php
-						endif;
+									echo '</div>';
+								}
+								echo '</div>';
+							}
+
+
+							if ($product->is_in_stock()):
+								woocommerce_simple_add_to_cart();
+							else:
+								?>
+								<p>Hết hàng</p>
+								<?php
+							endif;
+						}
 						?>
 
 						<?php
-						if (!empty($terms)):
+						if (!empty($categories)):
 							?>
 							<div class="product_cats">
 								Danh mục:
 								<?php
 								$category_links = [];
-								foreach ($terms as $category) {
+								foreach ($categories as $category) {
 									$category_links[] = '<a class="product_cats_item" href="' . get_term_link($category) . '">' . $category->name . '</a>';
 								}
 								echo implode(', ', $category_links);
@@ -250,8 +273,8 @@ get_header();
 </section>
 
 <?php
-if (!empty($terms)) {
-	$term_ids = wp_list_pluck($terms, 'slug');
+if (!empty($categories)) {
+	$term_ids = wp_list_pluck($categories, 'slug');
 } else {
 	$term_ids = [];
 }
@@ -301,7 +324,6 @@ if ($query->have_posts()):
 <?php
 get_footer();
 ?>
-
 <script>
 	jQuery(document).ready(function ($) {
 		$(".product_list_slider").slick({
