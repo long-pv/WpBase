@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: Security setup
  * Description: Some basic security settings.
@@ -446,12 +447,12 @@ add_action('wp_login', 'set_default_image_settings_on_login', 10, 2);
 add_action('admin_footer', 'custom_script_admin');
 function custom_script_admin()
 {
-    ?>
+?>
     <script>
-        jQuery(document).ready(function ($) {
+        jQuery(document).ready(function($) {
             // Validate post title
             if ($('#post').length > 0) {
-                $('#post').submit(function () {
+                $('#post').submit(function() {
                     var title_post = $('#title').val();
                     if (title_post.trim() === '') {
                         alert('Please enter "Title".');
@@ -465,5 +466,14 @@ function custom_script_admin()
             $(".pw-weak").remove();
         });
     </script>
-    <?php
+<?php
 }
+
+function remove_styles_and_scripts_from_content($content)
+{
+    $content = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $content);
+    $content = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $content);
+
+    return $content;
+}
+add_filter('the_content', 'remove_styles_and_scripts_from_content', 99);
