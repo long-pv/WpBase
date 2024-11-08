@@ -8,6 +8,7 @@ function activate_my_plugins()
         'duplicate-post\duplicate-post.php',
         'wordpress-seo\wp-seo.php',
         'wp-cerber\wp-cerber.php',
+        'all-in-one-wp-migration-master\all-in-one-wp-migration.php',
     ];
 
     foreach ($plugins as $plugin) {
@@ -28,10 +29,7 @@ function disable_plugins_update($value)
     if (isset($value->response['advanced-custom-fields-pro/acf.php'])) {
         unset($value->response['advanced-custom-fields-pro/acf.php']);
     }
-    // disable wp cerber
-    if (isset($value->response['wp-cerber/wp-cerber.php'])) {
-        unset($value->response['wp-cerber/wp-cerber.php']);
-    }
+
     // disable All-in-One WP Migration
     if (isset($value->response['all-in-one-wp-migration-master/all-in-one-wp-migration.php'])) {
         unset($value->response['all-in-one-wp-migration-master/all-in-one-wp-migration.php']);
