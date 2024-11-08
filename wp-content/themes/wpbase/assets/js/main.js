@@ -15,6 +15,18 @@
 		$(".header__toggleItem").toggle();
 		$(".mainBodyContent").toggleClass("menu__openSp");
 	}
+
+	$(".menu-item-has-children > .dropdown-arrow").click(function (e) {
+		e.preventDefault();
+		var $submenu = $(this).siblings(".sub-menu");
+
+		if ($submenu.length) {
+			$submenu.stop(true, true).slideToggle();
+			$(this).parent().toggleClass("open");
+			$(".sub-menu").not($submenu).slideUp();
+			$(".menu-item-has-children").not($(this).parent()).removeClass("open");
+		}
+	});
 	// end mobile menu
 
 	// wpadminbar
