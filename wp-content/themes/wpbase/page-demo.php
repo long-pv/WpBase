@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Template name: Page Demo
  * The template for displaying all pages
@@ -392,6 +393,43 @@ get_header();
             </a>
         </div>
     </div>
+
+    <div class="pb-5">
+        <h2>Calendar</h2>
+
+        <div id="calendar-controls" style="text-align: center; margin-bottom: 10px;">
+            <select id="month-select"></select>
+            <select id="year-select"></select>
+        </div>
+
+        <div class="calendar_block">
+            <div id="calendar"></div>
+            <div class="calendar_footer">
+                <div class="calendar_footer_left">
+                    <div class="calendar_footer_item">
+                        <span class="calendar_footer_label">
+                            Departure date:
+                        </span>
+                        <span class="calendar_footer_date">
+                        </span>
+                    </div>
+
+                    <div class="calendar_footer_item">
+                        <span class="calendar_footer_label">
+                            Price per person:
+                        </span>
+                        <span class="calendar_footer_price">
+                        </span>
+                    </div>
+                </div>
+                <div class="calendar_footer_right">
+                    <a href="javascript:vodi(0);" class="calendar_footer_btn calendar_booking_date_btn">
+                        Select
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php
@@ -405,12 +443,13 @@ get_footer();
 <!-- paypal -->
 <script
     src="https://www.paypal.com/sdk/js?client-id=AQDtyFOubNFVF-BohVnhaovzU517KKryur7IiYYMPp2Y-nMitDcqzeFH3v5C9TwW6lvcqOxgV8kV0e0h&locale=en_US&disable-funding=credit,card"></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 <script>
-    jQuery(document).ready(function ($) {
+    jQuery(document).ready(function($) {
         var page_default = '<?php echo get_permalink(); ?>';
         var stripe = Stripe("pk_test_51Q78biGYyIJ7x0h4Tv4TSOChaIIHb0YzqHpqDv2PTpCBVMHfcSyF97Ti6zJkM0jThfAJIcJFkRoDF3j1UiluleKx00AZQKgU9u");
 
-        $('#input_price').on('change', function () {
+        $('#input_price').on('change', function() {
             let val = $(this).val();
             $('#show_price').text(currency_format(val));
         });
@@ -430,7 +469,7 @@ get_footer();
             }
         }
 
-        $('#send_mail').click(function (e) {
+        $('#send_mail').click(function(e) {
             e.preventDefault();
             $.ajax({
                 url: url_ajax,
@@ -438,16 +477,16 @@ get_footer();
                 data: {
                     action: 'send_demo_mail',
                 },
-                beforeSend: function () {
+                beforeSend: function() {
                     $("#ajax-loader").show();
                 },
-                success: function (response) {
+                success: function(response) {
                     alert('Mail đã được gửi thành công!');
                 },
-                error: function (error) {
+                error: function(error) {
                     alert('Something went wrong.');
                 },
-                complete: function () {
+                complete: function() {
                     $("#ajax-loader").hide();
                 }
             });
@@ -460,33 +499,31 @@ get_footer();
                     allowed: [paypal.FUNDING.CARD],
                     disallowed: [paypal.FUNDING.CREDIT],
                 },
-                createOrder: function (data, actions) {
+                createOrder: function(data, actions) {
                     return actions.order.create({
-                        purchase_units: [
-                            {
-                                amount: {
-                                    value: 10,
-                                },
+                        purchase_units: [{
+                            amount: {
+                                value: 10,
                             },
-                        ],
+                        }, ],
                     });
                 },
-                onApprove: function (data, actions) {
-                    return actions.order.capture().then(function (details) {
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(function(details) {
                         alert('Thanh toán thành công.');
                     });
                 },
-                onCancel: function (data) {
+                onCancel: function(data) {
                     alert("Transaction cancelled");
                 },
-                onError: function (err) {
+                onError: function(err) {
                     alert("Something went wrong.");
                 },
             })
             .render("#paypal-button-container");
 
 
-        $('#btn_stripe_payment').on('click', function () {
+        $('#btn_stripe_payment').on('click', function() {
             $.ajax({
                 url: url_ajax,
                 type: "POST",
@@ -496,21 +533,23 @@ get_footer();
                     total_payment: 10,
                     post_id: 123,
                 },
-                beforeSend: function () {
+                beforeSend: function() {
                     $("#ajax-loader").show();
                 },
-                success: function (response) {
+                success: function(response) {
                     if (response.success) {
                         var sessionId = response.data.id;
-                        stripe.redirectToCheckout({ sessionId: sessionId });
+                        stripe.redirectToCheckout({
+                            sessionId: sessionId
+                        });
                     } else {
                         alert("Error creating checkout session: " + response);
                     }
                 },
-                error: function (error) {
+                error: function(error) {
                     alert('Something went wrong.');
                 },
-                complete: function () {
+                complete: function() {
                     $("#ajax-loader").hide();
                 },
             });
@@ -551,7 +590,7 @@ get_footer();
                     extension: "Only jpg, jpeg, png, or gif files are allowed"
                 }
             },
-            submitHandler: function (form) {
+            submitHandler: function(form) {
                 var formData = new FormData(form); // lấy data
                 formData.append("action", "ajax_action"); // gọi tới hook action
 
@@ -560,7 +599,7 @@ get_footer();
             }
         });
 
-        $('#ajax_loader_demo').on('click', function () {
+        $('#ajax_loader_demo').on('click', function() {
             $('#ajax-loader').toggle();
         });
 
@@ -582,14 +621,18 @@ get_footer();
             moreLink: '<div class="rm_down"><button class="btn btn-primary">Đọc thêm</button></div>',
             lessLink: '<div class="rm_up"><button class="btn btn-primary">Thu gọn</button></div>',
             collapsedHeight: 150,
-            afterToggle: function (trigger, element, expanded) {
+            afterToggle: function(trigger, element, expanded) {
                 if (!expanded) {
-                    $("html, body").animate({ scrollTop: element.offset().top }, { duration: 100 });
+                    $("html, body").animate({
+                        scrollTop: element.offset().top
+                    }, {
+                        duration: 100
+                    });
                 }
             },
         }).css('overflow', 'hidden');
 
-        $('input[name="upload_img"]').on("change", function (e) {
+        $('input[name="upload_img"]').on("change", function(e) {
             e.preventDefault();
             let this_el = $(this);
             let file = this_el.get(0).files[0];
@@ -609,9 +652,9 @@ get_footer();
 
                 let reader = new FileReader();
 
-                reader.onload = function (e) {
+                reader.onload = function(e) {
                     let img = new Image();
-                    img.onload = function () {
+                    img.onload = function() {
                         let width = img.width;
                         let height = img.height;
                         let w_img_wrap = parent.outerWidth();
@@ -632,6 +675,211 @@ get_footer();
                 parent.css("height", "unset");
                 input_height.val("");
             }
+        });
+
+        // calendar event
+        var selectedDate = null;
+        var calendarEl = $('#calendar')[0];
+        var today = new Date();
+        var todayDate = today.setHours(0, 0, 0, 0);
+
+        var specialPrices = [{
+                date: '2024-11-15',
+                price: 2500
+            },
+            {
+                date: '2024-11-17',
+                price: 2500
+            },
+            {
+                date: '2024-12-01',
+                price: 2500
+            },
+        ];
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            firstDay: 1,
+            headerToolbar: {
+                left: 'prev',
+                center: 'title',
+                right: 'next'
+            },
+            contentHeight: 'auto',
+            dateClick: function(info) {
+                if ($(info.dayEl).hasClass('fc-day-other')) {
+                    return;
+                }
+
+                if (info.date >= todayDate) {
+                    selectedDate = info.dateStr;
+                    $('.fc-daygrid-day').removeClass('selected');
+                    $(info.dayEl).addClass('selected');
+                    let price = $(info.dayEl).find('.fc-event-price').data('price');
+                    price = parseFloat(price);
+                    let formattedPrice = '$' + display_price(price);
+
+                    $('.calendar_footer_price').text(formattedPrice);
+                    $('.accordion_header_price').text(formattedPrice);
+
+                    // date
+                    let dateObj = new Date(info.date);
+                    let options = {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    };
+                    let formattedDate = dateObj.toLocaleDateString('en-US', options);
+                    let [weekday, month, day, year] = formattedDate.replace(/,/g, '').split(' ');
+                    let finalFormattedDate = `${weekday} ${day} ${month} ${year}`;
+                    $('.calendar_footer_date').text(finalFormattedDate);
+                    $('.accordion_header_date').text(finalFormattedDate);
+                } else {
+                    return;
+                }
+            },
+            datesSet: function() {
+                if (selectedDate) {
+                    let selectedDayEl = $(`.fc-daygrid-day[data-date="${selectedDate}"]`);
+                    if (selectedDayEl.length) {
+                        selectedDayEl.addClass('selected');
+                    }
+                }
+
+                let currentDate = calendar.getDate();
+                $('#month-select').val(currentDate.getMonth());
+                $('#year-select').val(currentDate.getFullYear());
+
+                $(this).find('.fc-event-price').remove();
+
+                $('.fc-daygrid-day').each(function() {
+                    let dayDate = $(this).data('date');
+                    let price = 2000;
+                    price = parseFloat(price);
+                    let price_format = '$' + display_price(price);
+
+                    let specialPrice = specialPrices.find(sp => sp.date === dayDate);
+                    if (specialPrice) {
+                        price = specialPrice.price;
+                        price_format = '$' + price.toLocaleString();
+                        $(this).addClass('fc-special-day');
+                    }
+
+                    if ($(this).find('.fc-event-price').length === 0) {
+                        var priceElement = $('<div>', {
+                            class: 'fc-event-price',
+                            'data-price': price,
+                            text: price_format
+                        });
+                        $(this).find('.fc-daygrid-day-top').append(priceElement);
+                    }
+                });
+            }
+        });
+
+        calendar.render();
+
+        function display_price(price_val) {
+            let price = parseFloat(price_val);
+            let formattedPrice = 0;
+
+            if (Number.isInteger(price)) {
+                formattedPrice = price.toLocaleString("en-US");
+            } else {
+                price = price.toFixed(1).toString();
+                let parts = price.split(".");
+                let integer_part = parseInt(parts[0]).toLocaleString("en-US");
+                let decimal_part = parts[1];
+                formattedPrice = integer_part + "." + decimal_part;
+            }
+
+            return formattedPrice;
+        }
+
+        function updatePriceAndDateInfo(info) {
+            let price = $(info.dayEl).find('.fc-event-price').data('price');
+            price = parseFloat(price);
+            let formattedPrice = '$' + display_price(price);
+
+            $('.calendar_footer_price').text(formattedPrice);
+            $('.accordion_header_price').text(formattedPrice);
+
+            let dateObj = new Date(info.date);
+            let options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            let formattedDate = dateObj.toLocaleDateString('en-US', options);
+            let [weekday, month, day, year] = formattedDate.replace(/,/g, '').split(' ');
+            let finalFormattedDate = `${weekday} ${day} ${month} ${year}`;
+            $('.calendar_footer_date').text(finalFormattedDate);
+            $('.accordion_header_date').text(finalFormattedDate);
+        }
+
+        function setSelectedDate(dateString) {
+            var targetDate = new Date(dateString);
+            if (!isNaN(targetDate.getTime())) {
+                selectedDate = targetDate.toISOString().split('T')[0];
+                calendar.gotoDate(targetDate);
+
+                setTimeout(function() {
+                    $('.fc-daygrid-day').removeClass('selected');
+                    var selectedDayEl = $(`.fc-daygrid-day[data-date="${selectedDate}"]`);
+                    if (selectedDayEl.length) {
+                        selectedDayEl.addClass('selected');
+
+                        updatePriceAndDateInfo({
+                            dayEl: selectedDayEl[0],
+                            date: targetDate,
+                            dateStr: selectedDate
+                        });
+                    }
+                }, 0);
+            }
+        }
+        var today = new Date();
+        today.setDate(today.getDate() + 1);
+        var formattedDate = today.toISOString().split('T')[0];
+        date_select = formattedDate;
+        setSelectedDate(formattedDate);
+
+        var monthSelect = $('#month-select');
+        var yearSelect = $('#year-select');
+
+        for (var month = 0; month < 12; month++) {
+            monthSelect.append($('<option>', {
+                value: month,
+                text: new Date(0, month).toLocaleString('default', {
+                    month: 'long'
+                })
+            }));
+        }
+
+        var currentYear = new Date().getFullYear();
+        for (var year = currentYear; year <= currentYear + 5; year++) {
+            yearSelect.append($('<option>', {
+                value: year,
+                text: year
+            }));
+        }
+
+        var currentDate = calendar.getDate();
+        monthSelect.val(currentDate.getMonth());
+        yearSelect.val(currentDate.getFullYear());
+
+        monthSelect.change(function() {
+            var selectedMonth = parseInt($(this).val());
+            var selectedYear = parseInt(yearSelect.val());
+            calendar.gotoDate(new Date(selectedYear, selectedMonth, 1));
+        });
+
+        yearSelect.change(function() {
+            var selectedMonth = parseInt(monthSelect.val());
+            var selectedYear = parseInt($(this).val());
+            calendar.gotoDate(new Date(selectedYear, selectedMonth, 1));
         });
     });
 </script>
