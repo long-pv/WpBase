@@ -2,11 +2,11 @@
 function add_custom_video_popup_script()
 {
     if (!is_admin()) {
-        ?>
+?>
         <!-- modal video -->
         <div class="modal modalVideo fade" id="videoUrl" tabindex="-1" role="dialog" aria-labelledby="videoModalLabel"
             aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <button type="button" class="close modalVideo__video" data-dismiss="modal" aria-label="Close">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -28,23 +28,23 @@ function add_custom_video_popup_script()
         </div>
 
         <script type="text/javascript">
-            jQuery(document).ready(function ($) {
+            jQuery(document).ready(function($) {
                 if ($("#videoUrl").length) {
                     let videoSrc = "";
                     let videoId = $("#video");
                     let videoUrl = $("#videoUrl");
 
                     // Add click event for each .videoBlock__playAction
-                    $(document).on("click", ".videoBlock__playAction", function (e) {
+                    $(document).on("click", ".videoBlock__playAction", function(e) {
                         e.preventDefault();
                         videoSrc = $(this).data("src");
                     });
 
-                    videoUrl.on("shown.bs.modal", function (e) {
+                    videoUrl.on("shown.bs.modal", function(e) {
                         videoId.attr("src", videoSrc + "?autoplay=1&mute=1&modestbranding=1&showinfo=0");
                     });
 
-                    videoUrl.on("hide.bs.modal", function (e) {
+                    videoUrl.on("hide.bs.modal", function(e) {
                         videoId.attr("src", "");
                         videoSrc = "";
                     });
@@ -52,7 +52,7 @@ function add_custom_video_popup_script()
             });
         </script>
         <!-- end -->
-        <?php
+    <?php
     }
 }
 add_action('wp_footer', 'add_custom_video_popup_script', 99);
@@ -72,7 +72,7 @@ function video_popup($src_iframe, $thumb = null)
             </div>
         </div>
     </div>
-    <?php
+<?php
 }
 
 function getYoutubeEmbedUrl($input)

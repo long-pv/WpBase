@@ -30,9 +30,14 @@
 	// end mobile menu
 
 	// wpadminbar
-	if ($("#wpadminbar").length > 0) {
-		$(".header").css("margin-top", $("#wpadminbar").outerHeight(true));
+	function adjustPadding() {
+		$("body").css("padding-top", $("#header").outerHeight(true));
+		if ($("#wpadminbar").length > 0) {
+			$(".header").css("margin-top", $("#wpadminbar").outerHeight(true));
+		}
 	}
+	adjustPadding();
+	$(window).resize(adjustPadding);
 
 	// slick hiển thị arrow ngay cả khi có quá ít item
 	function calculateSlidesToShow(selector, itemClass) {
