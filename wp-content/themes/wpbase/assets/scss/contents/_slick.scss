@@ -28,11 +28,14 @@
             align-items: flex-end;
 
             button {
-                background-color: #A2A2DF;
+                background-color: #fff;
                 width: 100%;
                 height: $h_dots;
                 padding: 0px;
                 margin: 0px;
+                box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
+                -webkit-box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
+                -moz-box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
 
                 &::before {
                     display: none;
@@ -41,7 +44,7 @@
 
             &.slick-active {
                 button {
-                    background-color: #ffffff;
+                    background-color: $primary;
                     height: 6px;
                 }
             }
@@ -96,13 +99,11 @@
         }
     }
 
-    $margin_arrow: 0px;
-
     &-prev {
-        left: $margin_arrow;
+        left: - 40px;
 
-        @include media-breakpoint-up(lg) {
-            transform: translateX(-70%);
+        @include media-breakpoint-down(md) {
+            left: 16px;
         }
 
         &::before {
@@ -111,10 +112,10 @@
     }
 
     &-next {
-        right: $margin_arrow;
+        right: - 40px;
 
-        @include media-breakpoint-up(lg) {
-            transform: translateX(70%);
+        @include media-breakpoint-down(md) {
+            right: 16px;
         }
 
         &::before {
