@@ -2,6 +2,12 @@
     white-space: inherit;
     word-wrap: break-word;
 
+    &>* {
+        &:last-child {
+            margin-bottom: 0px;
+        }
+    }
+
     b,
     strong,
     h1,
