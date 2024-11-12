@@ -59,6 +59,23 @@ add_action('wp_footer', 'add_custom_video_popup_script', 99);
 
 function video_popup($src_iframe, $thumb = null)
 {
+    function getYoutubeEmbedUrl($input)
+    {
+        if (filter_var($input, FILTER_VALIDATE_URL)) {
+            return $input;
+        }
+
+        if (preg_match('/<iframe[^>]+src=["\']([^"\']+)["\']/i', $input, $matches)) {
+            $url = $matches[1];
+            $parsedUrl = parse_url($url);
+            $cleanUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'];
+
+            return $cleanUrl;
+        }
+
+        return NO_IMAGE;
+    }
+
     $url = getYoutubeEmbedUrl($src_iframe);
     ?>
     <div class="videoBlock">
@@ -73,21 +90,4 @@ function video_popup($src_iframe, $thumb = null)
         </div>
     </div>
 <?php
-}
-
-function getYoutubeEmbedUrl($input)
-{
-    // Case 1: If the input is a direct URL (starting with https://)
-    if (filter_var($input, FILTER_VALIDATE_URL)) {
-        return $input; // Return the URL as is
-    }
-
-    // Case 2: If the input is an HTML string containing an iframe
-    // Use regex to find the value of the src attribute
-    if (preg_match('/<iframe.*?src="([^"]+)".*?>/i', $input, $matches)) {
-        return $matches[1]; // Return the URL found in the src attribute of the iframe
-    }
-
-    // If neither case, return null or an error message
-    return NO_IMAGE;
 }
