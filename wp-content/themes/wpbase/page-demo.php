@@ -41,6 +41,43 @@ get_header();
                 <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
             </div>
 
+            <!-- Radio buttons -->
+            <div class="mb-3">
+                <label class="form-label">Gender</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="gender_male" name="gender" value="male" checked>
+                    <label class="form-check-label" for="gender_male">Male</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="gender_female" name="gender" value="female">
+                    <label class="form-check-label" for="gender_female">Female</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="gender_other" name="gender" value="other">
+                    <label class="form-check-label" for="gender_other">Other</label>
+                </div>
+
+                <label for="add_info" class="form-label">Add info</label>
+                <input type="text" class="form-control" id="add_info" name="add_info" placeholder="Enter your add info">
+            </div>
+
+            <!-- Checkboxes -->
+            <div class="mb-3">
+                <label class="form-label">Hobbies</label>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="hobby_reading" name="hobbies[]" value="reading">
+                    <label class="form-check-label" for="hobby_reading">Reading</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="hobby_traveling" name="hobbies[]" value="traveling">
+                    <label class="form-check-label" for="hobby_traveling">Traveling</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="hobby_sports" name="hobbies[]" value="sports">
+                    <label class="form-check-label" for="hobby_sports">Sports</label>
+                </div>
+            </div>
+
             <!-- Nút submit -->
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
@@ -430,6 +467,37 @@ get_header();
             </div>
         </div>
     </div>
+
+    <div class="pb-5">
+        <h2>Custom dropdown</h2>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="custom_dropdown">
+                    <div class="custom_dropdown_button">Chọn tùy chọn</div>
+                    <div class="custom_dropdown_menu">
+                        <label><input type="checkbox" name="how_do_you_know[]" value="Bạn bè giới thiệu"> Bạn bè giới thiệu</label>
+                        <label><input type="checkbox" name="how_do_you_know[]" value="Facebook"> Facebook</label>
+                        <label><input type="checkbox" name="how_do_you_know[]" value="Google search"> Google search</label>
+                        <label><input type="checkbox" name="how_do_you_know[]" value="Email"> Email</label>
+                        <label><input type="checkbox" name="how_do_you_know[]" value="Youtube"> Youtube</label>
+                        <label><input type="checkbox" name="how_do_you_know[]" value="Báo chí"> Báo chí</label>
+                        <label><input type="checkbox" name="how_do_you_know[]" value="Khác"> Khác</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="custom_dropdown">
+                    <div class="custom_dropdown_button">Chọn tùy chọn</div>
+                    <div class="custom_dropdown_menu">
+                        <label><input type="checkbox" name="translation_skill[]" value="Dịch xuôi"> Dịch xuôi</label>
+                        <label><input type="checkbox" name="translation_skill[]" value="Dịch ngược"> Dịch ngược</label>
+                        <label><input type="checkbox" name="translation_skill[]" value="Cả 2"> Cả 2</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php
@@ -570,8 +638,18 @@ get_footer();
                 },
                 avatar: {
                     required: true,
-                    extension: "jpg,jpeg,png,gif"
-                }
+                },
+                gender: {
+                    required: true,
+                },
+                add_info: {
+                    required: function() {
+                        return $('input[name="gender"]:checked').val() == "other" ? true : false;
+                    },
+                },
+                'hobbies[]': {
+                    required: true,
+                },
             },
             messages: {
                 name: {
@@ -587,8 +665,20 @@ get_footer();
                 },
                 avatar: {
                     required: "Please upload an avatar",
-                    extension: "Only jpg, jpeg, png, or gif files are allowed"
-                }
+                },
+                gender: {
+                    required: "Please enter your gender",
+                },
+                add_info: {
+                    required: "Please enter your add info",
+                },
+                'hobbies[]': {
+                    required: "Please enter your hobbies",
+                },
+            },
+            errorPlacement: function(error, element) {
+                error.addClass('text-danger');
+                error.appendTo(element.closest(".mb-3"));
             },
             submitHandler: function(form) {
                 var formData = new FormData(form); // lấy data
@@ -880,6 +970,23 @@ get_footer();
             var selectedMonth = parseInt(monthSelect.val());
             var selectedYear = parseInt($(this).val());
             calendar.gotoDate(new Date(selectedYear, selectedMonth, 1));
+        });
+
+        // dropdown custom
+        $(".custom_dropdown_button").on("click", function(e) {
+            e.stopPropagation();
+            var dropdownMenu = $(this).next(".custom_dropdown_menu");
+            $(".custom_dropdown_menu").not(dropdownMenu).hide();
+
+            dropdownMenu.toggle();
+        });
+
+        $(document).on("click", function() {
+            $(".custom_dropdown_menu").hide();
+        });
+
+        $(".custom_dropdown_menu").on("click", function(e) {
+            e.stopPropagation();
         });
     });
 </script>
