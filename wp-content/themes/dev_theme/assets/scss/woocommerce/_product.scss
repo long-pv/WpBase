@@ -1,0 +1,38 @@
+#wooSingleProduct {
+    .single_add_to_cart_button.btnLink {
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .quantity {
+        margin-right: 8px;
+    }
+
+    .flex-control-nav.flex-control-thumbs {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        margin-top: 16px !important;
+
+        li {
+            float: unset !important;
+            width: 20% !important;
+            border: 2px solid $white;
+
+            img.flex-active {
+                border: 2px solid $primary;
+            }
+        }
+    }
+
+    .pswp__caption {
+        display: none !important;
+    }
+
+    .woocommerce-Price-amount.amount {
+        color: $primary;
+    }
+
+    .woocommerce-product-details__short-description {
+        margin-bottom: 24px;
+    }
+}

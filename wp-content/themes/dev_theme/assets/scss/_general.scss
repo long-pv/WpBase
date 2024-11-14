@@ -1,0 +1,240 @@
+body {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    color: $body;
+    font-size: 16px;
+
+    @include media-breakpoint-down(md) {
+        -webkit-touch-callout: none;
+        -khtml-user-select: none;
+        -ms-touch-action: pan-y;
+        touch-action: pan-y;
+    }
+}
+
+.mainBodyContent {
+    min-height: calc(100vh - 100px);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 700 !important;
+    line-height: 1.5 !important;
+}
+
+//------ Typography
+h6,
+.h6 {
+    font-size: 16px;
+}
+
+h5,
+.h5 {
+    font-size: 18px;
+}
+
+h4,
+.h4 {
+    font-size: 20px;
+}
+
+h3,
+.h3 {
+    font-size: 24px;
+}
+
+h2,
+.h2 {
+    font-size: 28px;
+}
+
+h1,
+.h1 {
+    font-size: 32px;
+}
+
+@include media-breakpoint-up(lg) {
+
+    h6,
+    .h6 {
+        font-size: 18px;
+    }
+
+    h5,
+    .h5 {
+        font-size: 20px;
+    }
+
+    h4,
+    .h4 {
+        font-size: 24px;
+    }
+
+    h3,
+    .h3 {
+        font-size: 28px;
+    }
+
+    h2,
+    .h2 {
+        font-size: 32px;
+    }
+
+    h1,
+    .h1 {
+        font-size: 40px;
+    }
+}
+
+.pointer-events {
+    pointer-events: none !important;
+}
+
+.text-justify {
+    text-align: justify !important;
+}
+
+$secSpacePC: 48px;
+$secSpaceSP: 32px;
+
+.secSpace {
+    padding-top: $secSpaceSP;
+    padding-bottom: $secSpaceSP;
+    position: relative;
+
+    @include media-breakpoint-up(lg) {
+        padding-top: $secSpacePC;
+        padding-bottom: $secSpacePC;
+    }
+
+    &--top {
+        padding-top: $secSpaceSP;
+        padding-bottom: 0px;
+
+        @include media-breakpoint-up(lg) {
+            padding-top: $secSpacePC;
+            padding-bottom: 0px;
+        }
+    }
+
+    &--bottom {
+        padding-top: 0px;
+        padding-bottom: $secSpaceSP;
+
+        @include media-breakpoint-up(lg) {
+            padding-top: 0px;
+            padding-bottom: $secSpacePC;
+        }
+    }
+}
+
+// -------------- Picture frame -------------
+.imgGroup {
+    display: block;
+    z-index: 5;
+    position: relative;
+    height: 0px;
+    padding-bottom: 70%;
+    overflow: hidden;
+
+    img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        transform: translate(-50%, -50%) scale(1);
+        object-fit: cover;
+        transition: all 0.3s;
+    }
+
+    @include media-breakpoint-up(lg) {
+        &:hover {
+            img {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+    }
+}
+
+// ---------- line ------------
+@mixin line-clamp($lines) {
+    -webkit-line-clamp: $lines;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+}
+
+.line-1 {
+    @include line-clamp(1);
+}
+
+.line-2 {
+    @include line-clamp(2);
+}
+
+.line-3 {
+    @include line-clamp(3);
+}
+
+.secHeading {
+    margin-bottom: 24px;
+    position: relative;
+
+    &__title {
+        margin: 0px;
+        color: $primary;
+        text-transform: uppercase;
+    }
+
+    &__link {
+        margin-top: 16px;
+        color: $primary;
+
+        @include media-breakpoint-up(lg) {
+            position: absolute;
+            right: 0px;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-top: 0px;
+        }
+    }
+}
+
+.video {
+    position: relative;
+    width: 100%;
+    height: 0px;
+    padding-bottom: 56.25%;
+
+    iframe,
+    video {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+}
+
+.favorite_posts {
+    position: absolute;
+    cursor: pointer;
+    right: 8px;
+    top: 8px;
+    width: 24px;
+    height: 24px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M7.49922 5.89893C5.28724 6.91003 3.66675 9.31498 3.66675 12.1828C3.66675 15.1127 4.8657 17.371 6.58446 19.3064C8.00105 20.9015 9.71586 22.2235 11.3882 23.5128C11.7855 23.819 12.1803 24.1234 12.5681 24.4292C13.2695 24.9821 13.8952 25.4674 14.4982 25.8198C15.1016 26.1724 15.5873 26.3333 16.0001 26.3333C16.4129 26.3333 16.8986 26.1724 17.5019 25.8198C18.105 25.4674 18.7306 24.9821 19.432 24.4292C19.8199 24.1234 20.2147 23.819 20.6119 23.5128C22.2843 22.2235 23.9991 20.9015 25.4157 19.3064C27.1345 17.371 28.3334 15.1127 28.3334 12.1828C28.3334 9.31498 26.7129 6.91003 24.5009 5.89893C22.352 4.91664 19.4645 5.17677 16.7206 8.02765C16.5321 8.22351 16.2719 8.33418 16.0001 8.33418C15.7282 8.33418 15.4681 8.22351 15.2796 8.02765C12.5356 5.17677 9.64817 4.91664 7.49922 5.89893ZM16.0001 5.94509C12.9173 3.18699 9.46536 2.80116 6.66777 4.07995C3.71303 5.43057 1.66675 8.56671 1.66675 12.1828C1.66675 15.7368 3.14741 18.4481 5.08904 20.6344C6.64391 22.3853 8.54705 23.8506 10.2278 25.1448C10.6089 25.4382 10.9785 25.7227 11.33 25.9998C12.013 26.5382 12.7461 27.1124 13.4892 27.5466C14.2319 27.9806 15.0795 28.3333 16.0001 28.3333C16.9206 28.3333 17.7683 27.9806 18.511 27.5466C19.254 27.1124 19.9872 26.5382 20.6702 25.9998C21.0217 25.7227 21.3913 25.4382 21.7723 25.1448C23.4531 23.8506 25.3563 22.3853 26.9111 20.6344C28.8528 18.4481 30.3334 15.7368 30.3334 12.1828C30.3334 8.56671 28.2871 5.43057 25.3324 4.07995C22.5348 2.80116 19.0828 3.18699 16.0001 5.94509Z' fill='white'/%3E%3C/svg%3E%0A");
+
+    &.active {
+        background-image: url("data:image/svg+xml,%3Csvg width='28' height='29' viewBox='0 0 28 29' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.33337 11.1601C2.33337 16.8335 7.02271 19.8568 10.4554 22.5628C11.6667 23.5177 12.8334 24.4168 14 24.4168C15.1667 24.4168 16.3334 23.5177 17.5447 22.5628C20.9774 19.8568 25.6667 16.8335 25.6667 11.1601C25.6667 5.48665 19.2499 1.46316 14 6.91753C8.75023 1.46316 2.33337 5.48665 2.33337 11.1601Z' fill='%23FF3974'/%3E%3C/svg%3E%0A") !important;
+    }
+}

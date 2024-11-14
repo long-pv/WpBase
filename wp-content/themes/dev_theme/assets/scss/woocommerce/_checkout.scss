@@ -1,0 +1,27 @@
+#wooTheme {
+	#place_order {
+		margin: 0 auto;
+		outline: none !important;
+	}
+
+	.woocommerce-billing-fields__field-wrapper {
+		padding: 16px;
+		border: 1px solid rgba(0, 0, 0, 0.1);
+		border-radius: 8px;
+
+		@include media-breakpoint-up(lg) {
+			padding: 40px;
+		}
+	}
+
+	.shop_table.woocommerce-checkout-review-order-table,
+	.woocommerce-checkout-payment {
+		border-radius: 8px !important;
+	}
+
+	.woocommerce-billing-fields h3,
+	#order_review_heading {
+		margin-bottom: 24px;
+		font-weight: 700;
+	}
+}

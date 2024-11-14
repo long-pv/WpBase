@@ -1,0 +1,53 @@
+#wooTheme {
+    .shop_table {
+        .thead th {
+            padding: 20px 0;
+            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 14px;
+        }
+    }
+
+    input[name="coupon_code"] {
+        // style element
+    }
+
+    button[name="apply_coupon"],
+    button[name="update_cart"] {
+        // style element
+    }
+
+    button[name="update_cart"] {
+        visibility: hidden;
+    }
+
+    button[name="apply_coupon"] {
+        @include media-breakpoint-down(sm) {
+            width: 100%;
+        }
+    }
+
+    input[type="number"] {
+        outline: none !important;
+    }
+
+    .wc-proceed-to-checkout {
+        display: flex;
+        justify-content: center;
+    }
+
+    .checkout-button {
+        display: inline-flex;
+        align-items: center;
+        font-size: 16px;
+        margin: 0px;
+        height: 40px;
+    }
+
+    .product-remove .remove {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 3px;
+    }
+}

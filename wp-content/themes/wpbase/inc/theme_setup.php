@@ -72,7 +72,7 @@ function basetheme_scripts()
     // end
 
     // readmore Component
-    wp_enqueue_script('basetheme-script-readmore', get_template_directory_uri() . '/assets/js/readmore.js', array(), null, true);
+    wp_enqueue_script('basetheme-script-readmore', get_template_directory_uri() . '/assets/js/readmore.js', array(), _S_VERSION, true);
 
     //add custom main css/js
     wp_enqueue_style('basetheme-style-main', get_template_directory_uri() . '/assets/css/main.css', array(), _S_VERSION);

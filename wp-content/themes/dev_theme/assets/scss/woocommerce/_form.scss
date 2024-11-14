@@ -1,0 +1,67 @@
+#wooTheme {
+
+    .woocommerce-EditAccountForm,
+    .woocommerce-billing-fields__field-wrapper,
+    #customer_login,
+    .lost_reset_password {
+        p.form-row {
+            display: block;
+        }
+
+        .form-row-first {
+            width: 100% !important;
+        }
+
+        input {
+            width: 100%;
+            height: 40px;
+            border-radius: 0px;
+            outline: none !important;
+            padding: 8px;
+            font-size: 16px;
+            font-weight: 400;
+            border: 1px solid #c0c0c0;
+        }
+
+        .woocommerce-invalid-required-field {
+            input {
+                border: 1px solid #f73131;
+            }
+        }
+
+        .woocommerce-validated {
+            input {
+                border: 1px solid #6dc22e;
+            }
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            line-height: 24px !important;
+
+            .required {
+                color: #f73131;
+                font-size: 20px;
+                transform: translateY(5px) !important;
+                display: inline-block;
+            }
+        }
+
+        #login_remember {
+            label {
+                font-weight: 400;
+                display: flex;
+                align-items: center;
+                margin-bottom: 0px;
+            }
+
+            #rememberme {
+                width: 16px;
+                height: 16px;
+                margin-right: 8px;
+            }
+        }
+    }
+}
