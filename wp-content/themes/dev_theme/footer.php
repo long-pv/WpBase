@@ -14,6 +14,10 @@
 
 <footer></footer>
 
+<div id="ajax-loader" style="display: none;">
+    <div class="spinner"></div>
+</div>
+
 <?php wp_footer(); ?>
 
 </body>
