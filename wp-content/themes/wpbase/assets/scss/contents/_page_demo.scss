@@ -649,3 +649,15 @@
 .custom_dropdown_menu label:last-child {
     margin-bottom: 0;
 }
+
+.social_share_post {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.social_share_post_icon {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+}
