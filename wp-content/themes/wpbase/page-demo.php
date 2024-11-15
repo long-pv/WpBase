@@ -17,6 +17,21 @@
 // header template
 get_header();
 ?>
+
+<div id="loader"></div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+            document.getElementById('loader').style.transition = 'opacity 0.5s';
+            document.getElementById('loader').style.opacity = 0;
+
+            setTimeout(function() {
+                document.getElementById('loader').style.display = 'none';
+            }, 500);
+        }, 1000);
+    });
+</script>
+
 <div class="container py-5">
     <div class="pb-5">
         <h2>Form validate</h2>
