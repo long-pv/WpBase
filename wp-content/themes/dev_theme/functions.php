@@ -215,3 +215,13 @@ require get_template_directory() . '/inc/template-functions.php';
  * Security
  */
 require get_template_directory() . '/inc/security.php';
+
+/**
+ * breadcrumbs
+ */
+require get_template_directory() . '/inc/breadcrumbs.php';
+
+/**
+ * cpt custom
+ */
+require get_template_directory() . '/inc/cpt_custom.php';
