@@ -93,7 +93,7 @@ get_header();
                 </div>
             </div>
 
-            <div class="g-recaptcha" data-sitekey="<?php echo RECAPTCHA_SECRET_KEY; ?>"></div>
+            <div class="g-recaptcha" data-sitekey="<?php echo RECAPTCHA_SITEKEY_KEY; ?>"></div>
             <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
             <!-- Nút submit -->
@@ -803,7 +803,6 @@ get_footer();
                     success: function(response) {
                         if (response.success) {
                             alert('Thông tin đã được gửi thành công!');
-                            window.location.href = "<?php echo get_permalink(); ?>";
                         } else {
                             alert(response.data.message);
                         }

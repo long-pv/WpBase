@@ -252,12 +252,18 @@ add_filter('the_content', 'add_wow_class_to_headings');
 // Function kiểm tra reCAPTCHA
 function check_recaptcha($recaptcha_response)
 {
-    $recaptchaUrl = 'https://www.google.com/recaptcha/api/siteverify';
-    $remoteIp = $_SERVER['REMOTE_ADDR'];
-    $recaptchaResponse = file_get_contents($recaptchaUrl . '?secret=' . RECAPTCHA_SECRET_KEY . '&response=' . $recaptcha_response . '&remoteip=' . $remoteIp);
-    $result = json_decode($recaptchaResponse);
+    // Gửi yêu cầu kiểm tra token reCAPTCHA đến Google
+    $response = wp_remote_post('https://www.google.com/recaptcha/api/siteverify', array(
+        'body' => array(
+            'secret' => RECAPTCHA_SECRET_KEY,
+            'response' => $recaptcha_response,
+            'remoteip' => $_SERVER['REMOTE_ADDR']
+        )
+    ));
+    $response_body = wp_remote_retrieve_body($response);
+    $result = json_decode($response_body, true);
 
-    return $result->success ? true : false;
+    return $result['success'] ? true : false;
 }
 
 function send_email_ajax()
