@@ -93,6 +93,9 @@ get_header();
                 </div>
             </div>
 
+            <div class="g-recaptcha" data-sitekey="<?php echo RECAPTCHA_SECRET_KEY; ?>"></div>
+            <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
             <!-- Nút submit -->
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
@@ -777,8 +780,41 @@ get_footer();
                 error.appendTo(element.closest(".mb-3"));
             },
             submitHandler: function(form) {
-                var formData = new FormData(form); // lấy data
-                formData.append("action", "ajax_action"); // gọi tới hook action
+                // Kiểm tra reCAPTCHA trước khi gửi form
+                let recaptcha_response = grecaptcha.getResponse();
+                if (recaptcha_response.length === 0) {
+                    alert('Vui lòng chọn reCAPTCHA.');
+                    return false;
+                }
+
+                // thực hiện ajax
+                var formData = new FormData(form);
+                formData.append("action", "send_email");
+
+                $.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    beforeSend: function() {
+                        $("#ajax-loader").show();
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Thông tin đã được gửi thành công!');
+                            window.location.href = "<?php echo get_permalink(); ?>";
+                        } else {
+                            alert(response.data.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra khi gửi dữ liệu.');
+                    },
+                    complete: function() {
+                        $("#ajax-loader").hide();
+                    }
+                });
 
                 // ngăn không submit
                 return false;

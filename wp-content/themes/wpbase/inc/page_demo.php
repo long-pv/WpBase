@@ -1,10 +1,10 @@
 <?php
 function lpv_datepicker_start_date()
 {
-    ?>
+?>
     <script type="text/javascript">
-        (function ($) {
-            acf.add_filter('date_picker_args', function (args, $field) {
+        (function($) {
+            acf.add_filter('date_picker_args', function(args, $field) {
                 var key = $field.data('key');
                 if (key == 'field_6719e939598ea' || key == 'field_6719e958598eb') {
                     var today = new Date();
@@ -15,7 +15,7 @@ function lpv_datepicker_start_date()
             });
         })(jQuery);
     </script>
-    <?php
+<?php
 }
 add_action('acf/input/admin_footer', 'lpv_datepicker_start_date');
 
@@ -51,7 +51,7 @@ function send_demo_mail()
     $headers = array('Content-Type: text/html; charset=UTF-8');
 
     ob_start();
-    ?>
+?>
     <html>
 
     <body>
@@ -61,7 +61,7 @@ function send_demo_mail()
     </body>
 
     </html>
-    <?php
+<?php
     $message = ob_get_clean();
 
     if (wp_mail($to, $subject, $message, $headers)) {
@@ -241,3 +241,54 @@ function handle_google_login()
     }
 }
 add_action('init', 'handle_google_login');
+
+function add_wow_class_to_headings($content)
+{
+    $content = preg_replace('/<(h[1-6])(.*?)>/', '<$1$2 class="wow">', $content);
+    return $content;
+}
+add_filter('the_content', 'add_wow_class_to_headings');
+
+// Function kiểm tra reCAPTCHA
+function check_recaptcha($recaptcha_response)
+{
+    $recaptchaUrl = 'https://www.google.com/recaptcha/api/siteverify';
+    $remoteIp = $_SERVER['REMOTE_ADDR'];
+    $recaptchaResponse = file_get_contents($recaptchaUrl . '?secret=' . RECAPTCHA_SECRET_KEY . '&response=' . $recaptcha_response . '&remoteip=' . $remoteIp);
+    $result = json_decode($recaptchaResponse);
+
+    return $result->success ? true : false;
+}
+
+function send_email_ajax()
+{
+    if (isset($_POST['g-recaptcha-response'])) {
+        $is_valid_recaptcha = check_recaptcha($_POST['g-recaptcha-response']);
+
+        if ($is_valid_recaptcha) {
+            if (isset($_POST['email']) && is_email($_POST['email'])) {
+                $to = sanitize_email($_POST['email']);
+                $subject = 'Test Email';
+                $message = 'This is a test email sent from AJAX.';
+                $headers = array('Content-Type: text/html; charset=UTF-8');
+
+                // Gửi email
+                if (wp_mail($to, $subject, $message, $headers)) {
+                    wp_send_json_success(array('message' => 'Email đã được gửi thành công!'));
+                } else {
+                    wp_send_json_error(array('message' => 'Gửi email thất bại.'));
+                }
+            } else {
+                wp_send_json_error(array('message' => 'Email không hợp lệ.'));
+            }
+        } else {
+            wp_send_json_error(array('message' => 'Xác thực reCAPTCHA thất bại. Vui lòng thử lại.'));
+        }
+    } else {
+        wp_send_json_error(array('message' => 'reCAPTCHA không được xác nhận.'));
+    }
+
+    wp_die();
+}
+add_action('wp_ajax_send_email', 'send_email_ajax');
+add_action('wp_ajax_nopriv_send_email', 'send_email_ajax');

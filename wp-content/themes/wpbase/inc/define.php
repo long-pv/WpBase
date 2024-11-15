@@ -34,6 +34,11 @@ if (!defined('NO_IMAGE')) {
     define('NO_IMAGE', get_template_directory_uri() . '/assets/images/no_image.jpg');
 }
 
+
+if (!defined('RECAPTCHA_SECRET_KEY')) {
+    define('RECAPTCHA_SECRET_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI');
+}
+
 /**
  * contact form
  */
