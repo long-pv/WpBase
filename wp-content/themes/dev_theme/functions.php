@@ -220,6 +220,9 @@ function dev_theme_scripts()
 	//add custom main css/js
 	wp_enqueue_style('dev_theme-style-main', get_template_directory_uri() . '/assets/css/main.css', array(), _S_VERSION);
 	wp_enqueue_script('dev_theme-script-main', get_template_directory_uri() . '/assets/js/main.js', array(), _S_VERSION, true);
+
+	// ajax admin wordpress
+	wp_localize_script('dev_theme-ajax_url', 'custom_ajax', array('ajax_url' => admin_url('admin-ajax.php')));
 }
 add_action('wp_enqueue_scripts', 'dev_theme_scripts');
 

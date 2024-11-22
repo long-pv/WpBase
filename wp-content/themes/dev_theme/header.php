@@ -26,3 +26,7 @@
 	<?php wp_body_open(); ?>
 
 	<header></header>
+
+
+	<!-- start main body -->
+	<main class="mainBodyContent">

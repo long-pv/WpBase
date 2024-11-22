@@ -111,12 +111,6 @@ function custom_login_redirect()
         exit();
     }
 
-    // prevent users from entering the wp-admin page
-    if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false && !is_admin() && !defined('DOING_AJAX') && !is_user_logged_in()) {
-        wp_redirect(home_url('/404'));
-        exit();
-    }
-
     // Particularly, urls containing xmlrpc.php give status 403
     if (strpos($_SERVER['REQUEST_URI'], 'xmlrpc.php') !== false) {
         status_header(403);
@@ -231,12 +225,12 @@ function custom_login_logo()
 {
     echo '<style type="text/css">
     #login h1 a {
-      background-image: url(' . get_template_directory_uri() . '/assets/images/logo_login.svg) !important;
+      background-image: url(' . get_template_directory_uri() . '/assets/images/logo.svg) !important;
       background-position: center center !important;
       background-size: contain !important;
       width: 100% !important;
       height: 80px !important;
-      display: flex !important;
+      display: none !important;
       background-color: #fff;
     }
   </style>';
@@ -354,13 +348,6 @@ function allow_iframe_script_tags($allowedposttags)
     return $allowedposttags;
 }
 add_filter("wp_kses_allowed_html", "allow_iframe_script_tags", 1);
-
-// Hide Tags
-// function hide_tags()
-// {
-//     register_taxonomy('post_tag', array());
-// }
-// add_action('init', 'hide_tags');
 
 // setting image in content editor
 function set_default_image_settings_on_login($user_login, $user)

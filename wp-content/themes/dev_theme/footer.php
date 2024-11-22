@@ -12,6 +12,9 @@
 
 ?>
 
+</main>
+<!-- end main body -->
+
 <footer></footer>
 
 <div id="ajax-loader" style="display: none;">
