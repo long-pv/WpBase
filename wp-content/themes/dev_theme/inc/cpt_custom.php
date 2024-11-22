@@ -1,29 +1,31 @@
 <?php
 function register_cpt_post_types()
 {
-    // $cpt_list = [
-    //     'event' => [
-    //         'labels' => __('Event', 'basetheme'),
-    //         'cap' => false,
-    //         'hierarchical' => false
-    //     ],
-    // ];
+    $cpt_list = [
+        'event' => [
+            'labels' => __('Event', 'basetheme'),
+            'slug' => 'su_kien',
+            'cap' => false,
+            'hierarchical' => false
+        ],
+    ];
 
-    // $cpt_tax = [
-    //     'event_category' => [
-    //         'labels' => __('Event category', 'basetheme'),
-    //         'cap' => false,
-    //         'post_type' => ['event']
-    //     ],
-    // ];
+    $cpt_tax = [
+        'event_category' => [
+            'labels' => __('Event category', 'basetheme'),
+            'slug' => 'danh-muc-su-kien',
+            'cap' => false,
+            'post_type' => ['event']
+        ],
+    ];
 
-    // foreach ($cpt_list as $post_type => $data) {
-    //     register_cpt($post_type, $data);
-    // }
+    foreach ($cpt_list as $post_type => $data) {
+        register_cpt($post_type, $data);
+    }
 
-    // foreach ($cpt_tax as $ctx => $data) {
-    //     register_ctx($ctx, $data);
-    // }
+    foreach ($cpt_tax as $ctx => $data) {
+        register_ctx($ctx, $data);
+    }
 }
 add_action('init', 'register_cpt_post_types');
 
@@ -39,27 +41,18 @@ function register_cpt($post_type, $data = [])
     ];
 
     $args = array(
-        'labels' => $labels,
-        'description' => '',
-        'public' => true,
-        'publicly_queryable' => true,
-        'show_ui' => true,
-        'show_in_rest' => true,
-        'rest_base' => '',
-        'rest_controller_class' => 'WP_REST_Posts_Controller',
-        'has_archive' => false,
-        'show_in_menu' => true,
-        'show_in_nav_menus' => true,
-        'delete_with_user' => false,
-        'exclude_from_search' => true,
-        'map_meta_cap' => true,
-        'hierarchical' => $hierarchical,
-        'rewrite' => array('slug' => $post_type, 'with_front' => true),
-        'query_var' => true,
-        'menu_icon' => 'dashicons-admin-post',
-        'supports' => array('title', 'editor', 'thumbnail', 'revisions', 'author', $attributes),
-        'capability_type' => 'post',
-        'can_export' => true,
+        'labels'             => $labels,
+        'public'             => true,
+        'has_archive'        => true,
+        'rewrite'            => array(
+            'slug'       => $data['slug'],
+            'with_front' => false,
+            'hierarchical' => true,
+        ),
+        'supports'           => array('title', 'editor', 'thumbnail', 'revisions', 'author', $attributes),
+        'show_in_nav_menus'  => true,
+        'show_ui'            => true,
+        'menu_icon'          => 'dashicons-admin-post',
     );
 
     if (!empty($data['tax'])) {
@@ -93,25 +86,18 @@ function register_ctx($ctx, $data)
         'singular_name' => $data['labels'],
     ];
 
-    $args = [
-        "label" => $ctx,
-        "labels" => $labels,
-        "public" => true,
-        "publicly_queryable" => true,
-        "hierarchical" => true,
-        "show_ui" => true,
-        "show_in_menu" => true,
-        "show_in_nav_menus" => true,
-        "query_var" => true,
-        "rewrite" => ['slug' => $ctx, 'with_front' => true],
-        "show_admin_column" => true,
-        "show_in_rest" => true,
-        "rest_base" => "car_model_id",
-        "rest_controller_class" => "WP_REST_Terms_Controller",
-        "show_in_quick_edit" => true,
-        "show_in_graphql" => false,
-        'show_tagcloud' => true,
-    ];
+    $args = array(
+        'hierarchical'      => true,
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'rewrite'           => array(
+            'slug'          => $data['slug'],
+            'with_front'    => false,
+            'hierarchical'  => true,
+        ),
+    );
 
     if (!empty($data['cap'])) {
         $capabilities = [
