@@ -722,6 +722,16 @@ get_footer();
             });
         });
 
+        // Custom regex for email validation
+        $.validator.addMethod(
+            "customEmail",
+            function(value, element) {
+                var regex = /^[a-zA-Z0-9._%+-]+(?:.[a-zA-Z0-9._%+-]+)*@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/;
+                return this.optional(element) || regex.test(value);
+            },
+            "Please enter a valid email address"
+        );
+
         $("#personal-info-form").validate({
             rules: {
                 name: {
@@ -730,7 +740,8 @@ get_footer();
                 },
                 email: {
                     required: true,
-                    email: true
+                    customEmail: true,
+                    maxlength: 40,
                 },
                 address: {
                     required: true
