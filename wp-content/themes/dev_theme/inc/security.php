@@ -42,7 +42,7 @@ add_filter('xmlrpc_enabled', '__return_false');
 add_filter('upload_size_limit', 'PBP_increase_upload');
 function PBP_increase_upload($bytes)
 {
-    return 524288 * 4 * 100;
+    return 524288 * 4 * 10;
 }
 
 // Remove the Comments menu from the Dashboard
@@ -58,61 +58,6 @@ function disable_comments_and_pings_post_type()
     // Remove comments displayed in posts
     remove_post_type_support('post', 'comments');
     remove_post_type_support('post', 'trackbacks');
-
-    // Automatically update status in admin settings
-    if (get_option('default_ping_status') != 'closed') {
-        update_option('default_ping_status', 'closed');
-    }
-    if (get_option('default_comment_status') != 'closed') {
-        update_option('default_comment_status', 'closed');
-    }
-    if (get_option('comments_notify') != 0) {
-        update_option('comments_notify', 0);
-    }
-    if (get_option('moderation_notify') != 1) {
-        update_option('moderation_notify', 1);
-    }
-    if (get_option('comment_registration') != 1) {
-        update_option('comment_registration', 1);
-    }
-    if (get_option('close_comments_for_old_posts') != 1) {
-        update_option('close_comments_for_old_posts', 1);
-    }
-    if (get_option('require_name_email') != 1) {
-        update_option('require_name_email', 1);
-    }
-    if (get_option('show_comments_cookies_opt_in') != 1) {
-        update_option('show_comments_cookies_opt_in', 1);
-    }
-    if (get_option('thread_comments') != 1) {
-        update_option('thread_comments', 1);
-    }
-    if (get_option('page_comments') != 1) {
-        update_option('page_comments', 1);
-    }
-    if (get_option('close_comments_days_old') != 1) {
-        update_option('close_comments_days_old', 1);
-    }
-    if (get_option('default_pingback_flag') != 0) {
-        update_option('default_pingback_flag', 0);
-    }
-    if (get_option('comment_moderation') != 1) {
-        update_option('comment_moderation', 1);
-    }
-    if (get_option('comment_previously_approved') != 1) {
-        update_option('comment_previously_approved', 1);
-    }
-    if (get_option('comment_max_links') != 1) {
-        update_option('comment_max_links', 1);
-    }
-    if (get_option('show_avatars') != 0) {
-        update_option('show_avatars', 0);
-    }
-
-    // Always close the user registration function
-    if (get_option('users_can_register') == 1) {
-        update_option('users_can_register', 0);
-    }
 }
 add_action('admin_init', 'disable_comments_and_pings_post_type');
 
@@ -578,4 +523,25 @@ function write_log($log = null, $title = 'Debug')
         fwrite($file_handle, $text);
         fclose($file_handle);
     }
+}
+
+function pagination($query = null)
+{
+    global $wp_query;
+    $max_pages = $query ? $query->max_num_pages : $wp_query->max_num_pages;
+
+    echo '<div class="pagination">';
+    echo paginate_links(
+        array(
+            'total' => $max_pages,
+            'current' => max(1, get_query_var('paged')),
+            'end_size' => 2,
+            'mid_size' => 1,
+            'prev_text' => __('Prev', 'basetheme'),
+            'next_text' => __('Next', 'basetheme'),
+        )
+    );
+    echo '</div>';
+
+    wp_reset_postdata();
 }
