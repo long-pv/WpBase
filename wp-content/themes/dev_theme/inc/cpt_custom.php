@@ -45,7 +45,7 @@ function register_cpt($post_type, $data = [])
         'public'             => true,
         'has_archive'        => true,
         'rewrite'            => array(
-            'slug'       => $data['slug'],
+            'slug'       => $data['slug'] ?? $post_type,
             'with_front' => false,
             'hierarchical' => true,
         ),
@@ -93,7 +93,7 @@ function register_ctx($ctx, $data)
         'show_admin_column' => true,
         'query_var'         => true,
         'rewrite'           => array(
-            'slug'          => $data['slug'],
+            'slug'          => $data['slug'] ?? $ctx,
             'with_front'    => false,
             'hierarchical'  => true,
         ),
