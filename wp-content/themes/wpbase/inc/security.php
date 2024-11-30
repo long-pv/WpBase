@@ -42,7 +42,7 @@ add_filter('xmlrpc_enabled', '__return_false');
 add_filter('upload_size_limit', 'PBP_increase_upload');
 function PBP_increase_upload($bytes)
 {
-    return 524288 * 4 * 100;
+    return 524288 * 4 * 10;
 }
 
 // Remove the Comments menu from the Dashboard
@@ -60,79 +60,79 @@ function disable_comments_and_pings_post_type()
     remove_post_type_support('post', 'trackbacks');
 
     // Automatically update status in admin settings
-    if (get_option('default_ping_status') != 'closed') {
-        update_option('default_ping_status', 'closed');
-    }
-    if (get_option('default_comment_status') != 'closed') {
-        update_option('default_comment_status', 'closed');
-    }
-    if (get_option('comments_notify') != 0) {
-        update_option('comments_notify', 0);
-    }
-    if (get_option('moderation_notify') != 1) {
-        update_option('moderation_notify', 1);
-    }
-    if (get_option('comment_registration') != 1) {
-        update_option('comment_registration', 1);
-    }
-    if (get_option('close_comments_for_old_posts') != 1) {
-        update_option('close_comments_for_old_posts', 1);
-    }
-    if (get_option('require_name_email') != 1) {
-        update_option('require_name_email', 1);
-    }
-    if (get_option('show_comments_cookies_opt_in') != 1) {
-        update_option('show_comments_cookies_opt_in', 1);
-    }
-    if (get_option('thread_comments') != 1) {
-        update_option('thread_comments', 1);
-    }
-    if (get_option('page_comments') != 1) {
-        update_option('page_comments', 1);
-    }
-    if (get_option('close_comments_days_old') != 1) {
-        update_option('close_comments_days_old', 1);
-    }
-    if (get_option('default_pingback_flag') != 0) {
-        update_option('default_pingback_flag', 0);
-    }
-    if (get_option('comment_moderation') != 1) {
-        update_option('comment_moderation', 1);
-    }
-    if (get_option('comment_previously_approved') != 1) {
-        update_option('comment_previously_approved', 1);
-    }
-    if (get_option('comment_max_links') != 1) {
-        update_option('comment_max_links', 1);
-    }
-    if (get_option('show_avatars') != 0) {
-        update_option('show_avatars', 0);
-    }
+    // if (get_option('default_ping_status') != 'closed') {
+    //     update_option('default_ping_status', 'closed');
+    // }
+    // if (get_option('default_comment_status') != 'closed') {
+    //     update_option('default_comment_status', 'closed');
+    // }
+    // if (get_option('comments_notify') != 0) {
+    //     update_option('comments_notify', 0);
+    // }
+    // if (get_option('moderation_notify') != 1) {
+    //     update_option('moderation_notify', 1);
+    // }
+    // if (get_option('comment_registration') != 1) {
+    //     update_option('comment_registration', 1);
+    // }
+    // if (get_option('close_comments_for_old_posts') != 1) {
+    //     update_option('close_comments_for_old_posts', 1);
+    // }
+    // if (get_option('require_name_email') != 1) {
+    //     update_option('require_name_email', 1);
+    // }
+    // if (get_option('show_comments_cookies_opt_in') != 1) {
+    //     update_option('show_comments_cookies_opt_in', 1);
+    // }
+    // if (get_option('thread_comments') != 1) {
+    //     update_option('thread_comments', 1);
+    // }
+    // if (get_option('page_comments') != 1) {
+    //     update_option('page_comments', 1);
+    // }
+    // if (get_option('close_comments_days_old') != 1) {
+    //     update_option('close_comments_days_old', 1);
+    // }
+    // if (get_option('default_pingback_flag') != 0) {
+    //     update_option('default_pingback_flag', 0);
+    // }
+    // if (get_option('comment_moderation') != 1) {
+    //     update_option('comment_moderation', 1);
+    // }
+    // if (get_option('comment_previously_approved') != 1) {
+    //     update_option('comment_previously_approved', 1);
+    // }
+    // if (get_option('comment_max_links') != 1) {
+    //     update_option('comment_max_links', 1);
+    // }
+    // if (get_option('show_avatars') != 0) {
+    //     update_option('show_avatars', 0);
+    // }
 
     // Always close the user registration function
-    if (get_option('users_can_register') == 1) {
-        update_option('users_can_register', 0);
-    }
+    // if (get_option('users_can_register') == 1) {
+    //     update_option('users_can_register', 0);
+    // }
 }
 add_action('admin_init', 'disable_comments_and_pings_post_type');
 
 // Set cookie timeout 14 day
-add_filter('auth_cookie_expiration', 'cl_expiration_filter', 99, 3);
-function cl_expiration_filter($seconds, $user_id, $remember)
-{
+// add_filter('auth_cookie_expiration', 'cl_expiration_filter', 99, 3);
+// function cl_expiration_filter($seconds, $user_id, $remember)
+// {
 
-    if ($remember) {
-        $expiration = 14 * 24 * 60 * 60;
-    } else {
-        $expiration = 15 * 60;
-    }
+//     if ($remember) {
+//         $expiration = 14 * 24 * 60 * 60;
+//     } else {
+//         $expiration = 15 * 60;
+//     }
 
-    if (PHP_INT_MAX - time() < $expiration) {
-        $expiration = PHP_INT_MAX - time() - 5;
-    }
+//     if (PHP_INT_MAX - time() < $expiration) {
+//         $expiration = PHP_INT_MAX - time() - 5;
+//     }
 
-    return $expiration;
-}
+//     return $expiration;
+// }
 
 // Limit the type of files uploaded through the form
 function restrict_file_types($mimes)
@@ -154,7 +154,7 @@ function restrict_file_types($mimes)
 
     return $mimes;
 }
-add_filter('upload_mimes', 'restrict_file_types');
+// add_filter('upload_mimes', 'restrict_file_types');
 
 // redirect wp-admin and wp-register.php to the homepage
 add_action('init', 'custom_login_redirect');
@@ -167,10 +167,10 @@ function custom_login_redirect()
     }
 
     // prevent users from entering the wp-admin page
-    if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false && !is_admin() && !defined('DOING_AJAX') && !is_user_logged_in()) {
-        wp_redirect(home_url('/404'));
-        exit();
-    }
+    // if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false && !is_admin() && !defined('DOING_AJAX') && !is_user_logged_in()) {
+    //     wp_redirect(home_url('/404'));
+    //     exit();
+    // }
 
     // Particularly, urls containing xmlrpc.php give status 403
     if (strpos($_SERVER['REQUEST_URI'], 'xmlrpc.php') !== false) {
@@ -189,12 +189,12 @@ function custom_modify_text_field($value, $post_id, $field)
 add_filter('acf/update_value', 'custom_modify_text_field', 10, 3);
 
 // Apply a filter to the title before saving
-add_filter('title_save_pre', 'clear_tag_html_post_title');
-function clear_tag_html_post_title($title)
-{
-    $title = custom_replace_value($title);
-    return strip_tags($title);
-}
+// add_filter('title_save_pre', 'clear_tag_html_post_title');
+// function clear_tag_html_post_title($title)
+// {
+//     $title = custom_replace_value($title);
+//     return strip_tags($title);
+// }
 
 // Block CORS in WordPress
 add_action('init', 'add_cors_http_header');
@@ -291,7 +291,7 @@ function custom_login_logo()
       background-size: contain !important;
       width: 100% !important;
       height: 80px !important;
-      display: flex !important;
+      display: none !important;
       background-color: #fff;
     }
   </style>';
@@ -317,12 +317,12 @@ function redirect_author_pages()
 }
 
 // Remove the "View" button from the user's row actions
-function remove_user_row_actions($actions)
-{
-    unset($actions['view']);
-    return $actions;
-}
-add_filter('user_row_actions', 'remove_user_row_actions', 10, 1);
+// function remove_user_row_actions($actions)
+// {
+//     unset($actions['view']);
+//     return $actions;
+// }
+// add_filter('user_row_actions', 'remove_user_row_actions', 10, 1);
 
 // allow script iframe tag within posts
 function allow_iframe_script_tags($allowedposttags)
@@ -409,13 +409,6 @@ function allow_iframe_script_tags($allowedposttags)
     return $allowedposttags;
 }
 add_filter("wp_kses_allowed_html", "allow_iframe_script_tags", 1);
-
-// Hide Tags
-// function hide_tags()
-// {
-//     register_taxonomy('post_tag', array());
-// }
-// add_action('init', 'hide_tags');
 
 // setting image in content editor
 function set_default_image_settings_on_login($user_login, $user)

@@ -61,46 +61,6 @@ function disable_comments_and_pings_post_type()
 }
 add_action('admin_init', 'disable_comments_and_pings_post_type');
 
-// Set cookie timeout 14 day
-add_filter('auth_cookie_expiration', 'cl_expiration_filter', 99, 3);
-function cl_expiration_filter($seconds, $user_id, $remember)
-{
-
-    if ($remember) {
-        $expiration = 14 * 24 * 60 * 60;
-    } else {
-        $expiration = 15 * 60;
-    }
-
-    if (PHP_INT_MAX - time() < $expiration) {
-        $expiration = PHP_INT_MAX - time() - 5;
-    }
-
-    return $expiration;
-}
-
-// Limit the type of files uploaded through the form
-function restrict_file_types($mimes)
-{
-    $allowed_mime_types = array(
-        'jpg|jpeg|jpe' => 'image/jpeg',
-        'png' => 'image/png',
-        'gif' => 'image/gif',
-        'pdf' => 'application/pdf',
-        'mp4' => 'video/mp4',
-        // 'gif' => 'image/gif',
-        // 'doc' => 'application/msword',
-        // 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        // 'csv' => 'text/csv',
-        // 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
-
-    $mimes = array_intersect($allowed_mime_types, $mimes);
-
-    return $mimes;
-}
-add_filter('upload_mimes', 'restrict_file_types');
-
 // redirect wp-admin and wp-register.php to the homepage
 add_action('init', 'custom_login_redirect');
 function custom_login_redirect()
@@ -126,14 +86,6 @@ function custom_modify_text_field($value, $post_id, $field)
     return $value_change;
 }
 add_filter('acf/update_value', 'custom_modify_text_field', 10, 3);
-
-// Apply a filter to the title before saving
-add_filter('title_save_pre', 'clear_tag_html_post_title');
-function clear_tag_html_post_title($title)
-{
-    $title = custom_replace_value($title);
-    return strip_tags($title);
-}
 
 // Block CORS in WordPress
 add_action('init', 'add_cors_http_header');
@@ -225,13 +177,7 @@ function custom_login_logo()
 {
     echo '<style type="text/css">
     #login h1 a {
-      background-image: url(' . get_template_directory_uri() . '/assets/images/logo.svg) !important;
-      background-position: center center !important;
-      background-size: contain !important;
-      width: 100% !important;
-      height: 80px !important;
       display: none !important;
-      background-color: #fff;
     }
   </style>';
 }
@@ -254,14 +200,6 @@ function redirect_author_pages()
         exit();
     }
 }
-
-// Remove the "View" button from the user's row actions
-function remove_user_row_actions($actions)
-{
-    unset($actions['view']);
-    return $actions;
-}
-add_filter('user_row_actions', 'remove_user_row_actions', 10, 1);
 
 // allow script iframe tag within posts
 function allow_iframe_script_tags($allowedposttags)
@@ -376,31 +314,6 @@ function set_default_image_settings_on_login($user_login, $user)
 
 add_action('wp_login', 'set_default_image_settings_on_login', 10, 2);
 
-add_action('admin_footer', 'custom_script_admin');
-function custom_script_admin()
-{
-?>
-    <script>
-        jQuery(document).ready(function($) {
-            // Validate post title
-            if ($('#post').length > 0) {
-                $('#post').submit(function() {
-                    var title_post = $('#title').val();
-                    if (title_post.trim() === '') {
-                        alert('Please enter "Title".');
-                        $('#title').focus();
-                        return false;
-                    }
-                });
-            }
-
-            // Prevent users from using weak passwords
-            $(".pw-weak").remove();
-        });
-    </script>
-<?php
-}
-
 function remove_styles_and_scripts_from_content($content)
 {
     $content = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $content);
@@ -418,117 +331,3 @@ function add_dropdown_arrow_to_menu($items, $args)
     return $items;
 }
 add_filter('wp_nav_menu_items', 'add_dropdown_arrow_to_menu', 10, 2);
-
-// filter image url
-function img_url($img = '', $size = 'medium')
-{
-    $size = strtolower($size);
-
-    if (empty($size) || !in_array($size, ['thumbnail', 'medium', 'large', 'full'])) {
-        $size = 'medium';
-    }
-
-    if (is_array($img) && !empty($img['ID'])) {
-        $url = wp_get_attachment_image_url($img['ID'], $size);
-    } elseif (is_numeric($img)) {
-        $url = wp_get_attachment_image_url($img, $size);
-    } elseif (filter_var($img, FILTER_VALIDATE_URL)) {
-        $id = attachment_url_to_postid($img);
-        $url = $id ? wp_get_attachment_image_url($id, $size) : $img;
-    } else {
-        $url = '';
-    }
-    return $url ?: NO_IMAGE;
-}
-
-// Setup theme setting page
-if (function_exists('acf_add_options_page')) {
-    $name_option = 'Theme Settings';
-    acf_add_options_page(
-        array(
-            'page_title' => $name_option,
-            'menu_title' => $name_option,
-            'menu_slug' => 'theme-settings',
-            'capability' => 'edit_posts',
-            'redirect' => false,
-            'position' => 80
-        )
-    );
-}
-
-function activate_my_plugins()
-{
-    $plugins = [
-        'advanced-custom-fields-pro\acf.php',
-        'classic-editor\classic-editor.php',
-        'duplicator\duplicator.php',
-        'duplicate-post\duplicate-post.php',
-        'wordpress-seo\wp-seo.php',
-        'wp-cerber\wp-cerber.php',
-        'all-in-one-wp-migration-master\all-in-one-wp-migration.php',
-    ];
-
-    foreach ($plugins as $plugin) {
-        $plugin_path = WP_PLUGIN_DIR . '/' . $plugin;
-
-        if (file_exists($plugin_path) && !is_plugin_active($plugin)) {
-            activate_plugin($plugin);
-        }
-    }
-}
-add_action('admin_init', 'activate_my_plugins');
-
-// stop upgrading wp cerber plugin
-add_filter('site_transient_update_plugins', 'disable_plugins_update');
-function disable_plugins_update($value)
-{
-    // disable acf pro
-    if (isset($value->response['advanced-custom-fields-pro/acf.php'])) {
-        unset($value->response['advanced-custom-fields-pro/acf.php']);
-    }
-
-    // disable All-in-One WP Migration
-    if (isset($value->response['all-in-one-wp-migration-master/all-in-one-wp-migration.php'])) {
-        unset($value->response['all-in-one-wp-migration-master/all-in-one-wp-migration.php']);
-    }
-    return $value;
-}
-add_filter('auto_update_plugin', '__return_false');
-
-// The function "write_log" is used to write debug logs to a file in PHP.
-function write_log($log = null, $title = 'Debug')
-{
-    if ($log) {
-        if (is_array($log) || is_object($log)) {
-            $log = print_r($log, true);
-        }
-
-        $timestamp = date('Y-m-d H:i:s');
-        $text = '[' . $timestamp . '] : ' . $title . ' - Log: ' . $log . "\n";
-        $log_file = WP_CONTENT_DIR . '/debug.log';
-        $file_handle = fopen($log_file, 'a');
-        fwrite($file_handle, $text);
-        fclose($file_handle);
-    }
-}
-
-function pagination($query = null)
-{
-    global $wp_query;
-    $max_pages = $query ? $query->max_num_pages : $wp_query->max_num_pages;
-
-    echo '<div class="pagination">';
-    echo paginate_links(
-        array(
-            'total' => $max_pages,
-            'current' => max(1, get_query_var('paged')),
-            'end_size' => 2,
-            'mid_size' => 1,
-            'prev_text' => __('Prev', 'basetheme'),
-            'next_text' => __('Next', 'basetheme'),
-        )
-    );
-    echo '</div>';
-
-    wp_reset_postdata();
-}

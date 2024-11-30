@@ -6,7 +6,8 @@ function register_cpt_post_types()
             'labels' => __('Event', 'basetheme'),
             'slug' => 'su_kien',
             'cap' => false,
-            'hierarchical' => false
+            'hierarchical' => false,
+            'position' => false
         ],
     ];
 
@@ -32,6 +33,7 @@ add_action('init', 'register_cpt_post_types');
 function register_cpt($post_type, $data = [])
 {
     $hierarchical = !empty($data['hierarchical']) ? $data['hierarchical'] : false;
+    $position = !empty($data['position']) ? $data['position'] : 30;
     $attributes = $hierarchical == true ? 'page-attributes' : '';
 
     $labels = [
@@ -45,14 +47,16 @@ function register_cpt($post_type, $data = [])
         'public'             => true,
         'has_archive'        => true,
         'rewrite'            => array(
-            'slug'       => $data['slug'] ?? $post_type,
-            'with_front' => false,
-            'hierarchical' => true,
+            'slug'           => $data['slug'] ?? $post_type,
+            'with_front'     => false,
+            'hierarchical'   => true,
         ),
         'supports'           => array('title', 'editor', 'thumbnail', 'revisions', 'author', $attributes),
         'show_in_nav_menus'  => true,
         'show_ui'            => true,
         'menu_icon'          => 'dashicons-admin-post',
+        'archive_title'      => $data['labels'],
+        'menu_position'      => $position,
     );
 
     if (!empty($data['tax'])) {
