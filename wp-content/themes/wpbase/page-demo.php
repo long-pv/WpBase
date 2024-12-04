@@ -597,6 +597,52 @@ get_header();
         </div>
     </div>
 
+    <div class="pb-5">
+        <h2>Phân trang bằng Ajax</h2>
+
+        <div>
+            <?php
+            $args = array(
+                'post_type' => 'post',
+                'posts_per_page' => 3,
+                'paged' => 1,
+            );
+            $query = new WP_Query($args);
+            if ($query->have_posts()):
+            ?>
+                <ul class="post_list">
+                    <?php
+                    while ($query->have_posts()):
+                        $query->the_post();
+                    ?>
+                        <li>
+                            <?php the_title(); ?>
+                        </li>
+                    <?php
+                    endwhile;
+                    ?>
+                </ul>
+
+                <?php
+                echo '<div class="pagination pagination_ajax justify-content-start">';
+                echo paginate_links(
+                    array(
+                        'total'   => $query->max_num_pages,
+                        'current' => 1,
+                        'end_size' => 2,
+                        'mid_size' => 1,
+                        'prev_text' => __('Trước', 'basetheme'),
+                        'next_text' => __('Sau', 'basetheme'),
+                    )
+                );
+                echo '</div>';
+                ?>
+            <?php
+            endif;
+            ?>
+        </div>
+    </div>
+
 </div>
 
 <?php
@@ -635,6 +681,62 @@ get_footer();
                 return integer_part + "." + decimal_part;
             }
         }
+
+        // pagination_ajax
+        $(document).on('click', '.pagination_ajax .page-numbers', function(e) {
+            e.preventDefault();
+
+            var paged_current = $('.page-numbers.current').text() ?? 1;
+            paged_current = parseInt(paged_current);
+            var paged = 1;
+
+            if ($(this).hasClass('next')) {
+                paged = paged_current + 1;
+            } else if ($(this).hasClass('prev')) {
+                paged = paged_current - 1;
+            } else if ($(this).hasClass('dots')) {
+                return 0;
+            } else {
+                paged = $(this).text() ?? 1;
+            }
+
+            $.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'ajax_pagination_load_post',
+                    paged: paged,
+                },
+                beforeSend: function() {
+                    $("#ajax-loader").show();
+                },
+                success: function(response) {
+                    $('.post_list').html(response);
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi gửi dữ liệu.');
+                },
+                complete: function() {
+                    $("#ajax-loader").hide();
+                }
+            });
+
+            $.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'ajax_pagination',
+                    paged: paged,
+                },
+                success: function(response) {
+                    $('.pagination_ajax').html(response);
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi gửi dữ liệu.');
+                },
+            });
+        });
+        // end pagination_ajax
 
         $('#send_mail').click(function(e) {
             e.preventDefault();

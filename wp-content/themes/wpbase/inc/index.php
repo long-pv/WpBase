@@ -33,6 +33,7 @@ require get_template_directory() . '/inc/favorite_posts.php';
 require get_template_directory() . '/inc/login_google.php';
 require get_template_directory() . '/inc/login_facebook.php';
 require get_template_directory() . '/inc/check_recaptcha.php';
+require get_template_directory() . '/inc/pagination_ajax.php';
 // woocommerce
 if (class_exists('WooCommerce')) {
     require get_template_directory() . '/inc/woo/index.php';
