@@ -28,6 +28,11 @@ require get_template_directory() . '/inc/countdown_date.php';
 require get_template_directory() . '/inc/intlTelInput.php';
 require get_template_directory() . '/inc/export_pdf/index.php';
 require get_template_directory() . '/inc/download_zip.php';
+require get_template_directory() . '/inc/show_admin_bar_subscriber.php';
+require get_template_directory() . '/inc/favorite_posts.php';
+require get_template_directory() . '/inc/login_google.php';
+require get_template_directory() . '/inc/login_facebook.php';
+require get_template_directory() . '/inc/check_recaptcha.php';
 // woocommerce
 if (class_exists('WooCommerce')) {
     require get_template_directory() . '/inc/woo/index.php';

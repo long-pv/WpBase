@@ -57,25 +57,25 @@ function add_custom_video_popup_script()
 }
 add_action('wp_footer', 'add_custom_video_popup_script', 99);
 
-function video_popup($src_iframe, $thumb = null)
+function getYoutubeEmbedUrl($input)
 {
-    function getYoutubeEmbedUrl($input)
-    {
-        if (filter_var($input, FILTER_VALIDATE_URL)) {
-            return $input;
-        }
-
-        if (preg_match('/<iframe[^>]+src=["\']([^"\']+)["\']/i', $input, $matches)) {
-            $url = $matches[1];
-            $parsedUrl = parse_url($url);
-            $cleanUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'];
-
-            return $cleanUrl;
-        }
-
-        return NO_IMAGE;
+    if (filter_var($input, FILTER_VALIDATE_URL)) {
+        return $input;
     }
 
+    if (preg_match('/<iframe[^>]+src=["\']([^"\']+)["\']/i', $input, $matches)) {
+        $url = $matches[1];
+        $parsedUrl = parse_url($url);
+        $cleanUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'];
+
+        return $cleanUrl;
+    }
+
+    return NO_IMAGE;
+}
+
+function video_popup($src_iframe, $thumb = null)
+{
     $url = getYoutubeEmbedUrl($src_iframe);
     ?>
     <div class="videoBlock">
