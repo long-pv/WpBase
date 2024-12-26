@@ -119,25 +119,57 @@ get_header();
 							</div>
 						</div>
 
-						<div class="product_info_price h1">
-							<span class="price_title">Giá:</span>
-							<?php
-							$regular_price = $product->get_regular_price();
-							$sale_price = $product->get_sale_price();
+						<?php
 
-							if ($regular_price == 0): ?>
-								<span class="contact-price">Liên hệ</span>
-							<?php elseif ($product->is_on_sale()): ?>
-								<span class="regular-price-sale">
-									<?php echo wc_price($regular_price); ?>
-								</span>
-								<span class="sale-price" style="color: red; margin-left: 10px;">
-									<?php echo wc_price($sale_price); ?>
-								</span>
-							<?php else: ?>
-								<span class="regular-price"><?php echo wc_price($regular_price); ?></span>
-							<?php endif; ?>
-						</div>
+						if ($product->is_type('variable')) {
+							$available_variations = $product->get_available_variations();
+
+							$min_price = null;
+							$max_price = null;
+
+							foreach ($available_variations as $variation) {
+								$variation_price = $variation['display_price'];
+
+								if ($min_price === null || $variation_price < $min_price) {
+									$min_price = $variation_price;
+								}
+
+								if ($max_price === null || $variation_price > $max_price) {
+									$max_price = $variation_price;
+								}
+							}
+
+							if ($min_price && $max_price) {
+								if ($min_price === $max_price) {
+									echo '<p>Giá: ' . wc_price($min_price) . '</p>';
+								} else {
+									echo '<p>Giá từ: ' . wc_price($min_price) . ' đến ' . wc_price($max_price) . '</p>';
+								}
+							}
+						} else {
+						?>
+							<div class="product_info_price h1">
+								<span class="price_title">Giá:</span>
+								<?php
+								$regular_price = $product->get_regular_price();
+								$sale_price = $product->get_sale_price();
+
+								if ($regular_price == 0): ?>
+									<span class="contact-price">Liên hệ</span>
+								<?php elseif ($product->is_on_sale()): ?>
+									<span class="regular-price-sale">
+										<?php echo wc_price($regular_price); ?>
+									</span>
+									<span class="sale-price" style="color: red; margin-left: 10px;">
+										<?php echo wc_price($sale_price); ?>
+									</span>
+								<?php else: ?>
+									<span class="regular-price"><?php echo wc_price($regular_price); ?></span>
+								<?php endif; ?>
+							</div>
+						<?php
+						}
+						?>
 
 						<?php
 						$short_description = $product->get_short_description();
