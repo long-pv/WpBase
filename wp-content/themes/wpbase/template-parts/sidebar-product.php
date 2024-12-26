@@ -45,23 +45,24 @@
         ]);
 
         if (!empty($tags)):
-            ?>
+        ?>
             <div class="product-tags-checkboxes">
                 <h3>Chọn tags</h3>
                 <?php
                 foreach ($tags as $tag):
                     $checked = in_array($tag->term_id, $selected_tags) ? 'checked' : '';
-                    ?>
+                ?>
                     <label>
                         <input type="checkbox" name="product_tags[]" value="<?php echo esc_attr($tag->term_id); ?>" <?php echo $checked; ?>>
-                        <?php echo esc_html($tag->name); ?>
+                        <?php echo esc_html($tag->name); ?> 
+                        (<?php echo $tag->count ?? 0; ?>)
                     </label>
                     <br>
-                    <?php
+                <?php
                 endforeach;
                 ?>
             </div>
-            <?php
+        <?php
         endif;
         ?>
 
@@ -93,7 +94,7 @@
                     <?php
                     $terms = get_terms(array(
                         'taxonomy' => 'pa_' . $attribute->attribute_name,
-                        'hide_empty' => true,
+                        'hide_empty' => false,
                     ));
                     ?>
                     <?php if (!empty($terms)): ?>
@@ -104,6 +105,7 @@
                                     <input type="checkbox" name="product_attributes[]" value="<?php echo esc_attr($term->term_id); ?>"
                                         <?php echo (isset($_GET['product_attributes']) && in_array($term->term_id, $_GET['product_attributes'])) ? 'checked' : ''; ?>>
                                     <?php echo esc_html($term->name); ?>
+                                    (<?php echo $term->count ?? 0; ?>)
                                 </label>
                                 <br>
                             <?php endforeach; ?>
