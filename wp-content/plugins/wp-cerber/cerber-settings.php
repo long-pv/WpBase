@@ -669,6 +669,24 @@ function cerber_upgrade_settings( $ver = '' ) {
 
 	$settings = array_intersect_key( $settings, $defs );
 
+	// New format of some settings
+
+	if ( $settings['botswhite'] ) {
+		foreach ( $settings['botswhite'] as &$item ) {
+			if ( $item[0] == '{' && substr( $item, - 1 ) == '}' ) {
+				$item = preg_replace( '~\\\/~', '/', $item );
+			}
+		}
+	}
+
+	if ( $settings['tiwhite'] ) {
+		foreach ( $settings['tiwhite'] as &$item ) {
+			if ( $item[0] == '{' && substr( $item, - 1 ) == '}' ) {
+				$item = preg_replace( '~\\\/~', '/', $item );
+			}
+		}
+	}
+
 	// @since 9.3.4 all WP Cerber settings use a new format
 
 	cerber_load_admin_code();

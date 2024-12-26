@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The template for displaying all single posts
  *
@@ -36,7 +37,7 @@ get_header();
 					<?php
 					$attachment_ids = $product->get_gallery_image_ids();
 					if ($attachment_ids):
-						?>
+					?>
 						<div class="product-gallery">
 							<?php foreach ($attachment_ids as $attachment_id): ?>
 								<div class="gallery-item">
@@ -84,9 +85,9 @@ get_header();
 
 							if ($regular_price > 0) {
 								$discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
-								?>
+						?>
 								<div class="sale_notification">Sale <?php echo $discount_percentage; ?>%</div>
-								<?php
+						<?php
 							}
 						}
 						?>
@@ -142,7 +143,7 @@ get_header();
 						$short_description = $product->get_short_description();
 						if (!empty($short_description)):
 							$short_description = apply_filters('the_content', $short_description);
-							?>
+						?>
 							<div class="product_summary">
 								<h3 class="h4 product_summary_title">
 									Đặc điểm nổi bật
@@ -181,16 +182,16 @@ get_header();
 							if ($product->is_in_stock()):
 								woocommerce_simple_add_to_cart();
 							else:
-								?>
+						?>
 								<p>Hết hàng</p>
-								<?php
+						<?php
 							endif;
 						}
 						?>
 
 						<?php
 						if (!empty($categories)):
-							?>
+						?>
 							<div class="product_cats">
 								Danh mục:
 								<?php
@@ -201,7 +202,7 @@ get_header();
 								echo implode(', ', $category_links);
 								?>
 							</div>
-							<?php
+						<?php
 						endif;
 						?>
 					</div>
@@ -227,6 +228,11 @@ get_header();
 							Thông số kỹ thuật
 						</a>
 					</li>
+					<li class="nav-item">
+						<a class="nav-link" data-toggle="tab" href="#tabs-3" role="tab">
+							Đánh giá
+						</a>
+					</li>
 				</ul>
 				<div class="tab-content">
 					<div class="tab-pane active" id="tabs-1" role="tabpanel">
@@ -241,30 +247,134 @@ get_header();
 					</div>
 					<div class="tab-pane" id="tabs-2" role="tabpanel">
 						<?php
-						$specifications = get_field('specifications');
-						if ($specifications):
-							?>
+						$product_attributes = $product->get_attributes();
+						if (! empty($product_attributes)) :
+						?>
 							<div class="editor editor_table_striped">
-								<table>
-									<tbody>
-										<?php foreach ($specifications as $item): ?>
-											<tr>
-												<td width="30%">
-													<?php echo $item['title']; ?>
-												</td>
-												<td>
-													<?php echo $item['content']; ?>
-												</td>
-											</tr>
-											<?php
-										endforeach;
-										?>
-									</tbody>
+								<table class="woocommerce-product-attributes shop_attributes" aria-label="<?php esc_attr_e('Product Details', 'woocommerce'); ?>">
+									<?php foreach ($product_attributes as $product_attribute_key => $product_attribute) : ?>
+										<tr class="woocommerce-product-attributes-item woocommerce-product-attributes-item--<?php echo esc_attr($product_attribute_key); ?>">
+											<th class="woocommerce-product-attributes-item__label" scope="row"><?php echo wp_kses_post($product_attribute->get_name()); ?></th>
+											<td class="woocommerce-product-attributes-item__value">
+												<?php
+												// Kiểm tra xem thuộc tính có phải là taxonomy không
+												if ($product_attribute->is_taxonomy()) {
+													$terms = wc_get_product_terms($product->get_id(), $product_attribute->get_name(), array('fields' => 'names'));
+													echo wp_kses_post(implode(', ', $terms));
+												} else {
+													// Nếu là thuộc tính tùy chỉnh, hiển thị giá trị
+													echo wp_kses_post(implode(', ', $product_attribute->get_options()));
+												}
+												?>
+											</td>
+										</tr>
+									<?php endforeach; ?>
 								</table>
 							</div>
 						<?php else: ?>
 							<p>Nội dung đang được cập nhật...</p>
 						<?php endif; ?>
+					</div>
+					<div class="tab-pane" id="tabs-3" role="tabpanel">
+						<?php
+						$args = array(
+							'post_id' => $product_id, // ID sản phẩm
+							'status'  => array('approve', 'hold'),   // Chỉ lấy các đánh giá đã được duyệt
+							'type'    => 'review',    // Lọc chỉ các đánh giá
+						);
+						$comments = get_comments($args);
+						?>
+						<div class="product-reviews">
+							<?php if ($comments) : ?>
+								<h3>Các đánh giá:</h3>
+								<ul class="review-list">
+									<?php foreach ($comments as $comment) : ?>
+										<li class="review-item">
+											<div class="review-author">
+												<strong><?php echo esc_html($comment->comment_author); ?></strong>
+											</div>
+											<div class="review-date">
+												<?php echo esc_html(date('d/m/Y', strtotime($comment->comment_date))); ?>
+											</div>
+											<div class="review-content">
+												<?php echo esc_html($comment->comment_content); ?>
+											</div>
+											<div class="review-rating">
+												<?php
+												$rating = intval(get_comment_meta($comment->comment_ID, 'rating', true));
+												if ($rating) {
+													echo '<div class="star-rating-item" style="color: #f5b301;">';
+													for ($i = 1; $i <= 5; $i++) {
+														echo $i <= $rating ? '★' : '';
+													}
+													echo '</div>';
+												}
+												?>
+											</div>
+										</li>
+									<?php endforeach; ?>
+								</ul>
+							<?php else : ?>
+								<p>Chưa có đánh giá nào cho sản phẩm này.</p>
+							<?php endif; ?>
+
+							<!-- Phần form đánh giá -->
+							<?php
+							if (comments_open() && is_user_logged_in()) :
+								$user_id = get_current_user_id(); // Lấy ID người dùng hiện tại
+								$args = array(
+									'post_id' => $product_id,  // ID sản phẩm
+									'user_id' => $user_id,     // Kiểm tra đánh giá của người dùng hiện tại
+									'type'    => 'review',     // Chỉ lấy các đánh giá
+									'status'  => array('approve', 'hold'),    // Chỉ lấy đánh giá đã duyệt
+								);
+								$user_reviews = get_comments($args);
+								if (empty($user_reviews)) :
+							?>
+									<div class="review-form">
+										<h3>Gửi đánh giá của bạn:</h3>
+										<form action="<?php echo site_url('/wp-comments-post.php'); ?>" method="post" class="comment-form">
+											<div class="comment-form-rating">
+												<label for="rating">Xếp hạng:</label>
+												<div class="rating-options">
+													<label>
+														<input type="radio" name="rating" value="5" required checked>
+														5 Sao - Xuất sắc
+													</label>
+													<label>
+														<input type="radio" name="rating" value="4">
+														4 Sao - Tốt
+													</label>
+													<label>
+														<input type="radio" name="rating" value="3">
+														3 Sao - Bình thường
+													</label>
+													<label>
+														<input type="radio" name="rating" value="2">
+														2 Sao - Tệ
+													</label>
+													<label>
+														<input type="radio" name="rating" value="1">
+														1 Sao - Rất tệ
+													</label>
+												</div>
+											</div>
+											<p class="comment-form-comment">
+												<label for="comment">Nội dung đánh giá:</label>
+												<textarea name="comment" id="comment" rows="5" required></textarea>
+											</p>
+											<p class="form-submit">
+												<input type="submit" name="submit" id="submit" class="submit" value="Gửi đánh giá">
+												<input type="hidden" name="comment_post_ID" value="<?php echo $product_id; ?>">
+												<input type="hidden" name="comment_parent" value="0">
+											</p>
+										</form>
+									</div>
+							<?php
+								endif;
+							endif;
+							?>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -295,7 +405,7 @@ $args = array(
 $query = new WP_Query($args);
 
 if ($query->have_posts()):
-	?>
+?>
 	<section class="secSpace pt-0">
 		<div class="container">
 			<div class="sec_heading">
@@ -325,7 +435,7 @@ if ($query->have_posts()):
 get_footer();
 ?>
 <script>
-	jQuery(document).ready(function ($) {
+	jQuery(document).ready(function($) {
 		$(".product_list_slider").slick({
 			slidesToShow: 4,
 			slidesToScroll: 2,
@@ -333,8 +443,7 @@ get_footer();
 			autoplaySpeed: 5000,
 			arrows: true,
 
-			responsive: [
-				{
+			responsive: [{
 					breakpoint: 1200,
 					settings: {
 						slidesToShow: 2,

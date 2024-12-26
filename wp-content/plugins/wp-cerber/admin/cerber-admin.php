@@ -1004,21 +1004,21 @@ function cerber_show_files( $ext, $scan_id ) {
 /**
  * @param string $type
  *
- * @return string[]
+ * @return string|WP_Error
  *
  * @since 8.6.4
  */
 function cerber_generate_insights( $type ) {
 
 	if ( ! $scan_id = crb_scan_last_full() ) {
-		return array( 'html' => crb_scan_no_message() );
+		return crb_scan_no_message();
 	}
 
 	$key = 'scan_insights_' . $type;
 
 	// Cache
 	if ( $report = cerber_get_set( $key, $scan_id, false ) ) {
-		return array( 'html' => $report );
+		return $report;
 	}
 
 	switch ( $type ) {
@@ -1041,13 +1041,7 @@ function cerber_generate_insights( $type ) {
 		$report = 'ERROR: Unknown report';
 	}
 
-	$response = array( 'html' => $report, 'error' => '' );
-
-	/*if ( $_REQUEST['request'] < 2 ) {
-		$response['continue'] = 1;
-	}*/
-
-	return $response;
+	return $report;
 }
 
 function crb_scan_insights_brief( $scan_id ) {
@@ -1111,7 +1105,7 @@ function crb_scan_insights_brief( $scan_id ) {
 			__( 'Path', 'wp-cerber' ),
 			__( 'Files', 'wp-cerber' ),
 			__( 'Space Occupied', 'wp-cerber' )
-		), '', 'crb_align_right crb_align_left_2', 'crb-monospace' );
+		), '', 'crb-table-align-right-3', 'crb-monospace' );
 
 }
 
@@ -1394,29 +1388,50 @@ function crb_make_file_table( $files ) {
 /**
  * Generates an HTML table
  *
- * @param $heading
- * @param $rows
- * @param string $id
- * @param $class
- * @param string $body_class
- * @param string $head_class
- * @param bool $show_footer
+ * @param array $rows Rows of the table. Each row is an array, and each cell can be a string or array ['class' => '', 'cell' => ''].
+ * @param array $heading Optional array of column headings.
+ * @param string $id Optional ID for the table.
+ * @param string $class Optional class for the table.
+ * @param string $body_class Optional class for the table body.
+ * @param string $head_class Optional class for the table header.
+ * @param bool $show_footer Whether to show a footer with the same content as the header.
  *
- * @return string
+ * @return string HTML code of the table
+ *
  * @since 8.6.4
- *
  */
-function cerber_make_table( $rows, $heading = array(), $id = '', $class = '', $body_class = '', $head_class = '', $show_footer = true ) {
+function cerber_make_table( array $rows, array $heading = array(), string $id = '', string $class = '', string $body_class = '', string $head_class = '', $show_footer = true ) {
 
 	$tr = array();
+
 	foreach ( $rows as $row ) {
-		$tr[] = '<td>' . implode( '</td><td>', $row ) . '</td>';
+
+        $tr_cells = array();
+
+		foreach ( $row as $cell ) {
+
+			if ( is_array( $cell ) ) {
+				$cell_class = crb_generic_escape( $cell['class'] ?? '' );
+				$val        = $cell['cell'] ?? 'none';
+			}
+            else {
+				$cell_class = '';
+				$val        = $cell;
+			}
+
+			$tr_cells [] = '<td class="' . $cell_class . '">' . $val . '</td>';
+		}
+
+		$tr[] = implode( '', $tr_cells );
 	}
 
 	$tfoot = '';
 	$thead = '';
 
 	if ( $heading ) {
+
+		$head_class = crb_generic_escape( $head_class );
+
 		$titles = '<tr><th>' . implode( '</th><th>', $heading ) . '</th></tr>';
 		$thead = '<thead class="' . $head_class . '">' . $titles . '</thead>';
 
@@ -1425,9 +1440,9 @@ function cerber_make_table( $rows, $heading = array(), $id = '', $class = '', $b
 		}
 	}
 
-	$id = ( $id ) ? 'id="' . $id . '"' : '';
+	$id = ( $id ) ? 'id="' . crb_generic_escape( $id ) . '"' : '';
 
-	return '<table ' . $id . ' class="widefat crb-table cerber-margin ' . $class . '">' . $thead . $tfoot . '<tbody class="' . $body_class . '"><tr>' . implode( '</tr><tr>', $tr ) . '</tr></tbody></table>';
+	return '<table ' . $id . ' class="widefat crb-table cerber-margin ' . crb_generic_escape( $class ) . '">' . $thead . $tfoot . '<tbody class="' . crb_generic_escape( $body_class ) . '"><tr>' . implode( '</tr><tr>', $tr ) . '</tr></tbody></table>';
 
 }
 

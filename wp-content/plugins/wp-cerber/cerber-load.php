@@ -77,10 +77,6 @@ const WP_COMMENT_SCRIPT = 'wp-comments-post.php';
 
 const GOO_RECAPTCHA_URL = 'https://www.google.com/recaptcha/api/siteverify';
 
-const CERBER_REQ_PHP = '7.0';
-const CERBER_REQ_WP = '4.9';
-const CERBER_TECH = 'https://cerber.tech/';
-
 const CERBER_CIREC_LIMIT = 30; // Upper limit for allowed nested values during inspection for malware
 
 const CRB_USER_SET = 'cerber_user';
@@ -92,16 +88,18 @@ const CRB_CNTX_SAFE = 1;
 const CRB_CNTX_NEXUS = 2;
 
 const CRB_ACT_PARAMS = array(
-	'filter_activity' => 'activity',
-	'filter_status'   => 'ac_status',
-	'filter_set'      => false,
-	'filter_ip'       => 'ip',
-	'filter_login'    => 'user_login',
-	'filter_user'     => 'user_id',
-	'search_activity' => false,
-	'filter_sid'      => 'session_id',
-	'search_url'      => false,
-	'filter_country'  => 'country',
+	'filter_activity'   => 'activity',
+	'filter_status'     => 'ac_status',
+	'filter_set'        => false,
+	'filter_ip'         => 'ip',
+	'filter_login'      => 'user_login',
+	'filter_user'       => 'user_id',
+	'search_activity'   => false,
+	'filter_sid'        => 'session_id',
+	'search_url'        => false,
+	'filter_country'    => 'country',
+	'filter_time_begin' => false,
+	'filter_time_end'   => false,
 );
 
 // Note: values is not specified yet
@@ -123,6 +121,8 @@ const CRB_TRF_PARAMS = array(
 	'filter_set'            => 'to_be_specified',
 	'filter_errors'         => 'to_be_specified',
 );
+
+const CRB_ACT_HASH = 'activity_table_hash';
 
 require_once( __DIR__ . '/cerber-pluggable.php' );
 require_once( __DIR__ . '/cerber-common.php' );
@@ -405,6 +405,8 @@ class WP_Cerber {
 			}
 			else {
 				$msg = sprintf( _n( 'You have %d login attempt remaining.', 'You have %d login attempts remaining.', $remain, 'wp-cerber' ), $remain );
+
+				__( 'You have %d login attempts remaining.', 'wp-cerber' ); // registration for _n()
 			}
 
 			return apply_filters( 'cerber_msg_remain', $msg, $remain );
@@ -1260,8 +1262,8 @@ function cerber_is_app_passwords( $var, $user ) {
 /**
  * Stops (restricts) authentication of a user once the user identified (existing users)
  *
- * @param WP_User $user
- * @param bool $app If true the user is authenticated with an application password
+ * @param WP_User $user Valid WP_User object to check
+ * @param bool $app If set to true, the user has been authenticated with an application password
  *
  * @return WP_User|WP_Error
  */
@@ -1367,11 +1369,14 @@ function cerber_user_login( $login, $user ) {
 		$user_login = $login;
 	}
 
-	$fa = CRB_2FA::enforce( $user_login, $user );
+	$status = CRB_2FA::enforce( $user_login, $user );
 
-	if ( crb_is_wp_error( $fa ) ) {
-		cerber_error_log( $fa->get_error_message() . ' | RID: ' . get_wp_cerber()->getRequestID(), '2FA' );
+	if ( crb_is_wp_error( $status ) ) {
+		cerber_error_log( $status->get_error_message() . ' | RID: ' . get_wp_cerber()->getRequestID(), '2FA' );
 	}
+    elseif ( $status ) {
+	    crb_sessions_update( $user->ID, CRB_2FA::get_session_token_hash(), array( 'mfa_status' => $status ) );
+    }
 
 	cerber_login_history( $user->ID );
 
@@ -1384,6 +1389,7 @@ add_action( 'set_auth_cookie', function ( $auth_cookie, $expire, $expiration, $u
 	CRB_2FA::$token = $token;
 
 	// Catching user switching and authentications without using a login form
+
 	add_action( 'set_current_user', function () { // deferred to allow the possible 'wp_login' action to be logged first
 		global $current_user;
 		if ( $current_user instanceof WP_User ) {
@@ -1562,72 +1568,86 @@ add_action( 'updated_user_meta', function ( $meta_id, $user_id, $meta_key, $_met
 // do_action( "deleted_{$meta_type}_meta", $meta_ids, $object_id, $meta_key, $_meta_value );
 add_action( 'deleted_user_meta', function ( $meta_ids, $user_id, $meta_key, $_meta_value ) {
 	if ( $meta_key === 'session_tokens' ) {
-		$query = 'DELETE FROM ' . cerber_get_db_prefix() . CERBER_USS_TABLE;
-		if ( $user_id ) {
-			$query .= ' WHERE user_id = ' . $user_id;
+
+        $query = 'DELETE FROM ' . cerber_get_db_prefix() . CERBER_USS_TABLE;
+
+        if ( $user_id ) {
+			$query .= ' WHERE user_id = ' . crb_absint( $user_id );
 			cerber_log( CRB_EV_UST, '', $user_id, 530 ); // Terminated by admin
 			CRB_Globals::set_act_status_if( 530 );
 		}
-		cerber_db_query( $query );
+        else {
+	        $buffer = cerber_get_set( 'diagnostic_buffer' );
+	        $buffer = ( ! is_array( $buffer ) ) ? array() : array_slice( $buffer, - 50 );
+	        $buffer[] = array( 'e' => 'USS1', 't' => time(), 'r' => get_wp_cerber()->getRequestID() );
+	        cerber_update_set( 'diagnostic_buffer', $buffer, null, true, time() + WEEK_IN_SECONDS );
+        }
+
+        cerber_db_query( $query );
 	}
 }, 10, 4 );
 
 /**
- * Keep the sessions table up to date
+ * Keep the user sessions table up to date. Typically executes after every update of "session_tokens" user meta.
  *
- * @param $user_id
- * @param array $wp_sessions List of user sessions from "session_tokens" user meta
+ * @param int $user_id User ID
+ * @param array $wp_sessions List of user sessions from the "session_tokens" user meta
  *
  * @return bool
  */
 function crb_sessions_update_user_data( $user_id, $wp_sessions = null ) {
 	global $wpdb;
 
-	$crb_sessions = cerber_get_db_prefix() . CERBER_USS_TABLE;
+	$user_id = crb_absint( $user_id );
 
 	if ( $wp_sessions === null ) {
 		$user_meta = cerber_db_get_var( 'SELECT um.* FROM ' . $wpdb->usermeta . ' um JOIN ' . $wpdb->users . ' us ON (um.user_id = us.ID) WHERE um.user_id = ' . $user_id . ' AND um.meta_key = "session_tokens"' );
-		if ( $user_meta && ! empty( $user_meta['meta_value'] ) ) {
+
+        if ( $user_meta && ! empty( $user_meta['meta_value'] ) ) {
 			$wp_sessions = crb_unserialize( $user_meta['meta_value'] );
 		}
 	}
 
-	if ( ! $wp_sessions ) {
-		cerber_db_query( 'DELETE FROM ' . $crb_sessions . ' WHERE user_id = ' . $user_id );
-
-		return true;
-	}
-
-	$list = array_keys( $wp_sessions );
-	cerber_db_query( 'DELETE FROM ' . $crb_sessions . ' WHERE user_id = ' . $user_id . ' AND wp_session_token NOT IN ("' . implode( '","', $list ) . '")' );
-
-	$existing = cerber_db_get_col( 'SELECT wp_session_token FROM ' . $crb_sessions . ' WHERE user_id = ' . $user_id );
-
-	if ( $existing ) {
-		$new_entries = array_diff( $list, $existing );
-	}
-	else {
-		$new_entries = $list;
-	}
-
-	foreach ( $new_entries as $id ) {
-		$data = $wp_sessions[ $id ];
-		$session_id = get_wp_cerber()->getRequestID();
-		//$ip = $data['ip']; // On some servers behind a proxy WP core is unable to detect IP address correctly.
-		$ip = cerber_get_remote_ip();
-		$country = (string) lab_get_country( $ip );
-		cerber_db_query( 'INSERT INTO ' . $crb_sessions . ' (user_id, ip, country, started, expires, session_id, wp_session_token) VALUES (' . $user_id . ',"' . $ip . '","' . $country . '","' . $data['login'] . '","' . $data['expiration'] . '","' . $session_id . '","' . $id . '")' );
-	}
-
-	return true;
+	return crb_sessions_sync( $user_id, $wp_sessions, true );
 }
 
 /**
- * Synchronize all sessions in bulk
+ * Updating session information in the session table
+ *
+ * @param integer $user_id
+ * @param string $wp_session_token
+ * @param array $update
+ *
+ * @return bool|mysqli_result
+ *
+ * @since 9.6.3.2
+ */
+function crb_sessions_update( $user_id, $wp_session_token, $update ) {
+	return cerber_db_update( CERBER_USS_TABLE, array( 'user_id' => crb_absint( $user_id ), 'wp_session_token' => crb_sanitize_alphanum( $wp_session_token ) ), $update );
+}
+
+/**
+ * Synchronize all user sessions from scratch
+ *
+ */
+function crb_sessions_sync_all() {
+	global $wpdb;
+
+	if ( cerber_db_is_empty( cerber_get_db_prefix() . CERBER_USS_TABLE )
+         || 300 < cerber_db_count( $wpdb->users, 'ID' ) ) {
+
+		return crb_sessions_bulk_load();
+	}
+
+	return crb_sessions_update_all();
+}
+
+/**
+ * Loads all user sessions in bulk mode. Doesn't preserve existing session data.
  *
  * @return bool
  */
-function crb_sessions_sync_all() {
+function crb_sessions_bulk_load() {
 	global $wpdb;
 
 	$table = cerber_get_db_prefix() . CERBER_USS_TABLE;
@@ -1635,24 +1655,156 @@ function crb_sessions_sync_all() {
 	cerber_db_query( 'DELETE FROM ' . $table );
 
 	$query = 'SELECT um.* FROM ' . $wpdb->usermeta . ' um JOIN ' . $wpdb->users . ' us ON (um.user_id = us.ID) WHERE um.meta_key = "session_tokens"';
-	if ( ! $metas = cerber_db_get_results( $query ) ) {
+
+    if ( ! $metas = cerber_db_get_results( $query ) ) {
 		return false;
 	}
 
 	foreach ( $metas as $user_meta ) {
-		$sessions = crb_unserialize( $user_meta['meta_value'] );
-		if ( empty( $sessions ) ) {
+
+        $sessions = crb_unserialize( $user_meta['meta_value'] );
+		$user_id = crb_absint( $user_meta['user_id'] );
+
+        if ( empty( $sessions ) ) {
 			continue;
 		}
-		foreach ( $sessions as $id => $data ) {
+
+        foreach ( $sessions as $token => $data ) {
 			if ( $data['expiration'] < time() ) {
 				continue;
 			}
-			cerber_db_query( 'INSERT INTO ' . $table . ' (user_id, ip, started, expires, wp_session_token) VALUES (' . $user_meta['user_id'] . ',"' . $data['ip'] . '","' . $data['login'] . '","' . $data['expiration'] . '","' . $id . '")' );
+
+	        $ip = filter_var( $data['ip'], FILTER_VALIDATE_IP );
+	        $started = crb_absint( $data['login'] );
+	        $expires = crb_absint( $data['expiration'] );
+	        $token = crb_sanitize_alphanum( $token );
+
+	        cerber_db_query( 'INSERT INTO ' . $table . ' (user_id, ip, started, expires, wp_session_token) VALUES (' . $user_id . ',"' . $ip . '",' . $started . ',' . $expires . ',"' . $token . '")' );
 		}
 	}
 
 	return true;
+}
+
+/**
+ * Synchronizes all user sessions in bulk preserving existing rows in the sessions table
+ *
+ * @return bool
+ *
+ * @since 9.6.3.2
+ */
+function crb_sessions_update_all() {
+	global $wpdb;
+
+	crb_sessions_del_expired();
+
+	$table = cerber_get_db_prefix() . CERBER_USS_TABLE;
+
+	$query = 'SELECT um.* FROM ' . $wpdb->usermeta . ' um JOIN ' . $wpdb->users . ' us ON (um.user_id = us.ID) WHERE um.meta_key = "session_tokens"';
+
+	if ( ! $metas = cerber_db_get_results( $query ) ) {
+
+		cerber_db_query( 'DELETE FROM ' . $table );
+
+		return false;
+	}
+
+    $logged_in_users = array();
+
+	foreach ( $metas as $user_meta ) {
+
+    	$sessions = $user_meta['meta_value'] ? crb_unserialize( $user_meta['meta_value'] ) : [];
+		$user_id = crb_absint( $user_meta['user_id'] );
+		$logged_in_users[] = $user_id;
+
+		crb_sessions_sync( $user_id, $sessions );
+	}
+
+    // Delete non-existing sessions
+
+	cerber_db_query( 'DELETE FROM ' . $table . ' WHERE user_id NOT IN (' . implode( ',', $logged_in_users ) . ')' );
+
+	return true;
+}
+
+/**
+ * Synchronizes the user session data in the sessions table with the session data stored in WordPress meta table.
+ * Preserves existing rows in the sessions table.
+ *
+ * @param int $user_id The ID of the user whose sessions are being synchronized.
+ * @param array $wp_sessions An associative array of user sessions from WordPress 'session_tokens' user meta.
+ * @param bool $interactive If true, additional details will be saved when the user logs in interactively.
+ *
+ * @return bool Returns true on successful synchronization, false on failure.
+ *
+ * @since 9.6.3.2
+ */
+function crb_sessions_sync( $user_id, $wp_sessions, $interactive = false ) {
+
+    $table = cerber_get_db_prefix() . CERBER_USS_TABLE;
+    $errors = false;
+
+	if ( empty( $wp_sessions ) ) {
+		if ( ! cerber_db_query( 'DELETE FROM ' . $table . ' WHERE user_id = ' . $user_id ) ) {
+			return false;
+		}
+
+        return true;
+	}
+
+	// Delete obsolete user sessions if any
+
+	if ( $existing_tokens = cerber_db_get_col( 'SELECT wp_session_token FROM ' . $table . ' WHERE user_id = ' . $user_id ) ) {
+
+		$existing_sessions = array_flip( $existing_tokens );
+
+		if ( $delete = array_diff_key( $existing_sessions, $wp_sessions ) ) {
+
+			$delete = crb_sanitize_alphanum( array_keys( $delete ) );
+
+			if ( ! cerber_db_query( 'DELETE FROM ' . $table . ' WHERE user_id = ' . $user_id . ' AND wp_session_token IN ("' . implode( '","', $delete ) . '")' ) ) {
+				$errors = true;
+			}
+		}
+
+		// Filter out user sessions to add
+
+		$wp_sessions = array_diff_key( $wp_sessions, $existing_sessions );
+	}
+
+	if ( $interactive ) {
+
+        // User is logging in now (login form submitted)
+
+		$wp_sessions = array_map( function ( $data ) {
+			$data['ip'] = cerber_get_remote_ip();
+			$data['sess_id'] = get_wp_cerber()->getRequestID();
+			$data['cnt'] = lab_get_country( cerber_get_remote_ip() );
+
+            return $data;
+
+		}, $wp_sessions );
+
+	}
+
+	foreach ( $wp_sessions as $token => $data ) {
+		if ( $data['expiration'] < time() ) {
+			continue;
+		}
+
+		$ip = filter_var( $data['ip'], FILTER_VALIDATE_IP );
+		$started = crb_absint( $data['login'] );
+		$expires = crb_absint( $data['expiration'] );
+		$request_id = crb_sanitize_alphanum( $data['sess_id'] ?? '' );
+		$country = crb_sanitize_alphanum( $data['cnt'] ?? '' );
+		$token = crb_sanitize_alphanum( $token );
+
+		if ( ! cerber_db_query( 'INSERT INTO ' . $table . ' (user_id, ip, country, started, expires, session_id, wp_session_token) VALUES (' . $user_id . ',"' . $ip . '","' . $country . '",' . $started . ',' . $expires . ',"' . $request_id . '","' . $token . '")' ) ) {
+			$errors = true;
+		}
+	}
+
+	return ! $errors;
 }
 
 function crb_sessions_del_expired() {
@@ -1666,10 +1818,17 @@ function crb_sessions_del_expired() {
 	$done = true;
 }
 
+/**
+ * Returns the number of user sessions, optionally filtered by user ID.
+ *
+ * @param int|null $user_id Optional. The user ID to filter sessions by. Default is null (counts all sessions).
+ *
+ * @return int The count of sessions for the specified user ID or for all users if no ID is provided.
+ */
 function crb_sessions_get_num( $user_id = null ) {
-	$where = ( $user_id ) ? ' WHERE user_id = ' . absint( $user_id ) : '';
 
-	return (int) cerber_db_get_var( 'SELECT COUNT(user_id) FROM ' . cerber_get_db_prefix() . CERBER_USS_TABLE . $where );
+	$conditions = $user_id ? ['user_id' => absint( $user_id )] : [];
+	return (int) cerber_db_count( cerber_get_db_prefix() . CERBER_USS_TABLE, 'user_id', $conditions );
 }
 
 /**
@@ -1688,6 +1847,8 @@ function crb_sessions_kill( $tokens, $user_id = null, $admin = true ) {
 	}
 
 	if ( ! $user_id ) {
+
+		$tokens = crb_sanitize_alphanum( $tokens );
 		$users = cerber_db_get_col( 'SELECT user_id FROM ' . cerber_get_db_prefix() . CERBER_USS_TABLE . ' WHERE wp_session_token IN ("' . implode( '","', $tokens ) . '")' );
 	}
 	else {
@@ -1742,6 +1903,8 @@ function crb_sessions_kill( $tokens, $user_id = null, $admin = true ) {
 
 		if ( $total ) {
 			cerber_admin_message( sprintf( _n( 'User session has been terminated', '%s user sessions have been terminated', $total, 'wp-cerber' ), $total ) );
+
+            __( '%s user sessions have been terminated', 'wp-cerber' ); // registration for _n()
 		}
 		else {
 			cerber_admin_notice( 'No user sessions found.' );
@@ -1750,6 +1913,7 @@ function crb_sessions_kill( $tokens, $user_id = null, $admin = true ) {
 
 	return $total;
 }
+
 
 // Enforce restrictions for the current user
 
@@ -1762,7 +1926,7 @@ add_action( 'init', function () { // backup for 'set_current_user' hook which mi
 	cerber_restrict_user( get_current_user_id() );
 }, 0 );
 
-function cerber_restrict_user( $user_id ) {
+function cerber_restrict_user( $current_user_id ) {
 	static $done;
 
 	if ( $done ) {
@@ -1771,16 +1935,16 @@ function cerber_restrict_user( $user_id ) {
 
 	$done = true;
 
-	CRB_2FA::check_for_errors( $user_id );
+	CRB_2FA::check_for_errors( $current_user_id );
 
-	if ( ! $user_id ) {
+	if ( ! $current_user_id ) {
 		return;
 	}
 
-	if ( ( $sts = ( crb_is_user_blocked( $user_id ) ? CRB_STS_29 : 0 ) )
-	     || ( $sts = ( CRB_DS::is_user_valid( $user_id ) ? 0 : 35 ) )
+	if ( ( $sts = ( crb_is_user_blocked( $current_user_id ) ? CRB_STS_29 : 0 ) )
+	     || ( $sts = ( CRB_DS::is_user_valid( $current_user_id ) ? 0 : 35 ) )
 	     || ( $sts = ( crb_acl_is_black() ? 14 : 0 ) ) // @since 8.2.4
-	     || ( $sts = ( cerber_geo_allowed( 'geo_login', $user_id ) ? 0 : 16 ) ) ) { // @since 8.2.3
+	     || ( $sts = ( cerber_geo_allowed( 'geo_login', $current_user_id ) ? 0 : 16 ) ) ) { // @since 8.2.3
 
 		cerber_user_logout( $sts );
 
@@ -1794,18 +1958,18 @@ function cerber_restrict_user( $user_id ) {
 		exit;
 	}
 
-	CRB_2FA::restrict_and_verify( $user_id );
+	CRB_2FA::restrict_and_verify( $current_user_id );
 
 	if ( ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX )
 	     && is_admin()
 	     && ! is_super_admin() ) {
-		if ( cerber_get_user_policy( 'nodashboard', $user_id ) ) {
+		if ( cerber_get_user_policy( 'nodashboard', $current_user_id ) ) {
 			wp_redirect( home_url() );
 			exit;
 		}
 	}
 
-	if ( cerber_get_user_policy( 'notoolbar', $user_id ) ) {
+	if ( cerber_get_user_policy( 'notoolbar', $current_user_id ) ) {
 		show_admin_bar( false );
 	}
 
@@ -3375,11 +3539,16 @@ function cerber_is_bot( $location ) {
 
 	if ( ( $list = crb_get_settings( 'botswhite' ) )
          && is_array( $list ) ) {
-		$uri = '/' . trim( $_SERVER['REQUEST_URI'], '/' );
+
+        $uri = '/' . trim( $_SERVER['REQUEST_URI'], '/' );
 		$uri_slash = $uri . ( ( empty( $_GET ) ) ? '/' : '' ); // @since 8.8
-		foreach ( $list as $item ) {
+
+        foreach ( $list as $item ) {
 			if ( $item[0] == '{' && substr( $item, - 1 ) == '}' ) {
-				$pattern = '/' . substr( $item, 1, - 1 ) . '/i';
+
+                $item = str_replace( '~', '\~', $item );
+				$pattern = '~' . substr( $item, 1, - 1 ) . '~i'; // ~ in use since 9.6.3.1
+
 				if ( @preg_match( $pattern, $uri ) ) {
 					CRB_Globals::$req_status = 502;
 
@@ -6315,7 +6484,7 @@ function cerber_bg_task_get_all() {
  *
  * @param callable $func Function must be in the safe list in cerber_bg_task_launcher().
  * @param array $config 'args' => Parameters to call the function
- * @param bool $priority If true, put the taks in the beginning of the queue
+ * @param bool $priority If true, put the task to the beginning of the queue
  *
  * @return bool|WP_Error True if the task was added, WP_Error otherwise
  *
@@ -6495,9 +6664,10 @@ function cerber_log( $activity, $login = '', $user_id = 0, $status = 0, $ip = nu
 	$status = absint( $status ); // Note: @since 8.9.4 $status is stored in a separate "ac_status" column
 	$login   = cerber_db_real_escape( $login );
 	$details = cerber_db_real_escape( $details );
+    $session_id = $wp_cerber->getRequestID();
 
 	$ret = cerber_db_query( 'INSERT INTO ' . CERBER_LOG_TABLE . ' (ip, ip_long, user_login, user_id, stamp, activity, session_id, country, details, ac_status, ac_bot, ac_by_user) 
-	    VALUES ("' . $ip . '",' . $ip_long . ',"' . $login . '",' . $user_id . ',"' . $stamp . '",' . $activity . ',"' . $wp_cerber->getRequestID() . '","' . $country . '","' . $details . '", ' . $status . ', ' . $ac_bot . ',' . $ac_by_user . ')' );
+	    VALUES ("' . $ip . '",' . $ip_long . ',"' . $login . '",' . $user_id . ',"' . $stamp . '",' . $activity . ',"' . $session_id . '","' . $country . '","' . $details . '", ' . $status . ', ' . $ac_bot . ',' . $ac_by_user . ')' );
 
 	if ( ! $ret ) {
 		cerber_watchdog();
@@ -6505,6 +6675,8 @@ function cerber_log( $activity, $login = '', $user_id = 0, $status = 0, $ip = nu
 	}
     else {
 	    $ret = true;
+
+	    cerber_cache_set( CRB_ACT_HASH, array( 'modified' => $stamp, 'hash' => sha1( $ip . $stamp . $session_id ) ) );
     }
 
 	// Alerts for admin ---------------------------------------------------
@@ -7437,6 +7609,12 @@ function cerber_upgrade_db( $force = false ) {
 		$sql[] = 'ALTER TABLE ' . cerber_get_db_prefix() . CERBER_SETS_TABLE . ' ADD argo int(10) UNSIGNED NOT NULL DEFAULT 0';
 	}
 
+	// @since 9.6.3.2
+	if ( $force || ! cerber_is_column( cerber_get_db_prefix() . CERBER_USS_TABLE, 'mfa_status' ) ) {
+		$sql[] = 'ALTER TABLE ' . cerber_get_db_prefix() . CERBER_USS_TABLE . '
+		ADD mfa_status int(10) UNSIGNED NOT NULL DEFAULT 0';
+	}
+
 	if ( ! empty( $sql ) ) {
 		foreach ( $sql as $query ) {
 			$query = str_replace( '"', '\'', $query );
@@ -8000,14 +8178,16 @@ function cerber_traffic_log(){
 	}
 
 	$session_id = $wp_cerber->getRequestID();
-	if ( is_ssl() ) {
+
+    if ( is_ssl() ) {
 		$scheme = 'https';
 	}
 	else {
 		$scheme = 'http';
 	}
+
 	$uri = $scheme . '://'. $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-	$method = preg_replace( '/\W/', '', $_SERVER['REQUEST_METHOD'] );
+	$method = crb_sanitize_alphanum( $_SERVER['REQUEST_METHOD'] );
 
 	// Request fields
 
@@ -8082,17 +8262,20 @@ function cerber_traffic_log(){
 
 	$cs = crb_get_settings( 'ticandy_sent' );
 	$hs = crb_get_settings( 'tihdrs_sent' );
-	if ( ( $cs || $hs ) && ( $hl = headers_list() ) ) {
+
+	if ( ( $cs || $hs ) && ( $server_headers = headers_list() ) ) {
 		$d1 = array();
 		$d2 = array();
-		foreach ( $hl as $h ) {
-			if ( 0 === strpos( $h, 'Set-Cookie:' ) ) {
-				$d1[] = $h;
+
+        foreach ( $server_headers as $header ) {
+			if ( 0 === strpos( $header, 'Set-Cookie:' ) ) {
+				$d1[] = substr( $header, 11 );
 			}
 			else {
-				$d2[] = $h;
+				$d2[] = $header;
 			}
 		}
+
 		if ( $cs ) {
 			$details[9] = $d1;
 		}
@@ -8579,7 +8762,10 @@ function crb_ti_is_exception(){
 
 		foreach ( (array) $path_list as $item ) {
 			if ( $item[0] == '{' && substr( $item, - 1 ) == '}' ) {
-				$pattern = '/' . substr( $item, 1, - 1 ) . '/i';
+
+				$item = str_replace( '~', '\~', $item );
+				$pattern = '~' . substr( $item, 1, - 1 ) . '~i';  // ~ in use since 9.6.3.1
+
 				if ( @preg_match( $pattern, $uri_path ) ) {
 					CRB_Globals::$req_status = 501;
 

@@ -211,6 +211,8 @@ function crb_log_maintainer() {
 		cerber_db_query( 'DELETE FROM ' . CERBER_LOG_TABLE . ' WHERE user_id !=0 AND stamp < ' . ( $time - $days_auth * 24 * 3600 ) );
 	}
 
+	cerber_cache_set( CRB_ACT_HASH, array() );
+
 	$days = absint( $settings['tikeeprec'] ) ?: cerber_get_defaults( 'tikeeprec' );  // @since 8.5.6
 	$days_auth = absint( $settings['tikeeprec_auth'] ?? false ) ?: $days; // It may be not configured by the admin yet, since it's introduced in 8.5.6
 
@@ -356,7 +358,7 @@ class CRB_Plugin {
 
 		$fresh_data = self::get_plugin_authors( $slug );
 
-		if ( is_wp_error( $fresh_data ) ) {
+		if ( crb_is_wp_error( $fresh_data ) ) {
 			return $fresh_data;
 		}
 
@@ -399,7 +401,7 @@ class CRB_Plugin {
 
 		$plugin_info = plugins_api( 'plugin_information', array( 'slug' => $slug ) );
 
-		if ( is_wp_error( $plugin_info ) ) {
+		if ( crb_is_wp_error( $plugin_info ) ) {
 			return $plugin_info;
 		}
 
@@ -545,7 +547,7 @@ class CRB_Plugin {
 
 		$result = self::retrieve_plugin_repo_data( $slug );
 
-		if ( is_wp_error( $result ) ) {
+		if ( crb_is_wp_error( $result ) ) {
 			$repo_data['err_code'] = $result->get_error_code();
 		}
 		else {
@@ -682,7 +684,7 @@ class CRB_Plugin {
 			),
 			true );
 
-		if ( is_wp_error( $result ) ) {
+		if ( crb_is_wp_error( $result ) ) {
 
 			if ( $network->is_host_rate_limited() ) {
 				$err_code = CRB_PL722;
@@ -710,7 +712,7 @@ class CRB_Plugin {
 
 		$json = self::extract_ld_json( $html );
 
-		if ( is_wp_error( $json ) ) {
+		if ( crb_is_wp_error( $json ) ) {
 			return $json;
 		}
 
@@ -772,4 +774,221 @@ class CRB_Plugin {
 
 		return $matches_script[1];
 	}
+}
+
+/**
+ * Check the server environment and the WP Cerber configuration for possible issues
+ *
+ * @return void
+ *
+ * @since 9.5.1
+ */
+function cerber_issue_monitor() {
+	static $checkers = array();
+
+	if ( ! $checkers ) {
+		$checkers = array(
+			'cerber-security' => function () {
+				$results = new WP_Error;
+
+				if ( $issue = cerber_extract_remote_ip( true ) ) {
+					$results->add( 'noipaddr', $issue, array( 'doc_page' => 'https://wpcerber.com/wordpress-ip-address-detection/' ) );
+				}
+
+				// -------
+
+				$repo_link = '[ <a href="https://wpcerber.com/automatic-updates-for-wp-cerber/" target="_blank">Know more</a> ]';
+
+				if ( crb_get_settings( 'cerber_sw_repo' )
+				     && ( defined( 'WP_HTTP_BLOCK_EXTERNAL' ) && WP_HTTP_BLOCK_EXTERNAL ) ) {
+
+					$issue = '';
+
+					if ( defined( 'WP_ACCESSIBLE_HOSTS' ) ) {
+						if ( false === strpos( WP_ACCESSIBLE_HOSTS, 'downloads.wpcerber.com' )
+						     && false === strpos( WP_ACCESSIBLE_HOSTS, '*.wpcerber.com' ) ) {
+
+							$const_def = empty( WP_ACCESSIBLE_HOSTS ) ? __( 'Currently, the WP_ACCESSIBLE_HOSTS constant contains no allowed hosts', 'wp-cerber' ) : sprintf( __( 'Currently, the WP_ACCESSIBLE_HOSTS constant is defined as: %s', 'wp-cerber' ), crb_generic_escape( WP_ACCESSIBLE_HOSTS ) );
+							$issue = __( 'To enable WP Cerber updates, add "downloads.wpcerber.com" to the WP_ACCESSIBLE_HOSTS constant', 'wp-cerber' ) . ' ' . $repo_link . '<p>' . $const_def . '</p>';
+						}
+					}
+					else {
+						$issue = __( 'To enable WP Cerber updates, add the WP_ACCESSIBLE_HOSTS constant defined as "downloads.wpcerber.com" to your wp-config.php file', 'wp-cerber' ) . ' ' . $repo_link;
+					}
+
+					if ( $issue ) {
+						$results->add( 'norepo', $issue );
+					}
+				}
+
+				// -------
+
+				if ( crb_get_settings( 'cerber_sw_auto' ) ) {
+					crb_load_dependencies( 'wp_is_auto_update_enabled_for_type' );
+					if ( ! wp_is_auto_update_enabled_for_type( 'plugin' ) ) {
+						$auto_const = ( defined( 'AUTOMATIC_UPDATER_DISABLED' ) && AUTOMATIC_UPDATER_DISABLED ) ? ' The WordPress AUTOMATIC_UPDATER_DISABLED constant is defined.' : '';
+						$results->add( 'noauto', 'WP Cerber does not get automatic updates because automatic updates for plugins on this website are disabled. ' . $auto_const.' ' . $repo_link );
+					}
+				}
+
+				// -------
+
+				if ( cerber_get_mode() != crb_get_settings( 'boot-mode' ) ) {
+					$results->add( 'booterr', 'WP Cerber is initialized in a different mode that does not match the plugin settings. Check the "Load security engine" setting.' );
+				}
+
+				// -------
+
+				if ( $ler = cerber_get_set( 'last_email_error' ) ) {
+					if ( $ler[0] > ( time() - WEEK_IN_SECONDS ) ) {
+
+						$txt = $ler[2] . ' Error #' . $ler[3];
+						$txt .= ( $ler[4] ? '. SMTP server: ' . $ler[4] : '' );
+						$txt .= ( $ler[5] ? '. SMTP username: ' . $ler[5] : '' );
+						$txt .= ( $ler[6] ? '. Recipient(s): ' . implode( ',', $ler[6] ) : '' );
+						$txt .= ( $ler[7] ? '. Subject: "' . $ler[7] . '"' : '' );
+						$txt .= '. Date: ' . cerber_date( $ler[0] );
+
+						$results->add( 'emailerr', 'An error occurred while sending email. ' . $txt );
+					}
+
+					cerber_delete_set( 'last_email_error' );
+				}
+
+				return $results;
+			},
+			'cerber-integrity' => function () {
+				if ( defined( 'CERBER_FOLDER_PATH' ) ) {
+					return cerber_get_my_folder();
+				}
+
+				return false;
+			},
+			'cerber-shield' => function () {
+				return CRB_DS::check_errors();
+			},
+			'*' => function () {
+				$results = new WP_Error;
+
+				if ( ! crb_get_settings( 'tienabled' ) ) {
+					$results->add( 'noti', 'Traffic Inspector is disabled' );
+				}
+
+				$ex_list = get_loaded_extensions();
+
+				if ( ! in_array( 'mbstring', $ex_list ) || ! function_exists( 'mb_convert_encoding' ) ) {
+					$results->add( 'nombstring', 'Required PHP extension <b>mbstring</b> is not enabled on this website. Some plugin features do work properly. Please enable the PHP mbstring extension (multibyte string support) in your hosting control panel.' );
+				}
+
+				if ( ! in_array( 'curl', $ex_list ) ) {
+					$results->add( 'nocurl', 'cURL PHP library is not enabled on this website.' );
+				}
+				else {
+					$curl = @curl_init();
+
+					if ( ! $curl
+					     && ( $err_msg = curl_error( $curl ) ) ) {
+						$results->add( 'nocurl', $err_msg );
+					}
+
+					curl_close( $curl );
+				}
+
+				return $results;
+			}
+		);
+	}
+
+	$notices = array();
+	$page = crb_admin_get_page();
+
+	// Part 1. We periodically run all the checks
+
+	if ( cerber_get_set( '_check_env', 0, false ) < ( time() - 120 ) ) {
+
+		cerber_update_set( '_check_env', time(), 0, false );
+
+		foreach ( $checkers as $page_id => $check ) {
+			if ( ! is_callable( $check ) || $page == $page_id ) {
+				continue;
+			}
+
+			if ( crb_is_wp_error( $test = call_user_func( $check ) ) ) {
+
+				$notices = array_merge( $notices, cerber_format_issue( $test ) );
+			}
+		}
+	}
+
+	// Part 2. Critical checks on a specific page (context)
+
+	if ( ( $check = $checkers[ $page ] ?? false )
+	     && is_callable( $check )
+	     && crb_is_wp_error( $test = call_user_func( $check ) ) ) {
+
+		$notices = array_merge( $notices, cerber_format_issue( $test ) );
+	}
+
+	// Part 3. Critical things we monitor continuously
+
+	if ( version_compare( CERBER_REQ_PHP, phpversion(), '>' ) ) {
+		$notices['php'] = sprintf( __( 'WP Cerber requires PHP %s or higher. You are running %s.', 'wp-cerber' ), CERBER_REQ_PHP, phpversion() );
+	}
+
+	if ( ! crb_wp_version_compare( CERBER_REQ_WP ) ) {
+		$notices['wordpress'] = sprintf( __( 'WP Cerber requires WordPress %s or higher. You are running %s.', 'wp-cerber' ), CERBER_REQ_WP, cerber_get_wp_version() );
+	}
+
+	if ( defined( 'CERBER_CLOUD_DEBUG' ) && CERBER_CLOUD_DEBUG ) {
+		$notices['cloud'] = 'Diagnostic logging of cloud requests is enabled (CERBER_CLOUD_DEBUG).';
+	}
+
+	if ( $notices ) {
+
+		foreach ( $notices as $code => $notice ) {
+			cerber_add_issue( $code, $notice );
+		}
+
+		$notices = array_map( function ( $e ) {
+			return '<b>' . __( 'Warning!', 'wp-cerber' ) . '</b> ' . $e;
+		}, $notices );
+
+		cerber_admin_notice( $notices );
+	}
+}
+
+/**
+ * Formats messages from a WP_Error object into an associative array.
+ *
+ * This function retrieves issue codes and their corresponding messages from a
+ * provided WP_Error object. If issue data includes a `doc_page` URL, a link to
+ * the WP Cerber documentation is appended to the error message.
+ *
+ * @param WP_Error $issues An instance of WP_Error containing error codes, messages,
+ *                         and optional error data.
+ *
+ * @return array An associative array where the keys are error codes and the values
+ *               are formatted error messages. Each message may include a link to
+ *               documentation if a `doc_page` is present in the error data.
+ *
+ * @since 9.6.3.3
+ */
+function cerber_format_issue( $issues ) {
+
+	$codes = $issues->get_error_codes();
+	$ret = array();
+
+	foreach ( $codes as $err_code ) {
+		$msg = $issues->get_error_message( $err_code );
+
+		if ( $data = $issues->get_error_data( $err_code ) ) {
+			if ( $doc = $data['doc_page'] ?? false ) {
+				$msg .= ' [ <a href="' . $doc . '" target="_blank">' . __( 'Documentation', 'wp-cerber' ) . '</a> ]';
+			}
+		}
+
+		$ret[ $err_code ] = $msg;
+	}
+
+	return $ret;
 }

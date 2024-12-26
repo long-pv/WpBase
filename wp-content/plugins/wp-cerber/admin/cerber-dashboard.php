@@ -336,12 +336,12 @@ function cerber_acl_form(){
 
 	$w = '<div class="crb-title-plus"><div><h2>' . __( 'White IP Access List', 'wp-cerber' ) . '</h2></div>';
 	$w .= '<div><span style="opacity: 0.6;">&#x2500;&#x2500;&nbsp;&nbsp;&nbsp;</span>';
-	$w .= '<a href="' . cerber_activity_link( false, 500 ) . '">' . __( 'View Activity', 'wp-cerber' ) . '</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="' . cerber_admin_link( 'imex' ) . '#crb-bulk-load-acl">' . __( 'Import Entries', 'wp-cerber' ) . '</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a target="_blank" href="https://wpcerber.com/using-ip-access-lists-to-protect-wordpress/">How Access Lists work</a></div></div>';
+	$w .= '<a href="' . cerber_activity_link( array(), 500 ) . '">' . __( 'View Activity', 'wp-cerber' ) . '</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="' . cerber_admin_link( 'imex' ) . '#crb-bulk-load-acl">' . __( 'Import Entries', 'wp-cerber' ) . '</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a target="_blank" href="https://wpcerber.com/using-ip-access-lists-to-protect-wordpress/">How Access Lists work</a></div></div>';
 	$w .= cerber_acl_get_table( 'W' );
 
 	$w .= '<div class="crb-title-plus"><div><h2>' . __( 'Black IP Access List', 'wp-cerber' ) . '</h2></div>';
 	$w .= '<div><span style="opacity: 0.6;">&#x2500;&#x2500;&nbsp;&nbsp;&nbsp;</span>';
-	$w .= '<a href="' . cerber_activity_link( false, 14 ) . '">' . __( 'View Activity', 'wp-cerber' ) . '</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="' . cerber_admin_link( 'imex' ) . '#crb-bulk-load-acl">' . __( 'Import Entries', 'wp-cerber' ) . '</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a target="_blank" href="https://wpcerber.com/using-ip-access-lists-to-protect-wordpress/">How Access Lists work</a></div></div>';
+	$w .= '<a href="' . cerber_activity_link( array(), 14 ) . '">' . __( 'View Activity', 'wp-cerber' ) . '</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="' . cerber_admin_link( 'imex' ) . '#crb-bulk-load-acl">' . __( 'Import Entries', 'wp-cerber' ) . '</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a target="_blank" href="https://wpcerber.com/using-ip-access-lists-to-protect-wordpress/">How Access Lists work</a></div></div>';
 	$w .= cerber_acl_get_table( 'B' );
 
 	echo $w;
@@ -452,7 +452,7 @@ function cerber_acl_form_process( $post = array() ) {
 }
 
 /*
-	AJAX admin requests is landing here
+	AJAX admin requests are landing here
 */
 add_action('wp_ajax_cerber_ajax', 'cerber_admin_ajax');
 function cerber_admin_ajax() {
@@ -588,31 +588,48 @@ function cerber_admin_ajax() {
 		else {
 			delete_site_option( 'cerber_admin_info' );
 		}
+
+	    $response ['message'] = 'OK';
 	}
-    elseif ( $admin && ( $ajax_route = crb_array_get( $request, 'ajax_route' ) ) ) {
+    elseif ( $admin && ( $ajax_route = crb_sanitize_id( crb_array_get( $request, 'ajax_route' ) ) ) ) {
 
 		$ref_params = crb_get_referrer_params();
+	    $response = array( 'html' => '', 'error' => '' );
+        $result = '';
 
 		switch ( $ajax_route ) {
+			case 'dashboard_analytics':
+				cerber_widgets_init();
+				$result = CRB_Widgets::render_widget( $request['ds_widget'] ?? '', true );
+				break;
 			case 'scanner_analytics':
-				$response = cerber_generate_insights( $request['itype'] );
+				$result = cerber_generate_insights( $request['itype'] );
 				break;
 			case 'user_activity_analytics':
-				$data = crb_generate_user_insights( absint( $request['user_id'] ), $ref_params['tab'] ?? '' );
-				$response = array( 'html' => $data, 'error' => '' );
+				$result = crb_generate_user_insights( absint( $request['user_id'] ), $ref_params['tab'] ?? '' );
 				break;
 			case 'ip_extra_info':
-				$response = cerber_ip_extra_view_ajax( $request, $ref_params );
+				$result = cerber_ip_extra_view_ajax( $request, $ref_params );
 				break;
 			case 'ip_quick_analytics':
-				$data = crb_generate_ip_insights( $request['ip_address'], $ref_params['tab'] );
-				$response = array( 'html' => $data, 'error' => '' );
+				$result = crb_generate_ip_insights( $request['ip_address'], $ref_params['tab'] );
 				break;
+			case 'diagnostic_tools':
+				$result = cerber_db_diag();
+				break;
+			default:
+	            $response['error'] = 'Error: Unknown WP Cerber AJAX route (' . $ajax_route . ')';
 		}
+
+	    if ( crb_is_wp_error( $result ) ) {
+		    $response ['error'] = $result->get_error_message();
+	    }
+	    else {
+		    $response ['html'] = $result;
+	    }
 	}
     elseif ( $admin && ( $usearch = crb_array_get( $request, 'user_search' ) ) ) {
 		$users    = get_users( array( 'search' => '*' . esc_attr( $usearch ) . '*', ) );
-		$response = array();
 		if ( $users ) {
 			foreach ( $users as $user ) {
 				$data       = get_userdata( $user->ID );
@@ -622,6 +639,36 @@ function cerber_admin_ajax() {
 				);
 			}
 		}
+	}
+    elseif ( $admin && $action = $request['cerber_ajax_action'] ?? false ) {
+
+	    $msg = '*';
+	    $result = false;
+
+	    switch ( $action ) {
+		    case 'dashboard_save_sortable':
+
+			    $order = array_map( function ( $id ) {
+				    return crb_sanitize_id( $id );
+			    }, $request['dash_order'] );
+
+			    $result = CRB_Widgets::save_order( $order );
+
+			    break;
+	    }
+
+	    if ( crb_is_wp_error( $result ) ) {
+		    $response ['error'] = $result->get_error_message();
+	    }
+	    else {
+		    $msg = 'OK';
+	    }
+
+	    $response ['message'] = $msg;
+	}
+
+	if ( empty( $response ) ) {
+		$response['error'] = 'Unknown AJAX request. Check your code, it\'s time to show your debugging skills!';
 	}
 
 	echo json_encode( $response );
@@ -903,6 +950,11 @@ function cerber_admin_request( $is_post = false ) {
         elseif ( $table = cerber_get_get( 'truncate', '[a-z_]+' ) ) {
 	        if ( 0 === strpos( $table, 'cerber_' ) ) {
 		        if ( $wpdb->query( 'TRUNCATE TABLE ' . $table ) ) {
+
+			        if ( $table == CERBER_LOG_TABLE ) {
+				        cerber_cache_set( CRB_ACT_HASH, array() );
+			        }
+
 			        cerber_admin_message( 'Table ' . $table . ' has been truncated' );
 		        }
 		        else {
@@ -938,6 +990,11 @@ function cerber_admin_request( $is_post = false ) {
 
 		if ( ( $do = crb_array_get( $post, 'cerber_admin_do' ) ) ) {
 			switch ( $do ) {
+				case 'save_widget_list':
+                    cerber_widgets_init();
+					CRB_Widgets::save_list( $post );
+					$redirect = true;
+					break;
 				case 'update_role_policies':
 					crb_settings_update_role_policies( $post );
 					$redirect = true;
@@ -1436,7 +1493,8 @@ function cerber_show_activity( $args = array(), $echo = true ) {
 		foreach ( $rows as $row ) {
 
 			$country = '';
-			$username = '';
+			$user_cell = '';
+			$username_cell = '';
 			$svg = '';
 			$act = (int) $row->activity;
 
@@ -1476,15 +1534,17 @@ function cerber_show_activity( $args = array(), $echo = true ) {
 
 			$activity = '<div class="' . crb_get_act_style( $act ) . '">' . $activity . '</div>';
 
-			$name = crb_admin_get_user_cell( $row->user_id, $base_url );
+			if ( ! isset( $hidden['crb_user_col'] ) ) {
+				$user_cell = '<td>' . crb_admin_get_user_cell( $row->user_id, $base_url ) . '</td>';
+			}
 
 			if ( ! isset( $hidden['crb_username_col'] ) ) {
 				if ( $row->user_login ) {
 					$login_used = crb_generic_escape( $row->user_login );
-					$username = '<a href="' . $base_url . '&amp;filter_login=' . $login_used . '">' . $login_used . '</a>';
+					$username_cell = '<a href="' . $base_url . '&amp;filter_login=' . $login_used . '">' . $login_used . '</a>';
 				}
 
-				$username = '<td>' . $username . '</td>';
+				$username_cell = '<td>' . $username_cell . '</td>';
 			}
 
 			$ip_info = cerber_get_ip_info( $row->ip );
@@ -1501,9 +1561,7 @@ function cerber_show_activity( $args = array(), $echo = true ) {
 				$country = '<td>' . crb_country_html( $row->country, $row->ip ) . '</td>';
 			}
 
-			//$tbody .= '<tr><td>' . crb_admin_ip_cell( $row->ip, $base_url . '&amp;filter_ip=' . $row->ip ) . '</td><td>' . $hostname . '</td>'. $country . '<td>' . $date . '</td><td class="crb-act-info">' . $activity . '</td><td>' . $name . '</td>' . $username . '</tr>';
-
-			$tbody .= '<tr><td>' . crb_admin_ip_cell( $row->ip, $base_url . '&amp;filter_ip=' . $row->ip ) . '</td><td class="crb-hostname">' . $hostname . '</td>' . $country . '<td>' . $date . '</td><td class="crb-act-info"><div class="crb-act-holder">' . $activity . $svg . '</div></td><td>' . $name . '</td>' . $username . '</tr>';
+			$tbody .= '<tr><td>' . crb_admin_ip_cell( $row->ip, $base_url . '&amp;filter_ip=' . $row->ip ) . '</td><td class="crb-hostname">' . $hostname . '</td>' . $country . '<td>' . $date . '</td><td class="crb-act-info"><div class="crb-act-holder">' . $activity . $svg . '</div></td>' . $user_cell . $username_cell . '</tr>';
 
 		}
 
@@ -1529,7 +1587,11 @@ function cerber_show_activity( $args = array(), $echo = true ) {
 			$table_footer .= '<th class="' . $id . '-class">' . $title . '</th>';
 		}
 
-		$class = 'widefat crb-table cerber-margin crb-' . count( $heading ) . '-columns';
+		$class = ' widefat crb-table cerber-margin crb-' . count( $heading ) . '-columns';
+
+		if ( $context = $args['context'] ?? '' ) {
+			$class .= ' crb-activity--' . crb_sanitize_id( $context );
+		}
 
 		$table = '<table id="crb-activity" class="' . $class . '"><thead><tr>' . $table_header . '</tr></thead><tfoot><tr>' . $table_footer . '</tr></tfoot><tbody>' . $tbody . '</tbody></table>';
 
@@ -1653,6 +1715,157 @@ function cerber_show_activity( $args = array(), $echo = true ) {
 }
 
 /**
+ * Generates activity breakdown report
+ *
+ * @param bool $just_check If true, will return true if the activity log contains data for generating the report
+ *
+ * @return string HTML code of the report table
+ *
+ * @since 9.6.4.1
+ */
+function cerber_activity_summary( $just_check = false ) {
+
+	$stamp = time() - 24 * 3600;
+
+	$rows   = array();
+	$not_in = ' activity NOT IN (' . crb_get_activity_set( 'blocked', true ) . ')';
+
+	$logged = (bool) cerber_db_get_var( 'SELECT ip FROM ' . CERBER_LOG_TABLE . ' WHERE stamp >= ' . $stamp . ' AND ' . $not_in . ' LIMIT 1' );
+
+	if ( ! $logged ) {
+		return '';
+	}
+
+	if ( $just_check ) {
+		return true;
+	}
+
+	$events = cerber_db_get_results( 'SELECT activity, COUNT(activity) cnt FROM ' . CERBER_LOG_TABLE . ' WHERE stamp >= ' . $stamp . ' AND ' . $not_in . ' GROUP by activity ORDER BY cnt DESC', MYSQL_FETCH_OBJECT );
+
+	$events = array_slice( $events, 0, 10 );
+
+    $events_not = cerber_db_get_results( 'SELECT activity, COUNT(activity) cnt FROM ' . CERBER_LOG_TABLE . ' WHERE stamp >= ' . $stamp . ' AND user_id = 0 GROUP by activity', MYSQL_FETCH_OBJECT_K );
+	$events_aut = cerber_db_get_results( 'SELECT activity, COUNT(activity) cnt FROM ' . CERBER_LOG_TABLE . ' WHERE stamp >= ' . $stamp . ' AND user_id > 0 GROUP by activity', MYSQL_FETCH_OBJECT_K );
+
+    $lables = cerber_get_labels();
+	$ac_base = cerber_admin_link( 'activity' );
+	$ac_base_time = $ac_base . '&filter_time_begin=' . $stamp;
+
+	foreach ( $events as $a ) {
+		if ( $a->cnt < 1 ) {
+			break;
+		}
+
+		$act = absint( $a->activity );
+
+		$no_user = 0;
+		if ( $r = crb_array_get( $events_not, $a->activity, 0 ) ) {
+			$no_user = '<a href="' . $ac_base_time . '&filter_activity=' . $act. '&filter_user=0">' . $r->cnt . '</a>';
+		}
+
+        $yes_user = 0;
+		if ( $r = crb_array_get( $events_aut, $a->activity, 0 ) ) {
+			$yes_user = '<a href="' . $ac_base_time . '&filter_activity=' . $act . '&filter_user=*">' . $r->cnt . '</a>';
+		}
+
+        $rows[] = array(
+			'<a href="' . $ac_base . '&filter_activity=' . $act . '">' . $lables[ $act ] . '</a>',
+			$yes_user,
+			$no_user,
+	        '<a href="' . $ac_base_time . '&filter_activity=' . $act . '">' . $a->cnt . '</a>'
+		);
+	}
+
+	return cerber_make_table( $rows, array( __( 'Event', 'wp-cerber' ), __( 'Known Users', 'wp-cerber' ), __( 'Unauthenticated Users', 'w-cerber' ), __( 'Total', 'w-cerber' ) ), '', 'crb-table-align-right-2', '', '', false );
+}
+
+/**
+ * Generates a report of the top 10 malicious IP addresses detected in the last 24 hours.
+ *
+ * The report includes the total number of incidents, spam activities, and blocked actions
+ * for each IP address. Each entry also provides additional metadata such as hostname and
+ * country (if available). The results are returned as an HTML table.
+ *
+ * @return string|array
+ *
+ * @since 9.6.4.7
+ */
+function crb_top_malicious_ip_report() {
+
+	$stamp = time() - 24 * 3600;
+	$in = crb_get_activity_set( 'suspicious', true );
+	$in_spam = crb_get_activity_set( 'spam', true );
+
+	$results = cerber_db_get_results(
+		'SELECT ip, country, COUNT(*) AS total,
+                SUM(activity IN (10, 11)) AS blocked,
+                SUM(activity IN (' . $in_spam . ')) AS spam 
+         FROM ' . CERBER_LOG_TABLE . ' 
+         WHERE stamp >= ' . $stamp . ' AND activity IN (' . $in . ') 
+         GROUP BY ip 
+         ORDER BY total DESC 
+         LIMIT 10',
+		MYSQL_FETCH_OBJECT
+	);
+
+	if ( empty( $results ) ) {
+		return array( 'no_data' => __( 'No malicious activity detected in the last 24 hours.', 'wp-cerber' ) );
+	}
+
+	$rows = [];
+
+	$base_url = cerber_activity_link();
+	$base_url_time = $base_url . '&filter_time_begin=' . $stamp;
+	$show_country = false;
+
+	foreach ( $results as $row ) {
+
+		$ip_id = cerber_get_id_ip( $row->ip );
+		$ip_info = cerber_get_ip_info( $row->ip );
+		$hostname = $ip_info['hostname_html'] ?? crb_get_ajax_placeholder( 'hostname', $ip_id );
+		$country = crb_country_html( $row->country, $row->ip );
+
+		$cells = [
+			crb_admin_ip_cell( $row->ip, $base_url . '&filter_ip=' . $row->ip ),
+			array( 'cell' => $hostname, 'class' => 'crb-hostname' ),
+		];
+
+		if ( $country ) {
+			$cells[] = $country;
+			$show_country = true;
+		}
+
+		$link_base = $base_url_time . '&filter_ip=' . $row->ip;
+
+		$cells[] = '<a href="' . $link_base . '&filter_set=1">' . $row->total . '</a>';
+		$cells[] = $row->spam ? '<a href="' . $link_base . '&filter_set=3">' . $row->spam . '</a>' : $row->spam;
+		$cells[] = $row->blocked ? '<a href="' . $link_base . '&filter_activity[0]=10&filter_activity[1]=11">' . $row->blocked . '</a>' : $row->blocked;
+
+		$rows[] = $cells;
+	}
+
+	$heading = [ '<div class="crb_act_icon"></div>' . __( 'IP Address', 'wp-cerber' ), __( 'Hostname', 'wp-cerber' ) ];
+
+	if ( $show_country ) {
+		$heading[] = __( 'Country', 'wp-cerber' );
+	}
+
+	$heading[] = __( 'Incidents', 'wp-cerber' );
+	$heading[] = __( 'Spam', 'wp-cerber' );
+	$heading[] = __( 'Blocked', 'wp-cerber' );
+
+	return cerber_make_table(
+		$rows,
+		$heading,
+		'',
+		'crb-activity--dashboard crb-table-align-right-4',
+		'',
+		'',
+		false
+	);
+}
+
+/**
  * @param int $ac Activity ID
  *
  * @return string CSS class name
@@ -1696,7 +1909,7 @@ function cerber_activity_query( $args = array() ) {
 	if ( ! empty( $q->filter_set ) ) {
 		$falist = crb_get_filter_set( $q->filter_set );
 	}
-	elseif ( $q->filter_activity ) { // Multiple activities can be requested this way: &filter_activity[]=11&filter_activity[]=7
+	elseif ( $q->filter_activity ) {
 		$falist = crb_sanitize_int( $q->filter_activity );
 	}
 	if ( $falist ) {
@@ -1779,6 +1992,16 @@ function cerber_activity_query( $args = array() ) {
 		$where[] = 'log.country = "' . cerber_db_real_escape( $country ) . '"';
 	}
 
+	if ( $begin = $q->filter_time_begin ) {
+		$ret[10] = absint( $begin );
+		$where[] = 'log.stamp >= ' . absint( $begin );
+	}
+
+	if ( $end = $q->filter_time_end ) {
+		$ret[11] = absint( $end );
+		$where[] = 'log.stamp <= ' . absint( $end );
+	}
+
 	$where = ( ! empty( $where ) ) ? 'WHERE ' . implode( ' AND ', $where ) : '';
 
 	// Limits, if specified
@@ -1841,7 +2064,7 @@ function crb_admin_ip_cell( $ip, $ip_link = '', $html = '' ) {
 	}
 
 	if ( $ip_link ) {
-		$ip = '<a href="' . $ip_link . '">' . $ip . '</a>';
+		$ip = '<a href="' . crb_escape_url( $ip_link ) . '">' . $ip . '</a>';
 	}
 
 	$cache[ $ip ] = '<div class="crb_css_table"><div><span class="crb_act_icon crb_ip_acl' . $acl . ' ' . $block . '" title="' . crb_attr_escape( $tip ) . '"></span></div><div>' . $ip . $html . '</div></div>';
@@ -1880,9 +2103,7 @@ function cerber_ip_extra_view_ajax( $request, $ref_params ) {
 	$ip = filter_var( $request['ip'], FILTER_VALIDATE_IP );
 	$tab = $ref_params['tab'] ?? '';
 
-	$ret = crb_generate_ip_extra_view( $ip, $tab );
-
-	return array( 'html' => $ret, 'error' => '' );
+	return crb_generate_ip_extra_view( $ip, $tab );
 }
 
 function crb_generate_ip_extra_view( $ip, $context = 'activity', $cache_only = false ) {
@@ -2264,7 +2485,7 @@ add_filter( 'manage_users_custom_column', function ( $value, $column, $user_id )
 }, 10, 3 );
 
 /*
- 	Registering admin widgets
+ 	Registering WordPress Dashboard widgets
 */
 if ( ! is_multisite() ) {
 	add_action( 'wp_dashboard_setup', 'cerber_widgets' );
@@ -2278,7 +2499,7 @@ function cerber_widgets() {
 	}
 }
 /*
-	Cerber Quick View widget
+	Cerber Quick View widget - WordPress Dashboard
 */
 function cerber_quick_w(){
 
@@ -2331,6 +2552,8 @@ function cerber_quick_w(){
 
 	echo '<table id="quick-info"><tr><td>'.__('Lockouts at the moment','wp-cerber').'</td><td><b><a href="' . $locks . '">'.$lockouts.'</a></b></td></tr>';
 	echo '<tr><td>'.__('Last lockout','wp-cerber').'</td><td>'.$last.'</td></tr>';
+
+	__( 'users', 'wp-cerber' ); // registration for _n()
 
 	echo '<tr class="with-padding"><td>' . __( 'Logged-in users', 'wp-cerber' ) . '</td><td><b><a href="' . $sess . '">' . $s_count . ' ' . _n( 'user', 'users', $s_count, 'wp-cerber' ) . '</a></b></td></tr>';
 
@@ -2858,84 +3081,236 @@ function cerber_help() {
  */
 function cerber_show_dashboard() {
 
-	$kpi_list = cerber_calculate_kpi( time() - 24 * 3600, time() );
+	cerber_widgets_init();
 
-	$kpi_show = '';
-	foreach ( $kpi_list as $kpi ) {
-		$kpi_show .= '<td>' . $kpi[1] . '</td><td><span style="z-index: 10;">' . $kpi[0] . '</span></td>';
+	$all_widgets = CRB_Widgets::get_titles( true );
+
+	echo '<div id="crb-dashboard-container">';
+
+	foreach ( $all_widgets as $widget_id => $titles ) {
+
+		$title = $titles[0];
+		$subtitle = $titles[1] ? '<span class="crb-widget-subtitle"> &nbsp;&#x2500;&#x2500;&nbsp; ' . $titles[1] . '</span>' : '';
+
+		$widget = CRB_Widgets::render_widget( $widget_id, false );
+
+		$show_control = true;
+
+		if ( crb_is_wp_error( $widget ) ) {
+			$body = $widget->get_error_message();
+		}
+        elseif ( is_array( $widget ) ) {
+			list( $body, $show_control ) = $widget;
+		}
+		else {
+			$body = $widget;
+		}
+
+		if ( ! $body ) {
+			continue;
+		}
+
+		$controls = CRB_Widgets::get_controls( $widget_id );
+
+		$visibility = $show_control ? '' : ' style="visibility: hidden;" ';
+
+		$heading = ( ! CRB_Widgets::hide_header( $widget_id ) && $title ) ? '<div class="crb-widget-heading"><div class="crb-widget-title-cell"><h2 class="crb-widget-title crb-dash-padding">' . $title . '</h2>' . $subtitle . '</div><div class="crb-widget-controls" ' . $visibility . '>' . $controls . '</div></div>' : '';
+
+		echo '<div class="crb-dashboard-element" data-widget_id="' . $widget_id . '">' . $heading . '<div class="crb-element-content" data-from_cache="' . ( CRB_Widgets::$from_cache ? 1 : 0 ) . '">' . $body . '</div></div>';
 	}
 
-	$kpi_show = '<table id = "crb-kpi" class=""><tr>' . $kpi_show . '</tr></table>';
+	echo '</div>';
 
-	// TODO: add link "send daily report to my email"
-	// $kpi_show .= '<p style="text-align: right; margin: 0;">' . __( 'in the last 24 hours', 'wp-cerber' ) . '</p>';
-	echo '<div title="In the last 24 hours">' . $kpi_show . '</div>';
-
-	$placeholder = '<div class="crb-act-padding crb-dash-placeholder">' . __( 'No activity has been logged yet.', 'wp-cerber' ) . '</div>';
-
-	$user_logged = cerber_db_get_var( 'SELECT ip FROM ' . CERBER_LOG_TABLE . ' WHERE user_id !=0 LIMIT 1' );
-
-	if ( ! $user_logged ) {
-		$nav_links = '';
-		$user_act = $placeholder;
-	}
-	else {
-		$nav_links = crb_admin_activity_nav_links( 'users' );
-		$user_act = cerber_show_activity( array(
-			'filter_user'  => '*',
-			'per_page'     => 10,
-			'no_navi'      => true,
-			'no_export'    => true,
-			'no_details'   => true,
-			'date'         => 'ago',
-			'hide_columns' => array( 'crb_username_col' ),
-		), false );
-	}
-
-	$dash_widgets[] = array( __( "Users' Activity", 'wp-cerber' ), $user_act, $nav_links );
-
-	$in = implode( ',', crb_get_filter_set( 1 ) );
-	$bad_logged = cerber_db_get_var( 'SELECT ip FROM ' . CERBER_LOG_TABLE . ' WHERE activity IN (' . $in . ') LIMIT 1' );
-
-	if ( ! $bad_logged ) {
-		$susp_act = $placeholder;
-	}
-	else {
-		$susp_act = cerber_show_activity( array(
-			'filter_set' => 1,
-			'per_page'    => 10,
-			'no_navi'     => true,
-			'no_export'   => true,
-			'no_details'  => true,
-			'date'        => 'ago'
-		), false );
-	}
-
-	$nav_links = ( $bad_logged ) ? crb_admin_activity_nav_links( 'suspicious' ) : '';
-	$dash_widgets[] = array( __( 'Malicious Activity', 'wp-cerber' ), $susp_act, $nav_links );
-
-	$locked = cerber_blocked_num();
-	if ( ! $locked ) {
-		$view_all = '';
-		$locked_ips = '<div class="crb-act-padding crb-dash-placeholder">' . __( 'No lockouts at the moment. The sky is clear.', 'wp-cerber' ) . '</div>';
-	}
-	else {
-		$view_all = crb_make_nav_links( array( array( array(), __( 'View all', 'wp-cerber' ) ) ), 'lockouts' );
-		$locked_ips = cerber_show_lockouts( array(
-			'per_page' => 10,
-			'no_navi'  => true
-		,
-		), false );
-	}
-
-	$dash_widgets[] = array( __( 'Recently locked out IP addresses', 'wp-cerber' ), $locked_ips, $view_all );
-
-	foreach ( $dash_widgets as $dash_widget ) {
-		$heading = '<table class="crb-table-heading"><tr><td><h2 class="crb-act-padding">' . $dash_widget[0] . '</h2></td><td>' . $dash_widget[2] . '</td></tr></table>';
-		echo '<div class="crb-dashboard-element">' . $heading . $dash_widget[1] . '</div>';
-	}
+	echo '<div style="text-align: right">' . crb_admin_screen_dialog() . '</div>';
 }
 
+/**
+ * Initializing and registering dashboard widgets code.
+ *
+ * @return void
+ *
+ * @since 9.6.4.2
+ */
+function cerber_widgets_init() {
+
+	CRB_Widgets::register( 'wgt_ac_kpi',
+		__( 'Security Status Monitor', 'wp-cerber' ),
+		'',
+		'',
+		function () {
+			$kpi_list = cerber_calculate_kpi( time() - 24 * 3600, time() );
+
+			$kpi_show = '';
+			foreach ( $kpi_list as $kpi ) {
+				$kpi_show .= '<td>' . $kpi[1] . '</td><td><span style="z-index: 10;">' . $kpi[0] . '</span></td>';
+			}
+
+			$kpi_show = '<table id="crb-kpi" class="" title="In the last 24 hours"><tr>' . $kpi_show . '</tr></table>';
+
+			// TODO: add link "send daily report to my email"
+			// $kpi_show .= '<p style="text-align: right; margin: 0;">' . __( 'in the last 24 hours', 'wp-cerber' ) . '</p>';
+			return $kpi_show;
+
+		},
+        array( CRB_ACT_HASH ),
+        true );
+
+	CRB_Widgets::register( 'wgt_ac_breakdown',
+		__( 'Activity Breakdown', 'wp-cerber' ),
+		__( 'most frequent incidents and events in the last 24 hours', 'wp-cerber' ),
+		'',
+		function ( $ajax = false ) {
+
+			return cerber_activity_summary();
+
+			/* AJAX variant
+
+			if ( $ajax ) {
+				return cerber_activity_summary();
+			}
+
+			if ( cerber_activity_summary( true ) ) {
+				return array( '', false, true );
+			}
+
+			return ''; */
+		},
+		array( CRB_ACT_HASH ) );
+
+	CRB_Widgets::register( 'wgt_mali_top',
+	__( 'Top Offending IP Addresses', 'wp-cerber' ),
+	__( 'most active in the last 24 hours', 'wp-cerber' ),
+	'',
+	function ( $ajax = false ) {
+
+		return crb_top_malicious_ip_report();
+	},
+	array( CRB_ACT_HASH ) );
+
+	CRB_Widgets::register( 'wgt_new_users',
+		__( 'New Users', 'wp-cerber' ),
+		__( 'most recent user registrations', 'wp-cerber' ),
+		crb_make_nav_links( array( array( array( 'filter_activity' => array( 1, 2 ) ), __( 'View all', 'wp-cerber' ) ) ), 'activity' ),
+		function () {
+
+			$logged = cerber_db_get_var( 'SELECT ip FROM ' . CERBER_LOG_TABLE . ' WHERE activity IN (1,2) LIMIT 1' );
+
+			if ( ! $logged ) {
+				return array( 'no_data' => __( 'No activity has been logged yet.', 'wp-cerber' ) );
+			}
+
+			return cerber_show_activity( array(
+				'filter_activity' => array( 1, 2 ),
+				'per_page'        => 10,
+				'no_navi'         => true,
+				'no_export'       => true,
+				'no_details'      => true,
+				'date'            => 'ago',
+				'hide_columns'    => array( 'crb_username_col' ),
+				'context'         => 'dashboard',
+			), false );
+
+		},
+		array( CRB_ACT_HASH, 60 ) );
+
+    CRB_Widgets::register( 'wgt_login_issues',
+		__( 'Login Issues', 'wp-cerber' ),
+		__( 'most recent authentication issues and requests', 'wp-cerber' ),
+		crb_make_nav_links( array( array( array( 'filter_set' => '2' ), __( 'View all', 'wp-cerber' ) ) ), 'activity' ),
+		function () {
+
+			$in = crb_get_activity_set('login_issues', true);
+			$logged = cerber_db_get_var( 'SELECT ip FROM ' . CERBER_LOG_TABLE . ' WHERE activity IN (' . $in . ') LIMIT 1' );
+
+			if ( ! $logged ) {
+				return array( 'no_data' => __( 'No activity has been logged yet.', 'wp-cerber' ) );
+			}
+
+			return cerber_show_activity( array(
+				'filter_set'  => 2,
+				'per_page'     => 10,
+				'no_navi'      => true,
+				'no_export'    => true,
+				'no_details'   => true,
+				'date'         => 'ago',
+				'hide_columns' => array( 'crb_user_col' ),
+				'context'      => 'dashboard',
+			), false );
+
+		},
+		array( CRB_ACT_HASH, 60 ) );
+
+	CRB_Widgets::register( 'wgt_user_activity',
+		__( "Users' Activity", 'wp-cerber' ),
+		__( 'most recent user events', 'wp-cerber' ),
+		crb_admin_activity_nav_links( 'users' ),
+		function () {
+
+			$user_logged = cerber_db_get_var( 'SELECT ip FROM ' . CERBER_LOG_TABLE . ' WHERE user_id !=0 LIMIT 1' );
+
+			if ( ! $user_logged ) {
+				return array( 'no_data' => __( 'No activity has been logged yet.', 'wp-cerber' ) );
+			}
+
+			return cerber_show_activity( array(
+				'filter_user'  => '*',
+				'per_page'     => 10,
+				'no_navi'      => true,
+				'no_export'    => true,
+				'no_details'   => true,
+				'date'         => 'ago',
+				'hide_columns' => array( 'crb_username_col' ),
+				'context'      => 'dashboard',
+			), false );
+
+		},
+		array( CRB_ACT_HASH, 60 ) );
+
+	CRB_Widgets::register( 'wgt_mali_activity',
+		__( 'Malicious Activity', 'wp-cerber' ),
+		__( 'most recent violations of security rules', 'wp-cerber' ),
+		crb_admin_activity_nav_links( 'suspicious' ),
+		function () {
+
+			$in = crb_get_activity_set( 'suspicious', true );
+			$bad_logged = cerber_db_get_var( 'SELECT ip FROM ' . CERBER_LOG_TABLE . ' WHERE activity IN (' . $in . ') LIMIT 1' );
+
+			if ( ! $bad_logged ) {
+				return array( 'no_data' => __( 'No activity has been logged yet.', 'wp-cerber' ) );
+			}
+
+			return cerber_show_activity( array(
+				'filter_set' => 1,
+				'per_page'   => 10,
+				'no_navi'    => true,
+				'no_export'  => true,
+				'no_details' => true,
+				'date'       => 'ago',
+				'context'    => 'dashboard',
+			), false );
+
+		},
+		array( CRB_ACT_HASH, 60 ) );
+
+	CRB_Widgets::register( 'wgt_blocked_ips',
+		__( 'Recently locked out IP addresses', 'wp-cerber' ),
+        '',
+		crb_make_nav_links( array( array( array(), __( 'View all', 'wp-cerber' ) ) ), 'lockouts' ),
+		function () {
+
+			$locked = cerber_blocked_num();
+
+			if ( ! $locked ) {
+				return array( 'no_data' => __( 'No lockouts at the moment. The sky is clear.', 'wp-cerber' ) );
+			}
+
+			return cerber_show_lockouts( array(
+				'per_page' => 10,
+				'no_navi'  => true
+			), false );
+
+		} );
+}
 
 /*
 	Admin aside bar
@@ -3161,11 +3536,11 @@ function crb_admin_alert_exists( $params = null ) {
  * @since 8.9.6
  */
 function crb_admin_alert_dialog( $button = true, $create_txt = null, $delete_txt = null ) {
-	$params = crb_get_alert_params();
+	$alert_params = crb_get_alert_params();
 
 	// Check if query parameters that are used in alerts are set and not empty.
 	// All activities, without any filter are not allowed
-	$empty = array_filter( array_values( $params ) );
+	$empty = array_filter( array_values( $alert_params ) );
 
     if ( empty( $empty ) ) {
 		return '';
@@ -3179,7 +3554,7 @@ function crb_admin_alert_dialog( $button = true, $create_txt = null, $delete_txt
 		return '';
 	}
 
-	$mode = ( crb_admin_alert_exists( $params ) ) ? 'off' : 'on';
+	$mode = ( crb_admin_alert_exists( $alert_params ) ) ? 'off' : 'on';
 
 	if ( $mode == 'on' ) {
 		$label = $create_txt ?? __( 'Create Alert', 'wp-cerber' );
@@ -3255,14 +3630,14 @@ function crb_admin_alert_dialog( $button = true, $create_txt = null, $delete_txt
 		);
 	}
 
-	$query_params = array_intersect_key( $params, $_GET );
+
+    // Extract values of the alert fields
+
+	$alert_fields = array_intersect_key( $alert_params, $_GET );
 
 	$limits = array(
 		'title'   => __( 'Optional alert limits', 'wp-cerber' ),
-		'hidden'  => array_merge( $query_params, array(
-			'page'            => crb_admin_get_page(),
-			'tab'             => crb_admin_get_tab(),
-			'cerber_nonce'    => crb_create_nonce(),
+		'hidden'  => array_merge( $alert_fields, array(
 			'cerber_admin_do' => 'subscribe',
 			'mode'            => $mode
 		) ),
@@ -3289,7 +3664,7 @@ function crb_admin_alert_dialog( $button = true, $create_txt = null, $delete_txt
 		),
 	);
 
-	return crb_create_popup_dialog( $limits, $channels, $label, $icon );
+	return crb_create_popup_form( $limits, $channels, [ 'icon' => $icon, 'label' => $label ] );
 }
 
 /**
@@ -3354,46 +3729,60 @@ function crb_delete_alert() {
 	}
 }
 
-/*
-	Pagination
-*/
+/**
+ * Generates pagination links
+ *
+ * @param int $total
+ * @param int $per_page
+ *
+ * @return string
+ */
 function cerber_page_navi( $total, $per_page = 25 ) {
-	$max_links = 10;
 
-    if ( ! $per_page ) {
+    $max_links = 10;
+	$total = max( 0, intval( $total ) );
+    $per_page = intval( $per_page );
+
+	if ( $per_page <= 0 ) {
 		$per_page = 25;
 	}
 
     $page = cerber_get_pn();
-
 	$base_url = esc_url( remove_query_arg( 'pagen', add_query_arg( crb_get_query_params(), cerber_admin_link() ) ) );
-
 	$last_page = ceil( $total / $per_page );
-	$ret = '';
-	if ( $last_page > 1 ) {
-		$start = 1 + $max_links * intval( ( $page - 1 ) / $max_links );
-		$end = $start + $max_links - 1;
-		if ( $end > $last_page ) {
-			$end = $last_page;
-		}
-		if ( $start > $max_links ) {
-			$links[] = '<a href="' . $base_url . '&amp;pagen=' . ( $start - 1 ) . '" class="arrows"><b>&laquo;</b></a>';
-		}
-		for ( $i = $start; $i <= $end; $i ++ ) {
-			if ( $page != $i ) {
-				$links[] = '<a href="' . $base_url . '&amp;pagen=' . $i . '" >' . $i . '</a>';
-			}
-			else {
-				$links[] = '<a class="active" style="font-size: 16px;">' . $i . '</a> ';
-			}
-		}
-		if ( $end < $last_page ) {
-			$links[] = '<a href="' . $base_url . '&amp;pagen=' . $i . '" class="arrows">&raquo;</a>';  // &#10141;
-		}
-		$ret = '<table class="cerber-margin" style="margin-top:1em; border-collapse: collapse;"><tr><td><div class="pagination">' . implode( ' ', $links ) . '</div></td><td><span style="margin-left:2em;"><b>' . $total . ' ' . _n( 'entry', 'entries', $total, 'wp-cerber' ) . '</b></span></td></tr></table>';
+
+	if ( $last_page <= 1 ) {
+        return '';
 	}
 
-	return $ret;
+	$links = array();
+	$start = 1 + $max_links * intval( ( $page - 1 ) / $max_links );
+	$end = $start + $max_links - 1;
+
+	if ( $end > $last_page ) {
+		$end = $last_page;
+	}
+
+	if ( $start > $max_links ) {
+		$links[] = '<a href="' . $base_url . '&pagen=' . ( $start - 1 ) . '" class="arrows"><b>&laquo;</b></a>';
+	}
+
+	for ( $i = $start; $i <= $end; $i ++ ) {
+		if ( $page != $i ) {
+			$links[] = '<a href="' . $base_url . '&pagen=' . $i . '" >' . $i . '</a>';
+		}
+		else {
+			$links[] = '<a class="active" style="font-size: 16px;">' . $i . '</a> ';
+		}
+	}
+
+	if ( $end < $last_page ) {
+		$links[] = '<a href="' . $base_url . '&pagen=' . $i . '" class="arrows">&raquo;</a>';  // &#10141;
+	}
+
+	__( 'entries', 'wp-cerber' );  // registration for _n()
+
+	return '<table class="cerber-margin" style="margin-top:1em; border-collapse: collapse;"><tr><td><div class="pagination">' . implode( ' ', $links ) . '</div></td><td><span style="margin-left:2em;"><b>' . $total . ' ' . _n( 'entry', 'entries', $total, 'wp-cerber' ) . '</b></span></td></tr></table>';
 }
 
 /**
@@ -3512,18 +3901,21 @@ function cerber_admin_assets() {
 		wp_register_style( 'nexus_css', $crb_assets_url . 'nexus.css', null, CERBER_VER );
 		wp_enqueue_style( 'nexus_css' );
 
-		wp_register_style( 'ui_stack_css', $crb_assets_url . 'ui-stack.css', null, CERBER_VER );
-		wp_enqueue_style( 'ui_stack_css' );
-
 		add_thickbox();
 
 		wp_enqueue_script( 'jquery-ui-core' );
 		wp_enqueue_script( 'jquery-effects-bounce' );
+		wp_enqueue_script( 'jquery-ui-sortable' );
+
 	}
 
 	if ( ! defined( 'CERBER_BETA' ) ) {
-		wp_enqueue_script( 'cerber_js', $crb_assets_url . 'admin.js', array( 'jquery' ), CERBER_VER, true );
+
+		wp_register_style( 'ui_stack_css', $crb_assets_url . 'ui-stack.css', null, CERBER_VER );
+		wp_enqueue_style( 'ui_stack_css' );
+
 		wp_enqueue_script( 'the-ui-stack', $crb_assets_url . 'ui-stack.js', array( 'jquery' ), CERBER_VER, true );
+		wp_enqueue_script( 'cerber_js', $crb_assets_url . 'admin.js', array( 'jquery' ), CERBER_VER, true );
 
 		if ( cerber_is_admin_page( array( 'page' => 'cerber-integrity' ) ) ) {
 			wp_enqueue_script( 'cerber_scan', $crb_assets_url . 'scanner.js', array( 'jquery' ), CERBER_VER, true );
@@ -3570,15 +3962,17 @@ function cerber_admin_head() {
 
     <style>
         #crb-admin-2fa-pins {
+            border-left: solid 3px rgba(0, 121, 219, 0.63);
+        }
+        #crb-admin-2fa-pins table {
             border-collapse: collapse;
         }
-        #crb-admin-2fa-pins tr:first-child td {
+        #crb-admin-2fa-pins table tr:first-child td {
             font-weight: bold;
         }
-        #crb-admin-2fa-pins td {
-            padding: 6px;
-            border: 2px solid rgb(255, 255, 255, 0.5);
-            background-color: rgba(187, 187, 187, 0.12);
+        #crb-admin-2fa-pins table td {
+            padding: 6px 12px;
+            background-color: rgba(255, 255, 255, 0.5);
         }
     </style>
 
@@ -3874,6 +4268,107 @@ function cerber_admin_footer() {
         </script>
 		<?php
 	}
+
+
+    // Inter-Page Loader
+
+	?>
+
+    <div id="ui_page_overlay" style="display: none;"></div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const containers = [
+                document.getElementById('crb-admin'),
+                document.getElementById('toplevel_page_cerber-security'),
+                document.getElementById('cerber_quick'),
+
+                document.querySelector('body.users-php #wpbody-content'),
+                document.querySelector('#wpbody-content #profile-page'),
+                document.querySelector('#adminmenu #menu-users'),
+            ];
+
+            containers.forEach(container => {
+                if (container) {
+                    const links = container.querySelectorAll('a');
+                    links.forEach(link => {
+                        link.classList.add('cerber-page-loader-candidate');
+                    });
+                }
+            });
+
+            // Helper function to parse query parameters
+            const getQueryParams = (url) => {
+                const queryString = url.split('?')[1] || '';
+                return Object.fromEntries(new URLSearchParams(queryString));
+            };
+
+            const excludedSchemes = ['mailto:', 'tel:', 'sms:', 'ftp:', 'geo:', 'javascript:'];
+            const overlay = document.getElementById('ui_page_overlay');
+
+            document.addEventListener('click', function (event) {
+                let link;
+
+                if (event.target.tagName === 'A') {
+                    link = event.target;
+                }
+                else {
+                    link = event.target.closest('a');
+                }
+
+                if (!link || !link.classList.contains('cerber-page-loader-candidate')) {
+                    return;
+                }
+
+                const href = link.getAttribute('href') || '';
+                const hasOnclick = link.hasAttribute('onclick');
+                const target = link.getAttribute('target') || '';
+
+                // Check for exceptions
+
+                if (
+                    !href ||
+                    hasOnclick ||
+                    href.startsWith('#') ||
+                    target ||
+                    excludedSchemes.some(scheme => href.startsWith(scheme))
+                ) {
+                    return;
+                }
+
+                // The link looks valid, let's check it for specific locations (URLs) we will activate the overlay loader for
+
+                const params = getQueryParams(href);
+
+                // Conditions for overlay activation
+                const validPages = ['cerber-security', 'cerber-traffic'];
+                const validTabs = ['dashboard', 'activity', 'sessions', 'traffic'];
+
+                if (params.cerber_nonce
+                    || !params.page
+                    || !validPages.includes(params.page)
+                    || (params.tab && !validTabs.includes(params.tab))) {
+                    return;
+                }
+
+                event.preventDefault();
+                overlay.style.display = 'flex';
+
+                // Trigger delayed navigation with delay to avoid "flashing effect"
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 200);
+
+            });
+
+        });
+
+    </script>
+
+
+	<?php
 
 	// ------------------------------------------------------
 
@@ -4324,9 +4819,14 @@ function crb_admin_geo_selector( $rule_id, $rule, $class = '' ) {
 		$num = count( $config['list'] );
 		if ( $config['type'] == 'W' ) {
 			$info = sprintf( _n( 'Permitted for one country', 'Permitted for %d countries', $num, 'wp-cerber' ), $num );
+
+			__( 'Permitted for %d countries', 'wp-cerber' ); // registration for _n()
+
 		}
 		else {
 			$info = sprintf( _n( 'Not permitted for one country', 'Not permitted for %d countries', $num, 'wp-cerber' ), $num );
+
+			__( 'Not permitted for %d countries', 'wp-cerber' ); // registration for _n()
 		}
 		if ( $num == 1 ) {
 			$info .= ' (' . current( $config['list'] ) . ')';
@@ -5044,14 +5544,23 @@ function cerber_show_traffic( $args = array(), $echo = true ) {
 			}
 
 			if ( ! empty( $details[9] ) ) {
-				$start = strlen( 'Set-Cookie:' );
-				$list = array();
-				foreach ( $details[9] as $item ) {
-					if ( $e = explode( '=', substr( $item, $start ), 2 ) ) {
-						$list[ $e[0] ] = $e[1];
-					}
+				$server_cookies = array();
+
+                foreach ( $details[9] as $item ) {
+	                if ( 0 === strpos( $item, 'Set-Cookie:' ) ) {
+		                $item = substr( $item, 11 ); // Old format includes Set-Cookie:
+                    }
+
+	                if ( $e = explode( '=', $item, 2 ) ) {
+		                $pos = strpos( $e[1], ';' );
+		                $decoded_value = urldecode( substr( $e[1], 0, $pos ) );
+		                $server_cookies[ trim( $e[0] ) ] = $decoded_value . substr( $e[1], $pos );
+	                }
 				}
-				$more_details[] = array( '', cerber_table_view( __( 'Server Response Cookies', 'wp-cerber' ), $list ) );
+
+				crb_green_marker( $server_cookies, 2 );
+
+                $more_details[] = array( '', cerber_table_view( __( 'Server Response Cookies', 'wp-cerber' ), $server_cookies ) );
 			}
 
 			if ( ! empty( $details[7] ) ) {
@@ -5262,18 +5771,28 @@ function cerber_show_traffic( $args = array(), $echo = true ) {
 function crb_green_marker( &$fields, $type = 1 ) {
     static $crb_fields;
 
-	if ( ! $anti = cerber_antibot_gene() ) {
-		return;
-	}
-
 	if ( ! $crb_fields ) {
+
+		if ( ! $anti = cerber_antibot_gene() ) {
+			return;
+		}
+
 		$crb_fields[1] = array_flip( array_column( $anti[0], 0 ) );
+
+        // All cookies
 
 		$crb_cookies = array_column( $anti[1], 0 );
 
 		foreach ( $crb_cookies as &$val ) {
 			$val = cerber_get_cookie_prefix() . $val;
 		}
+
+		$crb_cookies[] = cerber_get_cookie_prefix() . CRB_GROOVE;
+
+		$groove_x = cerber_get_groove_x();
+		$crb_cookies[] = cerber_get_cookie_prefix() . CRB_GROOVE . '_x_' . $groove_x[0];
+
+		$crb_cookies[] = cerber_get_cookie_prefix() . 'cerber_nexus_id';
 
 		$crb_fields[2] = array_flip( $crb_cookies );
 	}
@@ -6312,12 +6831,37 @@ function cerber_show_tabs( $active, $tabs = array() ) {
 // Access Lists (ACL) ---------------------------------------------------------
 
 /**
- * @param string $ip
- * @param string $tag
- * @param string $comment
- * @param int $acl_slice
+ * Adds an IP address, range, or network to the Access List.
  *
- * @return bool|WP_Error
+ * This function allows whitelisting or blacklisting IPs, ranges, or networks.
+ *
+ *  Supported formats for IP addresses (IPv4 and IPv6) with examples:
+ *
+ *  **IPv4 Formats:**
+ *  - Single address: `192.168.5.22`
+ *  - Range (hyphen-separated): `192.168.1.45 - 192.168.22.165`
+ *  - CIDR notation: `192.168.128.0/20`
+ *  - Wildcard notation: `192.168.77.*`, `192.168.*.*`, `192.*.*.*`
+ *  - Any address: `0.0.0.0/0` or `*.*.*.*`
+ *
+ *  **IPv6 Formats:**
+ *  - Single address: `2001:0db8:85a3:0000:0000:8a2e:0370:7334`
+ *  - Range (hyphen-separated): `2001:db8::ff00:41:0 - 2001:db8::ff00:41:12ff`
+ *  - CIDR notation: `2001:db8::/46`
+ *  - Wildcard notation: `2001:db8::ff00:41:*`
+ *  - Any address: `::/0`
+ *
+ * @param string      $ip        An IP address, IP range, or IP network in CIDR format.
+ * @param string      $tag       'W' for allowed list, 'B' for blocked list.
+ * @param string|null $comment   (Optional) A note visible to website administrators. Default: ''.
+ * @param int         $acl_slice (Optional) The ID of the Access List. Use 0 for the global Access List. Default: 0.
+ *
+ * @return true|WP_Error Returns true on success or WP_Error on failure.
+ *
+ * @throws WP_Error Possible error codes:
+ *                  - 'acl_wrong_ip': Invalid IP address, range, or network format.
+ *                  - 'acl_duplicate': The IP address or range is already in the list.
+ *                  - 'acl_db_error': A database error occurred while inserting the entry.
  */
 function cerber_acl_add( $ip, $tag, $comment = '', $acl_slice = 0 ) {
 	global $wpdb;
@@ -6376,7 +6920,6 @@ function cerber_acl_add( $ip, $tag, $comment = '', $acl_slice = 0 ) {
 	) );
 
 	return true;
-
 }
 
 function cerber_add_white( $ip, $comment = '' ) {
@@ -6538,29 +7081,35 @@ function crb_test_notify_link( $args = array(), $setting = null ) {
 // Pop-up dialogs -------------------------------------------------------------
 
 /**
- * Creates a pop-up dialog window with a button that opens the dialog.
+ * Creates a pop-up dialog DOM element with a button that opens the dialog.
  *
  * @param array $fields Form fields - left side
  * @param array $aside Form fields - right side, optional
- * @param string $label Button label
- * @param string $button_icon Button icon
+ * @param array $control
+ * @param array $atts HTML attributes for popup element
  * @param string $method Form method
- * @param null $action Form action
+ * @param string|null $action Form action
  *
  * @return string The HTML code of the pop-up prepared to add to the web page
  *
  * @since 8.9.5.3
  */
-function crb_create_popup_dialog( $fields, $aside = array(), $label = '', $button_icon = '', $method = 'get', $action = null ) {
+function crb_create_popup_form( array $fields, array $aside = array(), array $control = array(), array $atts = array(), string $method = 'get', string $action = null ) {
 	static $counter = 0;
-
 	$counter ++; // In case of multiple dialogs on a page
 
-	if ( $button_icon ) {
-		$control = '<a data-popup_element_id="crb-popup-dialog-' . $counter . '" class="button button-secondary cerber-button crb-popup-dialog-open" href="#" style="margin-right: 0.5em;"><i class="crb-icon ' . $button_icon . '"></i> ' . $label . '</a>';
+	$icon = $control['icon'] ?? '';
+	$label = $control['label'] ?? '';
+	$type = $control['type'] ?? 'button';
+
+	$icon_html = ( $icon ) ? '<i class="crb-icon ' . crb_generic_escape( $icon ) . '"></i>' : '';
+	$space = ( $icon_html && $label ) ? ' ' : '';
+
+	if ( $type == 'button' ) {
+		$opener = '<a data-popup_element_id="crb-popup-dialog-' . $counter . '" class="button button-secondary cerber-button crb-popup-dialog-open" href="#" style="margin-right: 0.5em;">' . $icon_html . $space . $label . '</a>';
 	}
 	else {
-		$control = '<a data-popup_element_id="crb-popup-dialog-' . $counter . '" class="crb-popup-dialog-open" href="#">' . $label . '</a>';
+		$opener = $icon_html . $space . '<a data-popup_element_id="crb-popup-dialog-' . $counter . '" class="crb-popup-dialog-open" href="#">' . $label . '</a>';
 	}
 
 	if ( $aside ) {
@@ -6574,11 +7123,24 @@ function crb_create_popup_dialog( $fields, $aside = array(), $label = '', $butto
 		$last_row = '';
 	}
 
-	$dialog = $control;
+	$html_atts = '';
 
-	$dialog .= '<div id="crb-popup-dialog-' . $counter . '" class="mfp-hide crb-popup-dialog">';
-	$dialog .= '<form action="' . ( $action ?? crb_get_admin_base() ) . '" method="' . $method . '">';
-	$dialog .= '<table class="' . $class . '">';
+	if ( $atts ) {
+		foreach ( $atts as $att => $val ) {
+			$html_atts .= ' ' . crb_generic_escape( $att ) . '="' . crb_generic_escape( $val ) . '" ';
+		}
+	}
+
+	if ( $action ) {
+		$form_action = $action;
+	}
+    else {
+	    $form_action = cerber_admin_link( crb_admin_get_tab() );
+	}
+
+	$dialog = '<div id="crb-popup-dialog-' . $counter . '" class="mfp-hide crb-popup-dialog" ' . $html_atts . '>';
+	$dialog .= '<form action="' . crb_escape_url( $form_action ) . '" method="' . crb_generic_escape( $method ) . '">';
+	$dialog .= '<table class="' . crb_generic_escape( $class ) . '">';
 	$dialog .= '<tr><td>' . crb_create_dialog_form( $fields ) . '</td>' . $td_aside . '</tr>';
 
 	$dialog .= '<tr>' . $last_row . '<td class="crb-dialog-controls">
@@ -6588,7 +7150,7 @@ function crb_create_popup_dialog( $fields, $aside = array(), $label = '', $butto
 
 	$dialog .= '</table></form></div>';
 
-	return $dialog;
+	return $dialog . $opener;
 }
 
 /**
@@ -6610,9 +7172,17 @@ function crb_create_dialog_form( $form_data ) {
 
 	$form .= $form_data['html'] ?? '';
 
-	$hidden = $form_data['hidden'] ?? array();
+	$hidden = array_merge(
+		$form_data['hidden'] ?? array(), array(
+		'page'         => crb_admin_get_page(),
+		'tab'          => crb_admin_get_tab(),
+		'cerber_nonce' => crb_create_nonce(),
+	) );
 
 	foreach ( $hidden as $field => $value ) {
+
+		$field = crb_generic_escape( $field );
+
 		if ( is_array( $value ) ) {
 			foreach ( $value as $val ) {
 				$form .= '<input type="hidden" name="' . $field . '[]" value="' . crb_generic_escape( $val ) . '">' . "\n";
@@ -6632,8 +7202,10 @@ function crb_create_dialog_form( $form_data ) {
 		$atts = '';
 
 		foreach ( $config['atts'] as $att => $val ) {
-			$atts .= ' ' . $att . '="' . $val . '" ';
+			$atts .= ' ' . crb_generic_escape($att) . '="' . crb_generic_escape( $val ) . '" ';
 		}
+
+		$field = crb_generic_escape( $field );
 
 		$input = '<input id="' . $field . '" name="' . $field . '" value="' . crb_generic_escape( $config['value'] ) . '" ' . $atts . '>';
 		$label = '<label for="' . $field . '">' . $config['label'] . '</label>';
@@ -6657,7 +7229,7 @@ function crb_create_dialog_form( $form_data ) {
 	$mess = $form_data['error_messages'] ?? array();
 
 	foreach ( $mess as $id => $msg ) {
-		$form .= '<p id="crb-message-' . $id . '" class="crb-error-text" style="display:none;">' . $msg . '</p>';
+		$form .= '<p id="crb-message-' . crb_sanitize_id( $id ) . '" class="crb-error-text" style="display:none;">' . $msg . '</p>';
 	}
 
 	return '<div class="crb-popup-dialog-form">' . $form . '</div>';
@@ -6715,7 +7287,7 @@ function crb_get_icon( $icon_id ) {
 	return '<i class="crb-icon crb-icon-' . ( CRB_ADMIN_ICONS[ $icon_id ] ?? 'unknown-icon' ) . '"></i>';
 }
 
-// Setting up menu editor -----------------------------------------------------
+// Setting up WordPress navigation menu editor ----------------------------------
 
 add_action( 'admin_head-nav-menus.php', function () {
 	add_meta_box( 'wp_cerber_nav_menu',
@@ -6782,4 +7354,541 @@ function cerber_nav_menu_box() {
         </p>
     </div>
 	<?php
+}
+
+/**
+ * Renders a popup form to display screen configuration dialog
+ *
+ * @return string HTML
+ *
+ * @since 9.6.4.5
+ */
+function crb_admin_screen_dialog() {
+
+	$atts = array( 'type' => 'checkbox', 'data-validation_group' => 'required_min_one' );
+
+	$widgets = CRB_Widgets::get_titles( true, false );
+	$field_list = array();
+
+	foreach ( $widgets as $widget_id => $widget ) {
+
+		if ( CRB_Widgets::is_active( $widget_id ) ) {
+			$atts['checked'] = 1;
+		}
+		else {
+			unset( $atts['checked'] );
+		}
+
+		$field_list[ $widget_id ] = array(
+			'label' => $widget[0],
+			'value' => '1',
+			'atts'  => $atts,
+		);
+	}
+
+	$form_fields = array(
+		'title'          => __( 'Select widgets to display', 'wp-cerber' ),
+		'visible'        => $field_list,
+		'hidden'         => array(
+			'cerber_admin_do' => 'save_widget_list',
+		),
+		'error_messages' => array( 'required_min_one' => __( 'Please select at least one widget', 'wp-cerber' ) )
+	);
+
+	return crb_create_popup_form( $form_fields, [], [ 'icon' => 'crb-icon-bx-cog' ], [ 'data-narrow' => 1 ], 'post' );
+}
+
+
+add_action( 'heartbeat_tick', 'cerber_update_widget_data' );
+/**
+ * Refresh expiring widgets stored in the WordPress persistent object cache
+ *
+ * @return void
+ *
+ * @since 9.6.4.3
+ */
+function cerber_update_widget_data(  ) {
+	if ( ! CRB_Cache::checker()
+	     || ! is_super_admin() ) {
+		return;
+	}
+
+	cerber_widgets_init();
+	CRB_Widgets::update_cache();
+}
+
+/**
+ * WP Cerber Dashboard Widget Manager
+ *
+ * Provides functionality to register, render, and manage WP Cerber dashboard widgets,
+ * including user-specific settings such as widget display order.
+ *
+ * @since 9.6.4.2
+ */
+final class CRB_Widgets {
+
+    // All widgets are here
+    private static $widgets = array();
+
+    // If a widget loaded from the cache
+    static $from_cache = false;
+
+	/**
+	 * Registers a new dashboard widget.
+	 *
+	 * @param string $id Unique identifier for the widget.
+	 * @param string $title The title of the widget displayed in the heading of the widget
+	 * @param string $sub_title Subtitle displayed next to the title
+	 * @param string $controls HTML content for the widget's control area, if any.
+	 * @param callable $callback Callback function for rendering the widget.
+	 *                           Expected to return either a string (HTML content) or an array:
+	 *                           - [0]: string - Widget body HTML content.
+	 *                           - [1]: bool   - Whether to display controls.
+	 *                           - [2]: bool   - Whether the widget body should be loaded via AJAX.
+	 * @param array $cache_config If specified and the WordPress persistent object cache is available, the content of the widget will be cached according to this configuration.
+	 *                                 - [0] string: Cache key for the data source.
+	 *                                 - [1] int: Allowed lag behind the data source for the cached data, in seconds.
+	 *                                 Default is 60 seconds.
+	 * @param bool $no_header Hide heading of the widget
+	 *
+	 * @return void
+	 */
+	public static function register( string $id, string $title, string $sub_title, string $controls, callable $callback, array $cache_config = array(), $no_header = false ) {
+		self::$widgets[ crb_sanitize_id( $id ) ] = array( $title, $controls, $callback, $cache_config, 'sub_title' => $sub_title, 'no_head' => $no_header );
+	}
+
+	/**
+	 * Returns a list of all registered widget IDs and their titles.
+	 *
+	 * @param bool $sort Optional. Whether to sort the widgets based on the saved user order of widgets.
+	 * @param bool $active_only Optional. Whether to filter out the widgets based on the saved user list of active widgets.
+	 *
+	 * @return array An associative array where the keys are widget IDs and the values are widget titles.
+	 */
+	public static function get_titles( bool $sort = false, bool $active_only = true ): array {
+		if ( ! self::$widgets ) {
+			return array();
+		}
+
+		$result = array();
+
+		foreach ( self::$widgets as $id => $widget ) {
+			$result[ $id ] = array( $widget[0], $widget['sub_title'] );
+		}
+
+		if ( $active_only
+		     && $list = self::get_active_list() ) {
+			$result = array_intersect_key( $result, array_filter( $list ) );
+		}
+
+		if ( $sort
+		     && ( $order = self::get_screen_parameter( 'widget_order' ) )
+		     && ! crb_is_wp_error( $order ) ) {
+
+			$order = array_filter( $order );
+			$order_indices = array_flip( $order );
+
+			uksort( $result, function ( $a, $b ) use ( $order_indices ) {
+				return ( $order_indices[ $a ] ?? 0 ) <=> ( $order_indices[ $b ] ?? 0 );
+			} );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Returns the HTML content for a widget's control area.
+	 *
+	 * @param string $widget_id The ID of the widget.
+	 *
+	 * @return string The HTML content of the widget controls, or an empty string if no controls are defined.
+	 */
+	public static function get_controls( string $widget_id ): string {
+		return self::$widgets[ $widget_id ][1] ?? '';
+	}
+
+	/**
+     * Determines whether the widget header will be shown or hidden
+     * when displaying the given widget on admin pages
+     *
+	 * @param string $widget_id
+	 *
+	 * @return bool If true, the widget header must be hidden
+	 */
+	public static function hide_header( string $widget_id ): bool {
+		return ! empty( self::$widgets[ $widget_id ]['no_head'] );
+	}
+
+	/**
+	 * Renders a dashboard widget by its ID.
+	 *
+	 * @param string $widget_id The ID of the widget to render.
+	 * @param bool   $is_ajax   Optional. Whether the rendering is triggered in an AJAX context. Default false.
+	 *
+	 * @return string|array|WP_Error The rendered widget content as a string or an array,
+	 *                               or a WP_Error object if the widget cannot be rendered.
+	 */
+	public static function render_widget( string $widget_id, bool $is_ajax = false ) {
+		if ( ! $widget = self::$widgets[ $widget_id ] ?? false ) {
+			return new WP_Error( 'cerber_widget_not_found', 'Widget not found:' . $widget_id );
+		}
+
+		if ( $cached = self::get_cache( $widget_id ) ) {
+            self::$from_cache = true;
+
+			return $cached;
+		}
+
+		self::$from_cache = false;
+
+		$callback = $widget[2];
+
+		if ( ! is_callable( $callback ) ) {
+			return new WP_Error( 'cerber_not_callable', 'Widget callback is not callable (Widget ID ' . $widget_id . ').' );
+		}
+
+		try {
+			$result = call_user_func( $callback, $is_ajax );
+		}
+		catch ( Exception $e ) {
+			return new WP_Error(
+				'cerber_callback_error',
+				'An exception occurred during widget callback execution (Widget ID ' . $widget_id . '). ERROR: ' . $e->getMessage(),
+				array( 'exception' => $e->getMessage() )
+			);
+		}
+
+		if ( crb_is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		if ( is_array( $result )
+		     && $no_data = $result['no_data'] ?? false ) {
+            // Exception: there is nothing to display
+			return array( '<div class="crb-dash-padding crb-dash-placeholder">' . $no_data . '</div>', false );
+		}
+
+		self::set_cache( $widget_id, $result );
+
+		if ( $is_ajax
+		     || ! is_array( $result ) ) {
+			return $result;
+		}
+
+        // Check if AJAX loading is required - based on the returned value from the callback
+
+		$ajax = $result[2] ?? false;
+
+		if ( ! $ajax ) {
+			return $result;
+		}
+
+		return self::get_ajax_area( $widget_id );
+	}
+
+	/**
+	 * Retrieves a widget's content from the WordPress persistent object cache.
+     * Note: If no persistent object cache is available, the content will be lost between HTTP requests.
+	 *
+	 * @param string $widget_id The ID of the widget.
+	 *
+	 * @return mixed|false The cached widget content if available and valid. Returns false if:
+	 *                     - The cache is unavailable.
+	 *                     - The cache has expired.
+	 *                     - The widget does not have a valid cache configuration.
+	 */
+	private static function get_cache( string $widget_id ) {
+		list ( $source_key, $lag ) = self::get_cache_params( $widget_id );
+
+		if ( ! $source_key
+		     || ! ( $source = cerber_cache_get( $source_key, false ) )
+		     || ! ( $modified = $source['modified'] ?? false )
+		     || ! ( $cached = cerber_cache_get( 'dash_widget_' . $widget_id, false ) )
+		     || empty( $cached['widget'] ) ) {
+
+			return false;
+		}
+
+		$saved = $cached['saved'];
+
+		// Check if the cache has expired
+		if ( ( $saved + $lag ) < $modified ) {
+            return false;
+        }
+
+		// Check if the cache is stale
+		if ( $saved < $modified
+		     && $saved < ( time() - 600 ) ) {
+			return false;
+		}
+
+		return $cached['widget'];
+	}
+
+
+	/**
+	 * Saves a widget's rendered content to the WordPress persistent object cache.
+	 * Note: If no persistent object cache is available, the content will be lost between HTTP requests.
+	 *
+	 * @param string       $widget_id The unique identifier of the widget.
+	 * @param array|string $contents  The content of the widget to be cached.
+	 *
+	 * @return bool True if the cache entry was successfully saved, false otherwise.
+	 *
+	 */
+	private static function set_cache( string $widget_id, $contents ) {
+		list ( $source_key, $lag ) = self::get_cache_params( $widget_id );
+
+		if ( ! $source_key ) {
+			return false;
+		}
+
+		return cerber_cache_set( 'dash_widget_' . $widget_id, array( 'widget' => $contents, 'saved' => time(), 'lag' => $lag ) );
+	}
+
+	/**
+     * Purges all cached widgets
+     *
+	 * @return void
+	 */
+	public static function purge_cache( string $widget_id = null ) {
+		if ( $widget_id ) {
+			cerber_cache_set( 'dash_widget_' . $widget_id, array( 'purged' => time() ) );
+
+			return;
+		}
+
+		foreach ( array_keys( self::$widgets ) as $widget_id ) {
+			cerber_cache_set( 'dash_widget_' . $widget_id, array( 'purged' => time() ) );
+		}
+	}
+
+	/**
+     * Returns cache parameters if specified for a widget. Parameters are defined when registering widgets.
+     *
+	 * @param string $widget_id Widget ID.
+	 *
+	 * @return array Contains 1) key to get the last modification time of the data source and 2) Allowed lag behind the data source
+	 */
+	private static function get_cache_params( string $widget_id ): array {
+		$key = self::$widgets[ $widget_id ][3][0] ?? '';
+		$lag = self::$widgets[ $widget_id ][3][1] ?? 120; // Default value is 2 minutes
+
+		return array( $key, $lag );
+	}
+
+	/**
+     * Forcefully update widget cache elements that will expire soon
+     *
+	 * @return void
+	 */
+	public static function update_cache() {
+		if ( ! self::$widgets
+		     || ! CRB_Cache::checker()
+		     || ! is_super_admin() ) {
+			return;
+		}
+
+		foreach ( array_keys( self::$widgets ) as $widget_id ) {
+			list ( $source_key, $lag ) = self::get_cache_params( $widget_id );
+
+			if ( ! $source_key ) { // Meaning cache not in use for this widget
+				continue;
+			}
+
+            // Do we have valid data source modification time?
+
+			if ( ! ( $source = cerber_cache_get( $source_key, false ) )
+			     || ! ( $modified = $source['modified'] ?? false ) ) {
+				continue;
+			}
+
+            // Try to get widget from cache
+
+			if ( ! ( $cached = cerber_cache_get( 'dash_widget_' . $widget_id, false ) )
+			     || ! ( $saved = $cached['saved'] ?? false ) ) {
+
+                self::render_widget( $widget_id );
+				continue;
+			}
+
+			// If cache will expire soon (less than in 30 sec) we update it preliminary
+
+			if ( ( $saved + $lag - 30 ) < $modified ) {
+				self::purge_cache( $widget_id );
+				self::render_widget( $widget_id );
+			}
+		}
+	}
+
+	/**
+     * Updates the list of active widgets for the current user on a specific admin screen.
+     *
+	 * @param array $post_fields Array containing $_POST fields that represent enabled widgets as array keys
+	 * @param string $screen
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function save_list( $post_fields, string $screen = 'main' ) {
+		if ( empty( self::$widgets ) ) {
+			return new WP_Error( 'cerber_no_widgets', 'No widgets are registered yet. Did you forget to call ' . __CLASS__ . '::register();?' );
+		}
+
+        // Make sure we're saving existing widget IDs only
+
+		$widgets = array_fill_keys( array_keys( self::$widgets ), 0 );
+		$list = array_merge( $widgets, array_intersect_key( $post_fields, $widgets ) );
+
+        // Sanitize values
+
+		$list = array_map( function ( $val ) {
+			return absint( $val );
+		}, $list );
+
+		return self::save_screen_parameter( 'widget_list', $list, $screen );
+	}
+
+	/**
+	 * Returns the list of active widgets for the current user on a specific admin screen.
+	 *
+	 * @param string $screen
+	 *
+	 * @return array The list of active widgets, including those that were registered after the list was saved.
+	 */
+	public static function get_active_list( string $screen = 'main' ) {
+		if ( empty( self::$widgets ) ) {
+			return array();
+		}
+
+		$list = self::get_screen_parameter( 'widget_list', $screen );
+
+		if ( crb_is_wp_error( $list ) ) {
+			return self::$widgets;
+		}
+
+		$disabled = array_filter( $list, function ( $value ) {
+			return empty( $value );
+		} );
+
+		return array_diff_key( self::$widgets, $disabled );
+	}
+
+	/**
+	 * Check if the widget is active for the current user on a specific admin screen.
+	 *
+	 * @param string $widget_id The ID of the widget to check.
+	 * @param string $screen The target screen ID.
+	 *
+	 * @return bool True if the widget is active.
+	 */
+	public static function is_active( string $widget_id, string $screen = 'main' ) {
+		$list = self::get_active_list( $screen );
+
+		return isset( $list[ $widget_id ] );
+	}
+
+	/**
+	 * Updates the display order of widgets for the current user on a specific admin screen.
+	 *
+	 * @param array  $order  An array of widget IDs in the desired display order.
+	 * @param string $screen Optional. The admin screen ID where the order applies. Default 'main'.
+	 *
+	 * @return true|WP_Error True on success, or a WP_Error object on failure.
+	 */
+	public static function save_order( array $order, string $screen = 'main' ) {
+
+		$order = array_filter( $order );
+
+		return self::save_screen_parameter( 'widget_order', $order, $screen );
+	}
+
+	/**
+     * Save a specific configuration parameter for the current user and a given screen (admin page)
+     *
+	 * @param string $key The screen meta key to save/retrieve the parameter.
+	 * @param array $value The parameter value.
+	 * @param string $screen Optional. The admin screen ID where the $value saved for. Default 'main'.
+	 *
+	 * @return true|WP_Error True on success, or a WP_Error object on failure.
+     */
+	private static function save_screen_parameter( string $key, array $value, string $screen = 'main' ) {
+		if ( ! $user_id = get_current_user_id() ) {
+			return new WP_Error( 'cerber_non_user', 'User is not authenticated.' );
+		}
+
+		$meta = get_user_meta( $user_id, 'cerber_dashboard_config', true );
+
+		if ( ! is_array( $meta ) ) {
+			$meta = array();
+		}
+
+		$meta[ $screen ][$key] = $value;
+
+		if ( ! update_user_meta( $user_id, 'cerber_dashboard_config', $meta ) ) {
+			return new WP_Error( 'cerber_not_updated', 'User meta not updated. Possibly duplicate value.' );
+		}
+
+		return true;
+	}
+
+	/**
+     * Retrieve a configuration parameter specified by $key for the current user and a given screen (admin page)
+     *
+	 * @param string $key The screen meta key to save/retrieve the parameter
+	 * @param string $screen Optional. The admin screen ID where the $value saved for. Default 'main'.
+	 *
+	 * @return array|WP_Error The parameter value, or a WP_Error object on failure.
+	 */
+	public static function get_screen_parameter( string $key, string $screen = 'main' ) {
+		if ( ! $user_id = get_current_user_id() ) {
+			return new WP_Error( 'cerber_non_user', 'User is not authenticated.' );
+		}
+
+		if ( ( $meta = get_user_meta( $user_id, 'cerber_dashboard_config', true ) )
+		     && ( $value = $meta[ $screen ][ $key ] ?? false )
+		     && is_array( $value ) ) {
+
+			return $value;
+		}
+
+		return array();
+	}
+
+	/**
+	 * Generates an HTML skeleton loader for a table-like structure.
+	 *
+	 * @param int $rows Optional. The number of rows to generate.
+	 * @param int $cols Optional. The number of columns to generate.
+	 *
+	 * @return string The generated HTML for the skeleton loader.
+	 */
+	static function get_skeleton( int $rows = 5, int $cols = 5 ): string {
+
+		$html = '<div class="crb-skeleton-table">';
+
+		for ( $i = 0; $i < $rows; $i ++ ) {
+			$html .= '<div class="crb-skeleton-row">';
+
+			$html .= str_repeat( '<div class="crb-skeleton-cell"></div>', $cols );
+
+			$html .= '</div>' . PHP_EOL;
+		}
+
+		$html .= '</div>';
+
+		return $html;
+	}
+
+	/**
+	 * Generates an HTML container for asynchronously loading a widget via AJAX.
+	 *
+	 * @param string $widget_id The unique ID of the widget to load via AJAX.
+	 *
+	 * @return string The generated HTML container with AJAX-related attributes.
+	 */
+	static function get_ajax_area( string $widget_id ): string {
+
+		return '<div class="crb_async_content" data-ajax_route="dashboard_analytics" data-ds_widget="' . crb_generic_escape( $widget_id ) . '">' . self::get_skeleton() . '</div>';
+
+	}
 }

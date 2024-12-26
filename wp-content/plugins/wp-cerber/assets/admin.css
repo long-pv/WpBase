@@ -438,46 +438,58 @@
 }
 */
 
-.crb-table-heading {
-    border-collapse: collapse;
-    width: 100%;
-    margin-top: 0.9em;
-    height: 44px;
+.crb-widget-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border: 2px solid #e5e5e5;
     border-bottom: none;
-}
-.crb-table-heading td {
     background-color: #fff;
-    vertical-align: middle;
     padding-top: 1em;
     padding-bottom: 1em;
+    height: 20px;
 }
-.crb-table-heading td:nth-child(2) {
-    text-align: right;
+
+.crb-widget-title-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.crb-widget-title {
+    margin: 0;
+    color: #111;
+    white-space: nowrap;
+}
+
+.crb-widget-subtitle {
+    color: #888;
+    white-space: nowrap;
+}
+
+.crb-widget-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
     padding-right: 28px;
 }
-.crb-table-heading h2 {
-    margin:0;
-    color: #111;
-}
-.crb-table-heading .crb-tag-buttons > * {
+
+.crb-widget-controls .crb-tag-buttons > * {
     margin-bottom: 0;
 }
 
-.crb-act-padding,
-.crb-dashboard-element #crb-locked-out th:first-child,
-.crb-dashboard-element #crb-locked-out td:first-child {
+.crb-dash-padding,
+.crb-element-content > table:not(.crb-activity--dashboard) th:first-child,
+.crb-element-content > table:not(.crb-activity--dashboard) td:first-child {
     padding-left: 36px;
 }
 
-.crb-dashboard-element #crb-locked-out,
-.crb-dashboard-element #crb-activity {
+.crb-element-content > table {
     border: 2px solid #e5e5e5;
     box-shadow: none;
 }
 
-.crb-dashboard-element #crb-locked-out th,
-.crb-dashboard-element #crb-activity th {
+.crb-element-content > table th {
     border-bottom: 1px solid #e5e5e5;
 }
 
@@ -487,6 +499,7 @@
 
 .crb-dashboard-element {
     background-color: #fff;
+    margin-bottom: 0.8em;
 }
 
 .crb-dash-placeholder {
@@ -696,13 +709,24 @@ div.crb-announcement p {
     }
 }
 
-.crb-tab-sessions .crb-us-lbl {
+.crb-tab-sessions .crb-label {
     display: inline-block;
-    padding: 3px 5px 3px 5px;
+    padding: 1px 4px;
     border-radius: 3px;
+    border: 2px solid;
     margin-left: 0.5em;
-    background-color: #83CE77;
+    line-height: 1;
     color: white;
+}
+
+.crb-tab-sessions .crb-label-green {
+    border-color: var(--crb-green-label-bg-color);
+    background-color: var(--crb-green-label-bg-color);
+}
+
+.crb-tab-sessions .crb-label-outline {
+    background-color: transparent;
+    color: black;
 }
 
 /* Primarily for IPv6 */
@@ -742,9 +766,36 @@ div.crb-announcement p {
     text-align: right;
 }
 
+.crb_align_right th:last-child,
+.crb_align_right td:last-child {
+    padding-right: 28px;
+}
+
 .crb_align_left_2 th:nth-child(2),
 .crb_align_left_2 td:nth-child(2) {
     text-align: left;
+}
+
+.crb-table-align-right-2 th:nth-child(n+2),
+.crb-table-align-right-2 td:nth-child(n+2),
+.crb-table-align-right-3 th:nth-child(n+3),
+.crb-table-align-right-3 td:nth-child(n+3),
+.crb-table-align-right-4 th:nth-child(n+4),
+.crb-table-align-right-4 td:nth-child(n+4),
+.crb-table-align-right-5 th:nth-child(n+5),
+.crb-table-align-right-5 td:nth-child(n+5) {
+    text-align: right;
+}
+
+.crb-table-align-right-2 th:last-child,
+.crb-table-align-right-2 td:last-child,
+.crb-table-align-right-3 th:last-child,
+.crb-table-align-right-3 td:last-child,
+.crb-table-align-right-4 th:last-child,
+.crb-table-align-right-4 td:last-child,
+.crb-table-align-right-5 th:last-child,
+.crb-table-align-right-5 td:last-child {
+    padding-right: 28px;
 }
 
 .crb-anchor-decorated a {
@@ -1512,12 +1563,11 @@ body.wp-cerber_page_cerber-integrity {
 }
 #crb-scan-details {
     padding: 0;
-    border: solid #DEDEDE 2px;
+    border: 2px solid #DEDEDE;
     /*min-height: 40vh;
     max-height: 50vh;*/
     height: 50vh;
     overflow: auto;
-    -webkit-transition: height 2s; /* Safari */
     transition: height 2s;
 }
 #crb-scan-display div.scan-tile {
@@ -1971,7 +2021,7 @@ div.mfp-wrap.crb-popup-dialog-wrap {
 }
 
 .crb-popup-dialog {
-    padding: 2em;
+    padding: 2em 3em 3em;
 }
 
 .crb-popup-dialog-aside {
@@ -2035,11 +2085,19 @@ div.mfp-wrap.crb-popup-dialog-wrap {
 
 .crb-popup-dialog .crb-dialog-controls {
     text-align: center;
-    padding-top: 1.5em; /* Space for error messages */
+    padding-top: 2em;
+}
+
+.crb-narrow-popup-dialog .crb-popup-dialog .crb-dialog-controls {
+    padding-top: 5em;
 }
 
 .crb-popup-dialog .crb-dialog-controls .button {
     min-width: 6rem !important;
+}
+
+.crb-narrow-popup-dialog .mfp-content {
+    width: auto;
 }
 
 /* Widgets */

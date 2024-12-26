@@ -349,8 +349,9 @@ function cerber_show_diag(){
 
 	    cerber_show_wp_diag();
 
-        $button = '<p style="text-align: right;"><a class="button button-secondary" href="' . wp_nonce_url( add_query_arg( array( 'force_repair_db' => 1 ) ), 'control', 'cerber_nonce' ) . '">Repair Cerber\'s Tables</a></p>';
-	    crb_show_diag_section( 'Database Info', cerber_db_diag() . $button );
+        //$button = '<p style="text-align: right;"><a class="button button-secondary" href="' . wp_nonce_url( add_query_arg( array( 'force_repair_db' => 1 ) ), 'control', 'cerber_nonce' ) . '">Repair Cerber\'s Tables</a></p>';
+	    //crb_show_diag_section( 'Database Info', cerber_db_diag() . $button );
+        crb_show_diag_section_ajax( 'Database Info' );
 
 	    $server = $_SERVER;
 	    if ( ! empty( $server['HTTP_COOKIE'] ) ) {
@@ -488,6 +489,15 @@ function crb_show_diag_section( $title, $content ) {
     echo '<div class="crb-diag-section" data-took_time="' . $took_time . '"><h3>' . $title . '</h3><div class="crb-diag-inner">' . $content . '</div></div>';
 
     $previous = microtime( true );
+}
+
+/**
+ * AJAX section
+ *
+ * @param string $title
+ */
+function crb_show_diag_section_ajax( string $title ) {
+	echo '<div class="crb-diag-section"><h3>' . $title . '</h3><div class="crb-diag-inner crb_async_content" data-ajax_route="diagnostic_tools"></div></div>';
 }
 
 function cerber_show_lic() {
@@ -836,7 +846,8 @@ function cerber_db_diag(){
 		update_site_option( '_cerber_db_errors', '' );
 	}
 
-	return $err . implode( '<br />', $ret );
+	$action = cerber_admin_link( 'diagnostic', array( 'force_repair_db' => 1 ), true, false );
+	return $err . implode( '<br />', $ret ) . '<p style="text-align: right;"><a class="button button-secondary" href="' . $action . '">Repair Cerber\'s Tables</a></p>';
 }
 
 /**

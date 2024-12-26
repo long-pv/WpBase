@@ -458,7 +458,7 @@ final class CRB_Wisdom {
 
 		$response = wp_remote_get( 'https://downloads.wpcerber.com/azoth/azoth_data' . $user_locale . '.json' );
 
-		if ( is_wp_error( $response ) ) {
+		if ( crb_is_wp_error( $response ) ) {
 
 			return $response;
 		}

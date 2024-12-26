@@ -24,14 +24,14 @@ const CERBER_PIN_LENGTH = 4;
 const CERBER_PIN_EXPIRES = 15;
 
 final class CRB_2FA {
-	static $token = null;
+	static $token = '';
 	static $user_set = null;
 
 	/**
-	 * Enforce 2FA for a user if needed
+	 * Enforce 2FA for a user based on the plugin settings
 	 *
-	 * @param $login string
-	 * @param $user WP_User
+	 * @param string $login User login
+	 * @param WP_User $user
 	 *
 	 * @return bool|WP_Error
 	 */
@@ -39,13 +39,13 @@ final class CRB_2FA {
 		static $done = false;
 
 		if ( $done ) {
-			return false;
+			return 0;
 		}
 
 		$done = true;
 
 		if ( crb_acl_is_white() ) {
-			return false;
+			return 6;
 		}
 
 		if ( ( ! $user instanceof WP_User ) || empty( $user->ID ) ) {
@@ -57,7 +57,7 @@ final class CRB_2FA {
 		$user_mode = self::get_user_meta_data( 'tfm', $user->ID );
 
         if ( $user_mode === 2 ) {
-			return false;
+	        return 7;
 		}
 
 		if ( ( $coo = self::get_user_meta_data( 'tf_remember', $user->ID ) )
@@ -69,7 +69,7 @@ final class CRB_2FA {
 				if ( $coo_data[1] > time()
 				     && cerber_get_cookie( $coo_name ) == $coo_data[0] ) {
 
-					return false;
+					return 8;
 				}
 			}
 
@@ -103,7 +103,7 @@ final class CRB_2FA {
 		}
 
 		if ( ! $go ) {
-			return false;
+			return 9;
 		}
 
 		// This user must complete 2FA
@@ -116,9 +116,18 @@ final class CRB_2FA {
 			return $ret;
 		}
 
+		crb_sessions_update( $user->ID, self::get_session_token_hash(), array( 'mfa_status' => 1 ) );
+
 		cerber_log( 400, $login, $user->ID );
 
-		wp_safe_redirect( get_home_url() );
+		$home = cerber_get_home_url();
+
+		if ( 2 < substr_count( $home, '/' ) ) {
+            // Home page URL includes a subfolder. Make sure it contains trailing slash as well. Improves web servers compatibility.
+			$home .= '/';
+		}
+
+		wp_safe_redirect( $home );
 		exit;
 
 	}
@@ -295,10 +304,10 @@ final class CRB_2FA {
 	}
 
 	/**
-	 * @param null $user_id User ID
+	 * @param int $current_user_id Current user ID
      *
 	 */
-	static function restrict_and_verify( $user_id = null ) {
+	static function restrict_and_verify( $current_user_id = null ) {
 		static $done = false;
 
 		if ( $done ) {
@@ -307,36 +316,36 @@ final class CRB_2FA {
 
     	$done = true;
 
-		if ( ! $user_id
-             && ! $user_id = get_current_user_id() ) {
+		if ( ! $current_user_id
+             && ! $current_user_id = get_current_user_id() ) {
 			return;
 		}
 
-		$twofactor = self::get_2fa_data( $user_id );
+		$twofactor = self::get_2fa_data( $current_user_id );
 
 		if ( empty( $twofactor['pin'] ) ) {
 			return;
         }
 
 		if ( crb_acl_is_white() ) {
-			self::delete_2fa( $user_id );
+			self::delete_2fa( $current_user_id );
 
 			return;
 		}
 
 		// Check user settings again: they can be changed by admin after the user was enforced to complete 2FA
 
-        $user_mode = self::get_user_meta_data( 'tfm', $user_id);
+        $user_mode = self::get_user_meta_data( 'tfm', $current_user_id);
 
 		if ( $user_mode === 2 ) {
-			self::delete_2fa( $user_id, true );
+			self::delete_2fa( $current_user_id, true );
 
 			return;
 		}
         elseif ( ! $user_mode ) {
 			$user = wp_get_current_user();
-	        if ( ! self::check_role_policies( $user_id, $user->roles ) ) {
-				self::delete_2fa( $user_id );
+	        if ( ! self::check_role_policies( $current_user_id, $user->roles ) ) {
+				self::delete_2fa( $current_user_id );
 
 				return;
 			}
@@ -348,7 +357,7 @@ final class CRB_2FA {
 		     || ( $sts = ( $twofactor['ua'] != sha1( crb_array_get( $_SERVER, 'HTTP_USER_AGENT', '' ) ) ? 541 : 0 ) )
 		     || ( $sts = ( cerber_is_ip_allowed() ? 0 : CRB_Globals::$act_status ) ) ) {
 
-			self::delete_2fa( $user_id );
+			self::delete_2fa( $current_user_id );
 			cerber_user_logout( $sts );
 			wp_redirect( get_home_url() );
 
@@ -381,14 +390,16 @@ final class CRB_2FA {
 			exit;
 		}
 
-		$new_pin = '';
-		if ( $twofactor['expires'] < time() ) {
-			$new_pin = self::generate_pin( $user_id );
+		$pin_expired = false;
+
+        if ( $twofactor['expires'] < time() ) {
+			self::generate_pin( $current_user_id );
+			$pin_expired = true;
 		}
 
 		// The first step of verification, ajax
 		if ( cerber_is_http_post() ) {
-			self::process_ajax( $new_pin );
+			self::process_ajax( $pin_expired );
 		}
 
 		// The second, final step of verification
@@ -398,14 +409,16 @@ final class CRB_2FA {
 		     && ( $pin = cerber_get_post( 'cerber_pin' ) )
 		     && self::verify_pin( trim( $pin ) ) ) {
 
-			self::delete_2fa( $user_id );
+			self::delete_2fa( $current_user_id );
 
-			cerber_log( CRB_EV_LIN, $twofactor['login'], $user_id, 27 );
-			cerber_login_history( $user_id, true );
+			cerber_log( CRB_EV_LIN, $twofactor['login'], $current_user_id, 27 );
+			cerber_login_history( $current_user_id, true );
 
 			cerber_2fa_checker( true );
 
-			self::save_remember_device( $user_id );
+			self::save_remember_device( $current_user_id );
+
+			crb_sessions_update( $current_user_id, self::get_session_token_hash(), array( 'mfa_status' => 2 ) );
 
 			$url = ( ! empty( $twofactor['to'] ) ) ? $twofactor['to'] : get_home_url();
 
@@ -531,7 +544,7 @@ final class CRB_2FA {
 		}
 	}
 
-	static function process_ajax( $new_pin ) {
+	static function process_ajax( $pin_expired = false ) {
 		if ( ( ! $nonce = cerber_get_post( 'the_2fa_nonce', '\w+' ) )
 		     || ( ! $pin = cerber_get_post( 'cerber_verify_pin' ) ) ) {
 			return;
@@ -542,7 +555,7 @@ final class CRB_2FA {
 		if ( ! wp_verify_nonce( $nonce, 'crb-ajax-2fa' ) ) {
 			$err = 'Nonce error.';
 		}
-        elseif ( $new_pin ) {
+        elseif ( $pin_expired ) {
 			$err = __( 'This verification PIN code is expired. We have just sent a new one to your email.', 'wp-cerber' );
 		}
         elseif ( ! self::verify_pin( trim( $pin ), $nonce ) ) {
@@ -746,7 +759,6 @@ final class CRB_2FA {
 			return false;
 		}
 
-		$to = self::get_user_email( $user_id );
 		$subj = __( 'Please verify that it’s you', 'wp-cerber' );
 		$body = array();
 
@@ -783,12 +795,17 @@ final class CRB_2FA {
 
 		$body = implode( "\n\n", $body );
 
+		$email = self::get_user_email( $user_id );
+
+		$user_name = trim( $user_data->user_firstname . ' ' . $user_data->user_lastname );
+		$to = $user_name ? '"' . $user_name . '" <' . $email . '>' : $email;
+
 		$result = cerber_send_message( '2fa', array(
 			'subj' => $subj,
 			'text' => $body
 		), array( 'email' => 1, 'pushbullet' => 0 ), true, array( 'email_recipients' => array( $to ) ) );
 
-		if ( $result && ( $user_data->user_email != $to ) ) {
+		if ( $result && ( $user_data->user_email != $email ) ) {
 		    // TODO Should we send a notification to the main user email?
 		}
 
@@ -853,12 +870,11 @@ final class CRB_2FA {
 			return '';
 		}
 
-		return '<table id="crb-admin-2fa-pins"><tr><td>PIN</td><td>Expires</td><td>Sent To</td><td>User Browser</td></tr>' . $pins . '</table>';
+		return '<div id="crb-admin-2fa-pins"><table><tr><td>PIN</td><td>Expires</td><td>Sent To</td><td>User Browser</td></tr>' . $pins . '</table></div>';
 
 	}
 
 	static function update_2fa_data( $data, $user_id = null ) {
-		$token = self::cerber_2fa_session_id();
 
 		if ( ! $user_id ) {
 			$user_id = get_current_user_id();
@@ -869,43 +885,82 @@ final class CRB_2FA {
 		if ( ! is_array( $cus ) ) {
 			$cus = array();
 		}
+
 		if ( ! isset( $cus['2fa'] ) ) {
 			$cus['2fa'] = array();
 		}
-		if ( ! isset( $cus['2fa'][ $token ] ) ) {
-			$cus['2fa'][ $token ] = array();
+
+		$old = self::cerber_2fa_session_id();
+		$token = self::get_session_token_hash();
+
+        // Move existing data from the deprecated format
+
+		if ( $existing = $cus['2fa'][ $old ] ?? false ) {
+			unset( $cus['2fa'][ $old ] );
+			$cus['2fa'][ $token ] = $existing;
 		}
 
-		$cus['2fa'][ $token ] = array_merge( $cus['2fa'][ $token ], $data );
+		$cus['2fa'][ $token ] = array_merge( $cus['2fa'][ $token ] ?? [], $data );
 
 		return cerber_update_set( CRB_USER_SET, $cus, $user_id );
 	}
 
-	static function get_2fa_data( $user_id = null ) {
-		$token = self::cerber_2fa_session_id();
+	/**
+     * Returns 2FA data for the current user session
+     *
+	 * @param int $current_user_id
+	 *
+	 * @return array
+	 */
+	static function get_2fa_data( $current_user_id = null ) {
 
-        if ( ! $user_id ) {
-			$user_id = get_current_user_id();
+        if ( ! $current_user_id ) {
+			$current_user_id = get_current_user_id();
 		}
 
-		if ( ! $cus = cerber_get_set( CRB_USER_SET, $user_id ) ) {
+		if ( ! $cus = cerber_get_set( CRB_USER_SET, $current_user_id ) ) {
 			return array();
 		}
 
-		return crb_array_get( $cus, array( '2fa', $token ), array() );
+		if ( empty( $cus['2fa'] ) ) {
+			return array();
+		}
+
+		if ( $ret = $cus['2fa'][ self::get_session_token_hash() ] ?? false ) {
+            return $ret;
+		}
+
+        // Deprecated format
+
+		if ( $ret = $cus['2fa'][ self::cerber_2fa_session_id() ] ?? false ) {
+			return $ret;
+		}
+
+		return array();
 	}
 
+	/**
+     * Deletes all 2FA data for any given user, or the current session 2FA data of the current user
+     *
+	 * @param int $uid If $all is false, may be only the current user ID
+	 * @param bool $all If false, deletes current session 2FA data for the current user
+	 *
+	 * @return void
+	 */
 	static function delete_2fa( $uid, $all = false ) {
 
 		if ( ! $uid = absint( $uid ) ) {
 			return;
 		}
-		$cus = cerber_get_set( CRB_USER_SET, $uid );
-		if ( $cus && isset( $cus['2fa'] ) ) {
+
+        $cus = cerber_get_set( CRB_USER_SET, $uid );
+
+        if ( $cus && isset( $cus['2fa'] ) ) {
 			if ( $all ) {
 				unset( $cus['2fa'] );
 			}
 			else {
+				unset( $cus['2fa'][ self::get_session_token_hash() ] );
 				unset( $cus['2fa'][ self::cerber_2fa_session_id() ] );
 			}
 
@@ -913,12 +968,33 @@ final class CRB_2FA {
 		}
 	}
 
+	/**
+     * Return WordPress session token for the current user session
+     *
+	 * @return string
+     *
+     * @deprecated since 9.6.3.2
+	 */
 	static function cerber_2fa_session_id() {
 		if ( self::$token ) {
 			return self::$token;
 		}
 
 		return crb_get_session_token();
+	}
+
+	/**
+     * Returns hashed WordPress session token for the current user session
+     * The hash can be stored in the DB safely
+     *
+	 * @return string
+     *
+     * @since 9.6.3.2
+	 */
+	static function get_session_token_hash() {
+		$token = ( self::$token ) ?: crb_get_session_token();
+
+		return cerber_hash_token( $token );
 	}
 
 	static function cerber_2fa_form() {

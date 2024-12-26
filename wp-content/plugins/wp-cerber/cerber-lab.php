@@ -603,7 +603,7 @@ function lab_save_push( $ip, $reason_id, $details = null ) {
  * @return array|bool
  */
 function lab_get_push() {
-	$result = cerber_db_get_results( 'SELECT * FROM ' . CERBER_LAB_TABLE, MYSQLI_ASSOC );
+	$result = cerber_db_get_results( 'SELECT * FROM ' . CERBER_LAB_TABLE );
 	if ( $result ) {
 		return array( 'type_1' => $result );
 	}

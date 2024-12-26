@@ -829,6 +829,8 @@ function nexus_delete_client( $ids ) {
 		$num = cerber_db_get_var( 'SELECT ROW_COUNT()' );
 		cerber_admin_message( sprintf( _n( 'Website has been deleted', '%s websites have been deleted', $num, 'wp-cerber' ), $num ) );
 
+		__( '%s websites have been deleted', 'wp-cerber' ); // registration for _n()
+
 		foreach ( $ids as $id ) {
 			nexus_delete_list( $id );
 		}
@@ -1190,7 +1192,7 @@ function nexus_bg_upgrade( $ids, $plugins ) {
 			'exec_until' => 'stop', // may not be boolean
 		) );
 
-		if ( is_wp_error( $ret ) ) {
+		if ( crb_is_wp_error( $ret ) ) {
 			$error->merge_from( $ret );
 		}
 	}

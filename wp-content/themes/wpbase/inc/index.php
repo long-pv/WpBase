@@ -6,7 +6,7 @@ require get_template_directory() . '/inc/auto_active_plugin.php';
 require get_template_directory() . '/inc/breadcrumbs.php';
 require get_template_directory() . '/inc/cpt_custom.php';
 require get_template_directory() . '/inc/view_post.php';
-require get_template_directory() . '/inc/security.php';
+// require get_template_directory() . '/inc/security.php';
 require get_template_directory() . '/inc/template-functions.php';
 require get_template_directory() . '/inc/pagination.php';
 require get_template_directory() . '/inc/write_log.php';

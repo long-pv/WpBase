@@ -39,7 +39,7 @@ const MYSQL_FETCH_OBJECT_K = 6;
 const CRB_IP_NET_RANGE = '/[^a-f\d\-\.\:\*\/]+/i';
 const CRB_TAB_ID_FILTER = '[a-z\d\_\-\.\:\*\/]+';
 const CRB_SANITIZE_KEY = '/[^a-z_\-\d.:\/]/i';
-const CRB_SANITIZE_ID = '/[^a-z\d]/i';
+const CRB_SANITIZE_ID = '/[^\w-]/i';
 const CRB_GROOVE = 'cerber_groove';
 const CRB_NEXT_LVL = 2147483647; // May not be changed ever, a marker of using role-based or global policies since 9.6
 
@@ -220,12 +220,12 @@ function cerber_admin_link( $tab = '', $args = array(), $add_nonce = false, $enc
 		$page = 'cerber-security';
 	}
 
-	$link = crb_get_admin_base() . '?page=' . crb_boring_escape( $page );
+	$link = crb_get_admin_base() . '?page=' . crb_sanitize_id( $page );
 
 	$amp = ( $encode ) ? '&amp;' : '&';
 
 	if ( $tab ) {
-		$link .= $amp . 'tab=' . $tab;
+		$link .= $amp . 'tab=' . crb_sanitize_id( $tab );
 	}
 
 	if ( $args ) {
@@ -290,12 +290,15 @@ function cerber_admin_link_add( $args = array(), $preserve = false, $add_nonce =
 }
 
 /**
- * @param array $act
- * @param int $status
+ * Generates a link to the Activity log page with an optional list of activity IDs and status filters.
+ * Those IDs will be used to filter out activities when rendering the Activity page.
  *
- * @return string
+ * @param array $act Activity IDs
+ * @param int $status Status ID
+ *
+ * @return string Full URL, safe to use in any HTML context (including attributes)
  */
-function cerber_activity_link( $act = array(), $status = null ) {
+function cerber_activity_link( array $act = array(), int $status = null ) {
 	static $link;
 
 	if ( ! $link ) {
@@ -304,19 +307,19 @@ function cerber_activity_link( $act = array(), $status = null ) {
 
 	$filter = '';
 
-	$c = $act ? count( $act ) : 0;
-
-	if ( 1 == $c ) {
-		$filter .= '&amp;filter_activity=' . crb_absint( array_shift( $act ) );
-	}
-	elseif ( $c ) {
-		foreach ( $act as $key => $item ) {
-			$filter .= '&amp;filter_activity[' . $key . ']=' . crb_absint( $item );
+	if ( $act ) {
+		if ( 1 == count( $act ) ) {
+			$filter .= '&filter_activity=' . crb_absint( array_shift( $act ) );
+		}
+		else {
+			foreach ( $act as $key => $item ) {
+				$filter .= '&filter_activity[' . crb_absint( $key ) . ']=' . crb_absint( $item );
+			}
 		}
 	}
 
 	if ( $status ) {
-		$filter .= '&amp;filter_status=' . crb_absint( $status );
+		$filter .= '&filter_status=' . crb_absint( $status );
 	}
 
 	return $link . $filter;
@@ -397,10 +400,12 @@ function cerber_get_site_url() {
 }
 
 /**
+ * Return URL of the home page
+ *
  * Might NOT include the path to the current WP installation in some cases
  * See: https://wordpress.org/support/article/giving-wordpress-its-own-directory/
  *
- * @return string
+ * @return string URL of the home page without trailing slash
  * @since 7.9.4
  *
  */
@@ -629,187 +634,13 @@ function cerber_pb_get_active() {
 	}
 	elseif ( $device
 	         && ( $list = cerber_pb_get_devices() )
-	         && ! is_wp_error( $list ) ) {
+	         && ! crb_is_wp_error( $list ) ) {
 		$name = crb_generic_escape( $list[ $device ] ) ?? '';
 	}
 
 	cerber_update_set( 'pushbullet_name', $name, null, false, time() + 3600 );
 
 	return $name;
-}
-
-/**
- * Check the server environment and the WP Cerber configuration for possible issues
- *
- * @return void
- *
- * @since 9.5.1
- */
-function cerber_issue_monitor() {
-	static $checkers = array();
-
-	if ( ! $checkers ) {
-		$checkers = array(
-			'cerber-security' => function () {
-				$results = new WP_Error;
-
-				$repo_link = '[ <a href="https://wpcerber.com/automatic-updates-for-wp-cerber/" target="_blank">Know more</a> ]';
-
-				if ( crb_get_settings( 'cerber_sw_repo' )
-				     && ( defined( 'WP_HTTP_BLOCK_EXTERNAL' ) && WP_HTTP_BLOCK_EXTERNAL ) ) {
-
-					$issue = '';
-
-					if ( defined( 'WP_ACCESSIBLE_HOSTS' ) ) {
-						if ( false === strpos( WP_ACCESSIBLE_HOSTS, 'downloads.wpcerber.com' )
-						     && false === strpos( WP_ACCESSIBLE_HOSTS, '*.wpcerber.com' ) ) {
-
-							$const_def = empty( WP_ACCESSIBLE_HOSTS ) ? __( 'Currently, the WP_ACCESSIBLE_HOSTS constant contains no allowed hosts', 'wp-cerber' ) : sprintf( __( 'Currently, the WP_ACCESSIBLE_HOSTS constant is defined as: %s', 'wp-cerber' ), crb_generic_escape( WP_ACCESSIBLE_HOSTS ) );
-							$issue = __( 'To enable WP Cerber updates, add "downloads.wpcerber.com" to the WP_ACCESSIBLE_HOSTS constant', 'wp-cerber' ) . ' ' . $repo_link . '<p>' . $const_def . '</p>';
-						}
-					}
-					else {
-						$issue = __( 'To enable WP Cerber updates, add the WP_ACCESSIBLE_HOSTS constant defined as "downloads.wpcerber.com" to your wp-config.php file', 'wp-cerber' ) . ' ' . $repo_link;
-					}
-
-					if ( $issue ) {
-						$results->add( 'norepo', $issue );
-					}
-				}
-
-				if ( crb_get_settings( 'cerber_sw_auto' ) ) {
-					crb_load_dependencies( 'wp_is_auto_update_enabled_for_type' );
-					if ( ! wp_is_auto_update_enabled_for_type( 'plugin' ) ) {
-						$auto_const = ( defined( 'AUTOMATIC_UPDATER_DISABLED' ) && AUTOMATIC_UPDATER_DISABLED ) ? ' The WordPress AUTOMATIC_UPDATER_DISABLED constant is defined.' : '';
-						$results->add( 'noauto', 'WP Cerber does not get automatic updates because automatic updates for plugins on this website are disabled. ' . $auto_const.' ' . $repo_link );
-					}
-				}
-
-				if ( cerber_get_mode() != crb_get_settings( 'boot-mode' ) ) {
-					$results->add( 'booterr', 'WP Cerber is initialized in a different mode that does not match the plugin settings. Check the "Load security engine" setting.' );
-				}
-
-				if ( $ler = cerber_get_set( 'last_email_error' ) ) {
-					if ( $ler[0] > ( time() - WEEK_IN_SECONDS ) ) {
-
-						$txt = $ler[2] . ' Error #' . $ler[3];
-						$txt .= ( $ler[4] ? '. SMTP server: ' . $ler[4] : '' );
-						$txt .= ( $ler[5] ? '. SMTP username: ' . $ler[5] : '' );
-						$txt .= ( $ler[6] ? '. Recipient(s): ' . implode( ',', $ler[6] ) : '' );
-						$txt .= ( $ler[7] ? '. Subject: "' . $ler[7] . '"' : '' );
-						$txt .= '. Date: ' . cerber_date( $ler[0] );
-
-						$results->add( 'emailerr', 'An error occurred while sending email. ' . $txt );
-					}
-
-					cerber_delete_set( 'last_email_error' );
-				}
-
-				return $results;
-			},
-			'cerber-integrity' => function () {
-				if ( defined( 'CERBER_FOLDER_PATH' ) ) {
-					return cerber_get_my_folder();
-				}
-
-				return false;
-			},
-			'cerber-shield' => function () {
-				return CRB_DS::check_errors();
-			},
-			'*' => function () {
-				$results = new WP_Error;
-
-				if ( ! crb_get_settings( 'tienabled' ) ) {
-					$results->add( 'noti', 'Traffic Inspector is disabled' );
-				}
-
-				$ex_list = get_loaded_extensions();
-
-				if ( ! in_array( 'mbstring', $ex_list ) || ! function_exists( 'mb_convert_encoding' ) ) {
-					$results->add( 'nombstring', 'Required PHP extension <b>mbstring</b> is not enabled on this website. Some plugin features do work properly. Please enable the PHP mbstring extension (multibyte string support) in your hosting control panel.' );
-				}
-
-				if ( ! in_array( 'curl', $ex_list ) ) {
-					$results->add( 'nocurl', 'cURL PHP library is not enabled on this website.' );
-				}
-				else {
-					$curl = @curl_init();
-
-					if ( ! $curl
-					     && ( $err_msg = curl_error( $curl ) ) ) {
-						$results->add( 'nocurl', $err_msg );
-					}
-
-					curl_close( $curl );
-				}
-
-				return $results;
-			}
-		);
-	}
-
-	$notices = array();
-	$page = crb_admin_get_page();
-
-	// Part 1. We periodically run all the checks
-
-	if ( cerber_get_set( '_check_env', 0, false ) < ( time() - 120 ) ) {
-
-		cerber_update_set( '_check_env', time(), 0, false );
-
-		foreach ( $checkers as $page_id => $check ) {
-			if ( ! is_callable( $check ) || $page == $page_id ) {
-				continue;
-			}
-
-			if ( crb_is_wp_error( $test = call_user_func( $check ) )
-			     && $codes = $test->get_error_codes() ) {
-				foreach ( $codes as $err_code ) {
-					$notices[ $err_code ] = $test->get_error_message( $err_code );
-				}
-			}
-		}
-	}
-
-	// Part 2. Critical checks on a specific page (context)
-
-	if ( ( $check = $checkers[ $page ] ?? false )
-	     && is_callable( $check )
-	     && crb_is_wp_error( $test = call_user_func( $check ) )
-	     && $codes = $test->get_error_codes() ) {
-		//$notices[ $page ] = $test->get_error_message();
-		foreach ( $codes as $err_code ) {
-			$notices[ $err_code ] = $test->get_error_message( $err_code );
-		}
-	}
-
-	// Part 3. Critical things we monitor continuously
-
-	if ( version_compare( CERBER_REQ_PHP, phpversion(), '>' ) ) {
-		$notices['php'] = sprintf( __( 'WP Cerber requires PHP %s or higher. You are running %s.', 'wp-cerber' ), CERBER_REQ_PHP, phpversion() );
-	}
-
-	if ( ! crb_wp_version_compare( CERBER_REQ_WP ) ) {
-		$notices['wordpress'] = sprintf( __( 'WP Cerber requires WordPress %s or higher. You are running %s.', 'wp-cerber' ), CERBER_REQ_WP, cerber_get_wp_version() );
-	}
-
-	if ( defined( 'CERBER_CLOUD_DEBUG' ) && CERBER_CLOUD_DEBUG ) {
-		$notices['cloud'] = 'Diagnostic logging of cloud requests is enabled (CERBER_CLOUD_DEBUG).';
-	}
-
-	if ( $notices ) {
-
-		foreach ( $notices as $code => $notice ) {
-			cerber_add_issue( $code, $notice );
-		}
-
-		$notices = array_map( function ( $e ) {
-			return '<b>' . __( 'Warning!', 'wp-cerber' ) . '</b> ' . $e;
-		}, $notices );
-
-		cerber_admin_notice( $notices );
-	}
 }
 
 /**
@@ -926,18 +757,18 @@ function cerber_get_remote_ip() {
 		return $remote_ip;
 	}
 
-	if ( defined( 'CERBER_IP_KEY' ) ) {
-		$remote_ip = filter_var( $_SERVER[ CERBER_IP_KEY ] ?? '', FILTER_VALIDATE_IP );
-	}
-	elseif ( crb_get_settings( 'proxy' ) ) {
-		$remote_ip = crb_extract_ip_from_headers();
-	}
-	else {
+	$remote_ip = cerber_extract_remote_ip();
+
+	if ( ! $remote_ip ) {
+
+		// Fallback to retrieving the remote address from the default $_SERVER['REMOTE_ADDR']
+		// Since 9.6.4
+
 		$remote_ip = filter_var( $_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP );
 	}
 
 	if ( ! $remote_ip ) { // including WP-CLI, other way is: if defined('WP_CLI')
-		$remote_ip = CERBER_NO_REMOTE_IP;
+		$remote_ip = CERBER_NO_REMOTE_IP; //  Critical issue
 	}
 
 	if ( cerber_is_ipv6( $remote_ip ) ) {
@@ -947,6 +778,60 @@ function cerber_get_remote_ip() {
 	return $remote_ip;
 }
 
+/**
+ * Extracts the remote IP address based on the plugin configuration.
+ * Optionally returns a diagnostic message if `$diagnostic` is set to true.
+ *
+ * If `$diagnostic` is true, the function performs additional checks and returns:
+ * - An error message if the IP address cannot be retrieved or validated.
+ * - An empty string if no errors are detected.
+ *
+ * @param bool $diagnostic If true, returns a diagnostic message in case of an error, or an empty string if no issues are found. Defaults to false.
+ *
+ * @return false|string Returns the remote IP address as a string if `$diagnostic` is false.
+ *                      If `$diagnostic` is true, returns an error message or an empty string.
+ *
+ * @since 9.6.3.3
+ */
+function cerber_extract_remote_ip( $diagnostic = false ) {
+
+	$remote_ip = false;
+	$err_msg = '';
+
+	if ( defined( 'CERBER_IP_KEY' ) && CERBER_IP_KEY ) {
+		$remote_ip = filter_var( $_SERVER[ CERBER_IP_KEY ] ?? '', FILTER_VALIDATE_IP );
+
+		if ( $diagnostic && ! $remote_ip ) {
+			if ( isset( $_SERVER[ CERBER_IP_KEY ] ) ) {
+				$err_msg = __( 'Unable to detect IP addresses. The defined constant CERBER_IP_KEY cannot be used to retrieve an IP address because the corresponding value does not contain a valid IP address. Ensure that the correct value is specified for this constant.', 'wp-cerber' ) . ' ' . __( 'Currently, it is defined as:', 'wp-cerber' ) . ' "' . esc_html( CERBER_IP_KEY ) . '".';
+			}
+			else {
+				$err_msg = __( 'Unable to detect IP addresses. The constant CERBER_IP_KEY you specified is mistyped or contains invalid characters.', 'wp-cerber' ) . ' ' . __( 'Currently, it is defined as:', 'wp-cerber' ) . ' "' . esc_html( CERBER_IP_KEY ) . '".';
+			}
+		}
+	}
+	elseif ( crb_get_settings( 'proxy' ) ) {
+		$remote_ip = crb_extract_ip_from_headers();
+
+
+		if ( $diagnostic && ! $remote_ip ) {
+			$err_msg = __( 'Unable to detect IP addresses. No HTTP headers containing a valid IP address were detected. Ensure that your proxy server is configured to include the remote IP address in its HTTP headers.', 'wp-cerber' );
+		}
+	}
+	else {
+		$remote_ip = filter_var( $_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP );
+
+		if ( $diagnostic && ! $remote_ip ) {
+			$err_msg = __( 'Unable to detect IP addresses. This might be because your website is behind a proxy server. If that is the case, enable proxy support in the plugin settings.', 'wp-cerber' );
+		}
+	}
+
+	if ( $diagnostic ) {
+		return $err_msg;
+	}
+
+	return $remote_ip;
+}
 /**
  * Extracting the client remote IP address from HTTP headers
  *
@@ -983,36 +868,31 @@ function crb_extract_ip_from_headers( $strict = false ) {
 }
 
 /**
- * Get ip_id for IP.
- * The ip_id can be safely used for array indexes and in any HTML code
+ * Converts an IP address into a safe string format (id_ip).
  *
- * @param $ip string IP address
+ * The resulting string can be safely used as an array key, in HTML attributes, or other contexts where certain characters might be restricted.
  *
- * @return string ID for given IP
+ * @param string $ip The IP address to be converted. Can be an IPv4 or IPv6 address.
+ *
+ * @return string The converted string, where dots are replaced with dashes and colons are replaced with underscores.
+ *
  * @since 2.2
- *
  */
 function cerber_get_id_ip( $ip ) {
-	$ip_id = str_replace( '.', '-', $ip, $count );
-	$ip_id = str_replace( ':', '_', $ip_id );
-
-	return $ip_id;
+	return strtr( $ip, '.:', '-_' );
 }
 
 /**
- * Get IP from ip_id
+ * Converts a safe string (id_ip) back into an IP address format.
  *
- * @param $ip_id string ID for an IP
+ * @param string $ip_id This should be a string previously generated by `cerber_get_id_ip`.
  *
- * @return string IP address for given ID
+ * @return string The reconstructed IP address in its original format (IPv4 or IPv6).
+ *
  * @since 2.2
- *
  */
 function cerber_get_ip_id( $ip_id ) {
-	$ip = str_replace( '-', '.', $ip_id, $count );
-	$ip = str_replace( '_', ':', $ip );
-
-	return $ip;
+	return strtr( $ip_id, '-_', '.:' );
 }
 
 /**
@@ -1233,7 +1113,7 @@ function crb_array_get_deep( &$arr, $keys ) {
 }
 
 /**
- * Compare two arrays by using keys: check if two arrays have different set of keys
+ * Compare two arrays by using keys: check if two arrays have a different set of keys
  *
  * @param $arr1 array
  * @param $arr2 array
@@ -1374,16 +1254,48 @@ function crb_sanitize_int( $val, $make_list = true, $keep_empty = false ) {
 }
 
 /**
- * Generic escaping suitable for all contexts while rendering WP Cerber admin pages
+ * Returns an escaped and sanitized ID that is safe for any context.
  *
- * @param string $val
+ * @param string $id
  *
  * @return string
  *
- * @since 9.5.7.2
+ * @since 9.6.1.2
  */
-function crb_generic_escape( $val = '' ) {
-	return htmlentities( $val, ENT_QUOTES | ENT_SUBSTITUTE );
+function crb_sanitize_id( $id = '' ) {
+	if ( ! $id ) {
+		return '';
+	}
+
+	return substr( preg_replace( CRB_SANITIZE_ID, '_', (string) $id ), 0, 64 );
+}
+
+/**
+ * Sanitize a value to include only alphanumeric characters.
+ *
+ * Note: enable the check for invalid UTF-8 if the input contains data from an untrusted source.
+ *
+ * @param string|array $value The value to be sanitized. Can be a string or an array of strings.
+ * @param bool $check_utf8 If true, will check and sanitize invalid UTF-8 characters.
+ *
+ * @return string|array Sanitized value with only alphanumeric characters. If data comes from an untrusted source.
+ *
+ * @since 9.6.3.2
+ */
+function crb_sanitize_alphanum( $value, $check_utf8 = false ) {
+
+	if ( is_array( $value ) ) {
+		return array_map( function ( $val ) use ( $check_utf8 ) {
+			return crb_sanitize_alphanum( $val, $check_utf8 );
+		}, $value );
+	}
+
+	if ( $check_utf8
+	     && ! preg_match('/^[\x00-\x7F]*$/', $value) ) {
+		$value = iconv( 'UTF-8', 'UTF-8//IGNORE', $value ); // Delete invalid UTF-8
+	}
+
+	return preg_replace( '/\W/', '', $value );
 }
 
 /**
@@ -1402,7 +1314,24 @@ function crb_boring_escape( $val = '' ) {
 		return $val;
 	}
 
-	return preg_replace( '/[^\w\-\[\].]/', '', (string) $val );
+	return preg_replace( '/[^\w\-\[\].]/u', '', (string) $val );
+}
+
+/**
+ * Generic escaping suitable for all contexts while rendering WP Cerber admin pages
+ *
+ * @param string $val
+ *
+ * @return string
+ *
+ * @since 9.5.7.2
+ */
+function crb_generic_escape( $val = '' ) {
+	if ( ! $val ) {
+		return $val;
+	}
+
+	return htmlentities( $val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
 }
 
 /**
@@ -1441,6 +1370,35 @@ function crb_escape( $val ) {
 	// the same way as in esc_attr();
 	return _wp_specialchars( $val, ENT_QUOTES );
 }
+
+
+/**
+ * Safely escapes a URL string to prevent XSS attacks.
+ *
+ * @param string $url The URL to escape.
+ * @return string The safely escaped URL or empty string otherwise
+ */
+function crb_escape_url( $url = '' ) {
+
+	$url = trim( $url );
+
+	if ( ! $clean_url = filter_var( $url, FILTER_SANITIZE_URL ) ) {
+		return '';
+	}
+
+	if ( ! $clean_url = filter_var( $clean_url, FILTER_VALIDATE_URL ) ) {
+		return '';
+	}
+
+	// Protect from using data:, javascript: , file and so on
+
+	if ( ! preg_match( '/^(https?|mailto|ftps?):/i', $clean_url ) ) {
+		return '';
+	}
+
+	return str_replace( array( '"', "'", '<', '>', '`' ), '', $clean_url );
+}
+
 
 /**
  * Escapes single quotes, `"`, `<`, `>`, `&`, and fixes line endings.
@@ -1519,22 +1477,6 @@ function crb_strip_tags( $text = '', $allowed_tags = null ) {
 	return strip_tags( $text, $allowed_tags );
 }
 
-/**
- * Returns an escaped and sanitized ID that is safe for any context.
- *
- * @param string $id
- *
- * @return string
- *
- * @since 9.6.1.2
- */
-function crb_sanitize_id( $id = '' ) {
-	if ( ! $id ) {
-		return '';
-	}
-
-	return substr( preg_replace( CRB_SANITIZE_ID, '_', (string) $id ), 0, 64 );
-}
 
 /**
  * Return true if a REST API URL has been requested
@@ -1973,11 +1915,11 @@ function crb_user_has_role_strict( $roles, $user_id ) {
 }
 
 /**
- * Returns metadata if the user is blocked by admin
+ * Returns block metadata if the user is manually blocked
  *
  * @param int $uid User ID
  *
- * @return false|array
+ * @return false|array False if the user is not blocked
  */
 function crb_is_user_blocked( $uid ) {
 	if ( $uid
@@ -2031,9 +1973,9 @@ function crb_is_user_logged_in() {
 }
 
 /**
- * Returns user session token.
+ * Returns user session token for the current user session.
  *
- * OMG: WordPress stores the same token in two different cookies.
+ * WordPress stores the same token in several different cookies: LOGGED_IN_COOKIE, SECURE_AUTH_COOKIE, AUTH_COOKIE
  *
  * @return string
  *
@@ -2041,9 +1983,12 @@ function crb_is_user_logged_in() {
  */
 function crb_get_session_token() {
 
-	// First, trying the default cookie:  LOGGED_IN_COOKIE
+	// First, trying to get it from LOGGED_IN_COOKIE
+
 	if ( ! $token = wp_get_session_token() ) {
-		// Trying another, backup cookie: SECURE_AUTH_COOKIE or AUTH_COOKIE
+
+		// Trying another cookie: SECURE_AUTH_COOKIE or AUTH_COOKIE
+
 		$cookie = wp_parse_auth_cookie();
 		$token = crb_array_get( $cookie, 'token', '' );
 	}
@@ -2462,26 +2407,34 @@ function crb_get_activity_label( $activity, $user_id = 0, $by_user_id = 0, $link
 	return cerber_get_labels( 'activity', $activity );
 }
 
+/**
+ * Returns predefined set of activity IDs to build URLs and generates SQL clauses
+ * Safe to use in any context.
+ *
+ * @param int $set_id The set IDs
+ *
+ * @return int[]
+ */
 function crb_get_filter_set( $set_id ) {
-	static $list = array( 1 => 'suspicious', 2 => 'login_issues' );
+	static $list = array( 1 => 'suspicious', 2 => 'login_issues', 3 => 'spam' );
 
 	if ( ! isset( $list[ $set_id ] ) ) {
 		return array();
 	}
 
 	return crb_get_activity_set( $list[ $set_id ] );
-
 }
 
 /**
- * Predefined sets of activities
+ * Returns predefined set of activity IDs.
+ * Safe to use in any context.
  *
- * @param string $slice
+ * @param string $set_id
  * @param bool $implode
  *
  * @return int[]|string
  */
-function crb_get_activity_set( $slice = 'malicious', $implode = false ) {
+function crb_get_activity_set( $set_id = 'malicious', $implode = false ) {
 
 	static $sets = array(
 		'malicious'  => array( CRB_EV_CMS, CRB_EV_SCD, CRB_EV_SFD, CRB_EV_PRD, 40, CRB_EV_PUR, 51, 52, CRB_EV_LDN, 54, 55, 56, 100 ),
@@ -2499,15 +2452,22 @@ function crb_get_activity_set( $slice = 'malicious', $implode = false ) {
 
 		'login_issues' => array( CRB_EV_LFL, CRB_EV_PRS, CRB_EV_PRD, 51, 52, CRB_EV_LDN, 152 ),
 
-		// IP or subnet was blocked
 		'blocked' => array( 10, 11 ),
+
+		'spam' => array( CRB_EV_CMS, CRB_EV_SCD, CRB_EV_SFD ),
 	);
 
-	if ( ! $implode ) {
-		return $sets[ $slice ];
+	if ( ! $set = $sets[ $set_id ] ?? false ) {
+		return false;
 	}
 
-	return implode( ',', $sets[ $slice ] );
+	$set = array_map( 'absint', $set );
+
+	if ( ! $implode ) {
+		return $set;
+	}
+
+	return implode( ',', $set );
 
 }
 
@@ -2763,25 +2723,27 @@ function cerber_is_admin_page( $params = array(), $screen_base = '' ) {
 }
 
 /**
- * Return human readable "ago" time
+ * Returns human-readable "ago" time
  *
  * @param $time integer Unix timestamp - time of an event
  *
  * @return string
  */
-function cerber_ago_time( $time ) {
-	$diff = abs( time() - (int) $time );
+function cerber_ago_time( int $time ) {
+
+	$diff = abs( time() - $time );
 	if ( $diff < MINUTE_IN_SECONDS ) {
 		$secs = ( $diff <= 1 ) ? 1 : $diff;
 		/* translators: Time difference between two dates, in seconds. %s: number of seconds. */
 		$dt = sprintf( _n( '%s sec', '%s secs', $secs, 'wp-cerber' ), $secs );
+
+		__( '%s secs', 'wp-cerber' ); // registration for _n()
 	}
 	else {
 		$dt = human_time_diff( $time );
 	}
 
-	// _x( 'at', 'preposition of time',
-	return ( $time <= time() ) ? sprintf( __( '%s ago' ), $dt ) : sprintf( _x( 'in %s', 'Preposition of a period of time like: in 6 hours', 'wp-cerber' ), $dt );
+	return ( $time <= time() ) ? sprintf( __( '%s ago' ), $dt )	: sprintf( _x( 'in %s', 'Preposition of a period of time, for instance: in 6 hours', 'wp-cerber' ), $dt );
 }
 
 function cerber_auto_date( $time, $purify = true ) {
@@ -2949,7 +2911,25 @@ function crb_get_userdata( $user_id ) {
  */
 function cerber_is_table( $table ) {
 	global $wpdb;
-	if ( ! $wpdb->get_row( "SHOW TABLES LIKE '" . $table . "'" ) ) {
+	if ( ! $wpdb->get_row( "SHOW TABLES LIKE '" . cerber_db_ascii_escape( $table ) . "'" ) ) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * Checks if a DB table is empty.
+ *
+ * @param string $table Table name
+ *
+ * @return bool True if the table is empty, false if it contains any data
+ *
+ * @since 9.6.3.2
+ */
+function cerber_db_is_empty( $table ) {
+
+	if ( cerber_db_get_var( 'SELECT EXISTS(SELECT 1 FROM ' . cerber_db_ascii_escape( $table ) . ' LIMIT 1)' ) ) {
 		return false;
 	}
 
@@ -3145,6 +3125,37 @@ function cerber_db_real_escape( $str ) {
 }
 
 /**
+ * Basic ASCII-only escaping function for MySQL, removing all non-ASCII characters.
+ *
+ * This function is designed to sanitize ASCII strings for use in MySQL queries by
+ * removing all non-ASCII characters and escaping special characters that may be used
+ * in SQL injection attacks.
+ *
+ * WARNING: This function does not support UTF-8 or multibyte characters.
+ *
+ * @param string $str The input string to be sanitized and escaped.
+ *
+ * @return string The sanitized and escaped string, or an empty string if no valid ASCII characters remain.
+ *
+ * @since 9.6.3.2
+ */
+function cerber_db_ascii_escape( $str ) {
+	if ( empty( $str ) ) {
+		return $str;
+	}
+
+	$str = preg_replace( '/[^\x00-\x7F]/', '', $str );
+
+	// Replace common special characters with their escaped versions
+
+	return str_replace(
+		[ "\\", "\x00", "\n", "\r", "'", "\"", "\x1a" ],
+		[ "\\\\", "\\0", "\\n", "\\r", "\\'", "\\\"", "\\Z" ],
+		$str
+	);
+}
+
+/**
  * @param bool $erase
  * @param bool $flat If true returns an array of error messages, otherwise a multidimensional array
  *
@@ -3250,37 +3261,51 @@ function cerber_db_get_affected() {
 	return  $aff;
 }
 
+/**
+ * @param string $query
+ * @param int $type
+ *
+ * @return array
+ */
 function cerber_db_get_results( $query, $type = MYSQLI_ASSOC ) {
 
 	if ( ! $result = cerber_db_query( $query ) ) {
 		return array();
 	}
 
-	$ret = array();
+	if ( $type === MYSQLI_ASSOC
+	     && function_exists( 'mysqli_fetch_all' ) ) {
 
-	switch ( $type ) {
-		case MYSQLI_ASSOC:
-			while ( $row = mysqli_fetch_assoc( $result ) ) {
-				$ret[] = $row;
-			}
-			//$ret = mysqli_fetch_all( $result, $type ); // Requires mysqlnd driver
-			break;
-		case MYSQL_FETCH_OBJECT:
-			while ( $row = mysqli_fetch_object( $result ) ) {
-				$ret[] = $row;
-			}
-			break;
-		case MYSQL_FETCH_OBJECT_K:
-			while ( $row = mysqli_fetch_object( $result ) ) {
-				$vars = get_object_vars( $row );
-				$key = array_shift( $vars );
-				$ret[ $key ] = $row;
-			}
-			break;
-		default:
-			while ( $row = mysqli_fetch_row( $result ) ) {
-				$ret[] = $row;
-			}
+		$ret = mysqli_fetch_all( $result, MYSQLI_ASSOC ); // Requires mysqlnd driver
+
+	}
+	else {
+
+		$ret = array();
+
+		switch ( $type ) {
+			case MYSQLI_ASSOC:
+				while ( $row = mysqli_fetch_assoc( $result ) ) {
+					$ret[] = $row;
+				}
+				break;
+			case MYSQL_FETCH_OBJECT:
+				while ( $row = mysqli_fetch_object( $result ) ) {
+					$ret[] = $row;
+				}
+				break;
+			case MYSQL_FETCH_OBJECT_K:
+				while ( $row = mysqli_fetch_object( $result ) ) {
+					$vars = get_object_vars( $row );
+					$key = array_shift( $vars );
+					$ret[ $key ] = $row;
+				}
+				break;
+			default:
+				while ( $row = mysqli_fetch_row( $result ) ) {
+					$ret[] = $row;
+				}
+		}
 	}
 
 	mysqli_free_result( $result );
@@ -3313,20 +3338,28 @@ function cerber_db_get_row( $query, $type = MYSQLI_ASSOC ) {
 }
 
 /**
- * @param string $query
+ * Executes an SQL query and returns the values of the first column of all rows in the result set.
  *
- * @return array
+ * @param string $query The SQL query to execute
+ * @return array A numerically indexed array of values from the first column of the query result
  */
 function cerber_db_get_col( $query ) {
-
 	if ( ! $result = cerber_db_query( $query ) ) {
 		return array();
 	}
 
 	$ret = array();
 
-	while ( $row = $result->fetch_row() ) {
-		$ret[] = $row[0];
+	if ( function_exists( 'mysqli_fetch_all' ) ) {
+		$rows = $result->fetch_all( MYSQLI_NUM );
+		$ret = array_column( $rows, 0 );
+		unset( $rows );
+	}
+	else {
+		// No mysqlnd installed
+		while ( $row = $result->fetch_row() ) {
+			$ret[] = $row[0];
+		}
 	}
 
 	$result->free();
@@ -3335,6 +3368,8 @@ function cerber_db_get_col( $query ) {
 }
 
 /**
+ * Returns the value of the first field from the first row
+ *
  * @param string $query
  *
  * @return bool|mixed
@@ -3345,15 +3380,37 @@ function cerber_db_get_var( $query ) {
 		return false;
 	}
 
-	//$r = $result->fetch_row();
-	$r = mysqli_fetch_row( $result );
+	$row = mysqli_fetch_row( $result );
 	$result->free();
 
-	if ( $r ) {
-		return $r[0];
+	return $row ? $row[0] : false;
+}
+
+/**
+ * Counts rows in a specified database table with optional conditions.
+ *
+ * @param string $table The name of the database table to count rows from.
+ * @param string $field The field to be counted (default is '*'). Recommended to use an indexed field.
+ * @param array $key_fields Optional associative array of conditional fields for the WHERE clause.
+ *                            Format: ['column_name' => 'value', ...]
+ *
+ * @return int|bool The number of rows matching the conditions, or 0 if an error occurs (e.g., non-ASCII input for $table, $field).
+ *
+ * @since 9.6.3.2
+ */
+function cerber_db_count( $table, $field = '*', $key_fields = array() ) {
+
+	if ( ! $table = cerber_db_ascii_escape( $table ) ) {
+		return 0;
 	}
 
-	return false;
+	if ( ! $field = cerber_db_ascii_escape( $field ) ) {
+		return 0;
+	}
+
+	$where = ( $key_fields ) ? ' WHERE ' . cerber_db_make_where( $table, $key_fields ) : '';
+
+	return cerber_db_get_var( 'SELECT COUNT(' . $field . ') FROM ' . $table . $where );
 }
 
 /**
@@ -3417,11 +3474,8 @@ function cerber_db_make_where( $table, $key_fields ) {
  * @since 8.8.6.3
  */
 function cerber_db_prepare( $table, $field, &$value ) {
-	$type = '';
 
-	if ( ! empty( CERBER_DB_TYPES[ $table ][ $field ] ) ) {
-		$type = CERBER_DB_TYPES[ $table ][ $field ];
-	}
+	$type = CERBER_DB_TYPES[ $table ][ $field ] ?? '';
 
 	switch ( $type ) {
 		case 'int':
@@ -3473,6 +3527,7 @@ function cerber_get_db() {
 function cerber_get_db_prefix() {
 	global $wpdb;
 	static $prefix = null;
+
 	if ( $prefix === null ) {
 		$prefix = $wpdb->base_prefix;
 	}
@@ -3764,9 +3819,13 @@ function cerber_check_groove_x() {
 	return false;
 }
 
-/*
-	Get the special public Cerber Sign for using with cookies
-*/
+/**
+ * Returns the special public Cerber Sign for using with cookies
+ *
+ * @param $regenerate bool
+ *
+ * @return array
+ */
 function cerber_get_groove_x( $regenerate = false ) {
 	$groove_x = array();
 
@@ -3774,7 +3833,7 @@ function cerber_get_groove_x( $regenerate = false ) {
 		$groove_x = cerber_get_site_option( 'cerber-groove-x' );
 	}
 
-	if ( $regenerate || empty( $groove_x ) ) {
+	if ( $regenerate || empty( $groove_x ) || ! is_array( $groove_x ) ) {
 		$groove_0 = crb_random_string( 24, 32 );
 		$groove_1 = crb_random_string( 24, 32 );
 		$groove_x = array( $groove_0, $groove_1 );
@@ -5199,6 +5258,16 @@ final class CRB_Cache {
 		return array( self::$stat, $entries );
 	}
 
+	/**
+	 * Checks if the WordPress persistent cache is functional by using a marker stored between HTTP requests.
+	 *
+	 * On the first call or if the cache is not operational, it initializes the marker and returns 0.
+	 * If the cache works correctly, it will return the timestamp (`t`) that was set during the first successful check.
+	 *
+	 * @return int Returns 0 on the first call or if the cache is non-operational.
+	 *             On subsequent requests, it returns the previously set timestamp from the first cache check,
+	 *             confirming that the cache retains data across HTTP requests.
+	 */
 	static function checker() {
 
 		$sid = get_wp_cerber()->getRequestID();
@@ -5222,9 +5291,13 @@ final class CRB_Cache {
 }
 
 /**
+ * Saves data to the WordPress persistent object cache if it's available.
+ * Note: if no persistent object cache is available, any cached data will be lost between HTTP requests.
+ * @see CRB_Cache::checker()
+ *
  * @param $key string
- * @param $value mixed
- * @param $expire integer Element will expire in X seconds, 0 = never expires
+ * @param $value mixed|array
+ * @param $expire integer Cached data will expire in X seconds, 0 = never expires
  *
  * @return bool
  */
@@ -5233,6 +5306,9 @@ function cerber_cache_set( $key, $value, $expire = 0 ) {
 }
 
 /**
+ * Retrieves data from the WordPress persistent object cache if it's available.
+ * Note: if no persistent object cache is available, the data will be lost between HTTP requests.
+ *
  * @param $key string
  * @param $default mixed
  *
@@ -5263,13 +5339,14 @@ function cerber_cache_is_enabled() {
 }
 
 /**
- * Retrieve and cache data from the DB. Make sense for heavy queries.
+ * Retrieve data from the DB using SQL query and cache the results.
+ * Return data from the cache if the table has not been changed.
  *
- * @param array|string $sql One or more SQL queries with optional data format
- * @param string $table DB table we're caching data from
- * @param bool $cache_only
- * @param string[] $hash_fields Fields to calculate hash
- * @param int $order_by The key of the ORDER BY field in the $fieldset
+ * @param array|string $sql One or more SQL queries with optional data format of returning results
+ * @param string $table DB table we're caching data for
+ * @param bool $cache_only If true, returns data from the cache strictly
+ * @param string[] $hash_fields Fields to calculate hash to detect changes in the table
+ * @param int $order_by The ID of the table field in the $hash_fields to use for ORDER BY condition
  *
  * @return array|false
  *
@@ -5389,7 +5466,10 @@ function cerber_check_for_update( $update, $plugin_data, $plugin_file, $locales 
 
 	$update = crb_array_get( $package_data, $plugin_file, $update );
 
-	//$update['requires_php'] = CERBER_REQ_PHP;
+	if ( isset( $update['requires_wp'] ) ) {
+		$update['requires'] = $update['requires_wp'];
+	}
+
 	$update['tested'] = cerber_get_wp_version(); // The last version of WP Cerber is always tested with the last version of WP
 
 	// This mess is for WP

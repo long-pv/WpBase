@@ -138,6 +138,8 @@ jQuery( function( $ ) {
 
         let popup_element = '#' + popup_element_id;
 
+        const narrow_class = $(popup_element).data('narrow') ? 'crb-narrow-popup-dialog' : '';
+
         $(popup_element + ' .crb-popup-dialog-close').on('click', function () {
             $.magnificPopup.close();
             event.preventDefault();
@@ -148,7 +150,7 @@ jQuery( function( $ ) {
             items: {
                 src: popup_element
             },
-            mainClass: 'crb-popup-dialog-wrap crb-admin-core',
+            mainClass: 'crb-popup-dialog-wrap crb-admin-core ' + narrow_class,
             closeOnContentClick: false,
             preloader: false,
         });
@@ -162,6 +164,7 @@ jQuery( function( $ ) {
         let elements = $(this).find(':checkbox[data-validation_group="' + group_id + '"]');
         if (elements.length) {
             let error_msg = $(this).find('#crb-message-' + group_id);
+
             if (!elements.filter(':checked').length) {
                 //elements.filter(':last').parent().after( '<p></p>' );
                 error_msg.show().effect('bounce');
@@ -173,14 +176,47 @@ jQuery( function( $ ) {
         }
 
     });
+
+
+    // Sortable dashboard widgets logic --------------------------------------------------------
+    // Requires: jQuery UI Sortable
+
+    const widget_container = $('#crb-dashboard-container');
+
+    if (widget_container.length) {
+
+        widget_container.sortable({
+            items: '.crb-dashboard-element',
+            cursor: 'move',
+            update: function (event, ui) {
+
+                let sortedIDs = $(this).sortable('toArray', {attribute: 'data-widget_id'});
+
+                // Remove empty values
+                sortedIDs = sortedIDs.filter(function (id) {
+                    return id !== '' && id !== null && id !== undefined; // Exclude invalid values
+                });
+
+                // Save the sorted order via AJAX
+                $.post(ajaxurl, {
+                    action: 'cerber_ajax',
+                    dash_order: sortedIDs,
+                    cerber_ajax_action: 'dashboard_save_sortable',
+                    ajax_nonce: crb_ajax_nonce
+                }).done(function (response) {
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    alert('Error saving widget order: ' + textStatus + ' [' + errorThrown + ']');
+                    console.log('Error saving widget order: ' + textStatus + ' [' + errorThrown + ']');
+                });
+            },
+        });
+    }
+
 });
 
 function __is_empty(thing) {
-    if (typeof thing == 'undefined') {
-        return true;
-    } else if (thing.length === 0) {
-        return true;
-    }
-
+    if (!thing) return true; // Handles undefined, null, false, 0, NaN, ''
+    if (Array.isArray(thing) || typeof thing === 'string') return thing.length === 0;
+    if (typeof thing === 'object') return Object.keys(thing).length === 0;
     return false;
 }
