@@ -1,28 +1,32 @@
-<?php 
+<?php
 function add_countdown_date_script()
 {
     if (!is_admin()) {
-        ?>
+?>
         <!-- count down time -->
         <style>
             .countDown {
                 display: flex;
                 gap: 10px;
                 margin-bottom: 16px;
+                align-items: center;
             }
+
             .countDown__item {
                 background: #0088ff;
                 flex: 1;
                 text-align: center;
                 color: #fff;
             }
-            .countDown__item > p {
+
+            .countDown__item>p {
                 text-transform: uppercase;
                 background: #0069ff;
                 padding: 8px;
                 margin: 0px;
             }
-            .countDown__item > span {
+
+            .countDown__item>span {
                 display: block;
                 height: 125px;
                 font-size: 50px;
@@ -31,7 +35,7 @@ function add_countdown_date_script()
         </style>
 
         <script type="text/javascript">
-            $(document).ready(function(){
+            $(document).ready(function() {
 
                 $('.countDown').each(function() {
                     let this_el = $(this);
@@ -73,12 +77,13 @@ function add_countdown_date_script()
             });
         </script>
         <!-- end -->
-<?php
+    <?php
     }
 }
 add_action('wp_footer', 'add_countdown_date_script', 99);
 
-function custom_countdowm_date_shortcode($atts) {
+function custom_countdowm_date_shortcode($atts)
+{
     $date = new DateTime();
     $date->modify('+1 month');
     $default_date = $date->format('Y-m-d 00:00:00');
@@ -86,6 +91,7 @@ function custom_countdowm_date_shortcode($atts) {
     $atts = shortcode_atts(
         array(
             'date' => $default_date,
+            'class' => '',
         ),
         $atts,
         'countdowm_date'
@@ -93,7 +99,7 @@ function custom_countdowm_date_shortcode($atts) {
 
     ob_start();
     ?>
-    <div class='countDown' data-date="<?php echo esc_html($atts['date']); ?>">
+    <div class='countDown <?php echo esc_html($atts['class']); ?>' data-date="<?php echo esc_html($atts['date']); ?>">
         <div class='countDown__item'>
             <span class='countDown__days'>--</span>
             <p>Days</p>
@@ -114,7 +120,7 @@ function custom_countdowm_date_shortcode($atts) {
             <p>Seconds</p>
         </div>
     </div>
-    <?php
-    return ob_get_clean();;
+<?php
+    return ob_get_clean();
 }
 add_shortcode('countdowm_date', 'custom_countdowm_date_shortcode');

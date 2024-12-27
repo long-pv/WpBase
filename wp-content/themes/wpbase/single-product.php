@@ -96,13 +96,13 @@ get_header();
 							<?php the_title(); ?>
 						</h1>
 
+						<!-- hiển thị thông tin chung -->
 						<?php
 						$product_sku = $product->get_sku() ? $product->get_sku() : 'N/A';
 						$stock_status = $product->is_in_stock() ? 'Còn hàng' : 'Hết hàng';
 						$product_views = get_post_meta($product_id, 'post_views_count', true);
 						$product_views = $product_views ? $product_views : 0;
 						?>
-
 						<div class="meta_product">
 							<div class="sku_pro">
 								Mã sản phẩm: <span class="sku"><?php echo esc_html($product_sku); ?></span>
@@ -120,7 +120,7 @@ get_header();
 						</div>
 
 						<?php
-
+						// hiển thị giá trong 2 trường hợp
 						if ($product->is_type('variable')) {
 							if ($product instanceof WC_Product_Variable) {
 								$available_variations = $product->get_available_variations();
@@ -174,6 +174,20 @@ get_header();
 								<?php endif; ?>
 							</div>
 						<?php
+						}
+						?>
+
+						<?php
+						// Lấy ngày kết thúc của chương trình giảm giá (Sale)
+						if (shortcode_exists('countdowm_date')) {
+							if ($product->is_on_sale()) {
+								$sale_end_date = $product->get_date_on_sale_to();
+								if ($sale_end_date) {
+									$sale_end_timestamp = $sale_end_date->getTimestamp();
+									$formatted_sale_end_date = date('Y-m-d H:i:s', $sale_end_timestamp);
+									echo do_shortcode('[countdowm_date class="product_sale_date" date="' . $formatted_sale_end_date . '"]');
+								}
+							}
 						}
 						?>
 
