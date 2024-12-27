@@ -19,8 +19,8 @@ if (!empty($_GET['product_cat'])) {
     $args['tax_query'][] = array(
         array(
             'taxonomy' => 'product_cat',
-            'field'    => 'slug',
-            'terms'    => sanitize_text_field($_GET['product_cat']),
+            'field' => 'slug',
+            'terms' => sanitize_text_field($_GET['product_cat']),
         ),
     );
 }
@@ -30,8 +30,8 @@ if (!empty($_GET['product_tags'])) {
     $args['tax_query'][] = array(
         array(
             'taxonomy' => 'product_tag',
-            'field'    => 'term_id',
-            'terms'    => $product_tags,
+            'field' => 'term_id',
+            'terms' => $product_tags,
         ),
     );
 }
@@ -40,12 +40,27 @@ if (!empty($_GET['min_price']) && !empty($_GET['max_price'])) {
     $min_price = floatval($_GET['min_price']);
     $max_price = floatval($_GET['max_price']);
     $args['meta_query'][] = array(
-        'key'     => '_price',
-        'value'   => array($min_price, $max_price),
+        'key' => '_price',
+        'value' => array($min_price, $max_price),
         'compare' => 'BETWEEN',
-        'type'    => 'DECIMAL',
+        'type' => 'DECIMAL',
     );
 }
+
+
+if (!empty($_GET['rating'])) {
+    $rating = floatval($_GET['rating']);
+    $args['meta_query'][] = array(
+        array(
+            'key' => '_wc_average_rating', // Trường meta chứa điểm sao
+            'value' => $rating, // Giá trị để so sánh
+            'compare' => '>=', // So sánh lớn hơn hoặc bằng
+            'type' => 'NUMERIC' // Chỉ định kiểu dữ liệu là số
+        ),
+    );
+}
+
+
 
 if (!empty($_GET['product_attributes'])) {
     $product_attributes = array_map('intval', $_GET['product_attributes']);
@@ -54,16 +69,45 @@ if (!empty($_GET['product_attributes'])) {
         if ($term) {
             $args['tax_query'][] = array(
                 'taxonomy' => $term->taxonomy,
-                'field'    => 'term_id',
-                'terms'    => $attribute_id,
+                'field' => 'term_id',
+                'terms' => $attribute_id,
             );
         }
     }
 }
 
+
+
 // Kết hợp tax_query nếu tồn tại nhiều điều kiện
 if (!empty($args['tax_query'])) {
     $args['tax_query']['relation'] = 'AND';
+}
+
+$order_by = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
+
+switch ($order_by) {
+    case 'price-desc':
+        $args['orderby'] = 'meta_value_num';
+        $args['meta_key'] = '_price';
+        $args['order'] = 'DESC';
+        break;
+
+    case 'price':
+        $args['orderby'] = 'meta_value_num';
+        $args['meta_key'] = '_price';
+        $args['order'] = 'ASC';
+        break;
+
+    case 'popularity':
+        $args['orderby'] = 'meta_value_num';
+        $args['meta_key'] = 'total_sales'; // Sắp xếp theo số lượng bán
+        $args['order'] = 'DESC';
+        break;
+
+    default:
+        $args['orderby'] = 'date'; // Mặc định sắp xếp theo ngày
+        $args['order'] = 'DESC';
+        break;
 }
 
 $query = new WP_Query($args);
@@ -136,7 +180,7 @@ get_footer();
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script>
-    jQuery(document).ready(function($) {
+    jQuery(document).ready(function ($) {
         var minPrice = parseFloat($("#slider-range").data("min"));
         var maxPrice = parseFloat($("#slider-range").data("max"));
 
@@ -148,7 +192,7 @@ get_footer();
             min: minPrice,
             max: maxPrice,
             values: [minVal, maxVal],
-            slide: function(event, ui) {
+            slide: function (event, ui) {
                 $("#min-price").val(ui.values[0]);
                 $("#max-price").val(ui.values[1]);
                 $("#min-label").text("$" + ui.values[0]);

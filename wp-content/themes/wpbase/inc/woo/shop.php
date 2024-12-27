@@ -5,7 +5,7 @@ function custom_woocommerce_catalog_orderby($sortby)
 {
     $sortby = array(
         'menu_order' => 'Thứ tự mặc định',
-        // 'popularity' => 'Phổ biến',
+        'popularity' => 'Bán chạy nhất',
         // 'rating' => 'Xếp hạng cao',
         // 'date' => 'Mới nhất',
         'price' => 'Giá: Thấp đến Cao',

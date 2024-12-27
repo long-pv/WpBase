@@ -3,12 +3,14 @@
 
     <!-- Form lọc sản phẩm -->
     <form method="GET">
+        <!-- Thêm sắp xếp -->
+        <input type="hidden" name="orderby" value="<?php echo isset($_GET['orderby']) ? $_GET['orderby'] : '' ?>">
 
         <!-- Tìm kiếm theo tên -->
         <div class="filter-item">
             <label for="product-search">Tìm kiếm tên sản phẩm</label>
             <input type="text" id="product-search" name="title" placeholder="Nhập tên sản phẩm"
-                value="<?php echo isset($_GET['title']) ? esc_attr($_GET['title']) : ''; ?>">
+                   value="<?php echo isset($_GET['title']) ? esc_attr($_GET['title']) : ''; ?>">
         </div>
 
         <!-- Lựa chọn danh mục (Radio Button) -->
@@ -16,7 +18,8 @@
             <div class="filter-item">
                 <label>Danh mục sản phẩm</label>
                 <div>
-                    <input type="radio" id="cat_all" name="product_cat" value="" <?php checked(!isset($_GET['product_cat']) || $_GET['product_cat'] == ''); ?>>
+                    <input type="radio" id="cat_all" name="product_cat"
+                           value="" <?php checked(!isset($_GET['product_cat']) || $_GET['product_cat'] == ''); ?>>
                     <label for="cat_all">Tất cả danh mục</label>
                 </div>
                 <?php
@@ -27,7 +30,7 @@
                 foreach ($categories as $category): ?>
                     <div>
                         <input type="radio" id="cat_<?php echo esc_attr($category->slug); ?>" name="product_cat"
-                            value="<?php echo esc_attr($category->slug); ?>" <?php checked(isset($_GET['product_cat']) && $_GET['product_cat'] == $category->slug); ?>>
+                               value="<?php echo esc_attr($category->slug); ?>" <?php checked(isset($_GET['product_cat']) && $_GET['product_cat'] == $category->slug); ?>>
                         <label for="cat_<?php echo esc_attr($category->slug); ?>">
                             <?php echo esc_html($category->name); ?>
                         </label>
@@ -45,15 +48,16 @@
         ]);
 
         if (!empty($tags)):
-        ?>
+            ?>
             <div class="product-tags-checkboxes">
                 <h3>Chọn tags</h3>
                 <?php
                 foreach ($tags as $tag):
                     $checked = in_array($tag->term_id, $selected_tags) ? 'checked' : '';
-                ?>
+                    ?>
                     <label>
-                        <input type="checkbox" name="product_tags[]" value="<?php echo esc_attr($tag->term_id); ?>" <?php echo $checked; ?>>
+                        <input type="checkbox" name="product_tags[]"
+                               value="<?php echo esc_attr($tag->term_id); ?>" <?php echo $checked; ?>>
                         <?php echo esc_html($tag->name); ?>
                         (<?php echo $tag->count ?? 0; ?>)
                     </label>
@@ -76,9 +80,9 @@
             <div id="slider-range" data-min="0" data-max="1000"></div>
             <div class="price-range-inputs">
                 <input type="hidden" id="min-price" name="min_price"
-                    value="<?php echo isset($_GET['min_price']) ? $_GET['min_price'] : '0'; ?>">
+                       value="<?php echo isset($_GET['min_price']) ? $_GET['min_price'] : '0'; ?>">
                 <input type="hidden" id="max-price" name="max_price"
-                    value="<?php echo isset($_GET['max_price']) ? $_GET['max_price'] : '1000'; ?>">
+                       value="<?php echo isset($_GET['max_price']) ? $_GET['max_price'] : '1000'; ?>">
             </div>
         </div>
 
@@ -102,7 +106,8 @@
                         <div class="attribute-checkboxes">
                             <?php foreach ($terms as $term): ?>
                                 <label>
-                                    <input type="checkbox" name="product_attributes[]" value="<?php echo esc_attr($term->term_id); ?>"
+                                    <input type="checkbox" name="product_attributes[]"
+                                           value="<?php echo esc_attr($term->term_id); ?>"
                                         <?php echo (isset($_GET['product_attributes']) && in_array($term->term_id, $_GET['product_attributes'])) ? 'checked' : ''; ?>>
                                     <?php echo esc_html($term->name); ?>
                                     (<?php echo $term->count ?? 0; ?>)
@@ -114,6 +119,36 @@
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
+
+
+        <div class="rating_filter">
+            <label for="rating_filter"><?php _e('Filter by Rating', 'your-theme'); ?></label>
+            <div class="content_select">
+                <div class="item">
+                    <input type="radio" name="rating" value="1" id="rating_1">
+                    <label for="rating_1"><?php _e('1 Star & Up', 'your-theme'); ?></label>
+                </div>
+                <div class="item">
+                    <input type="radio" name="rating" value="2" id="rating_2">
+                    <label for="rating_2"><?php _e('2 Stars & Up', 'your-theme'); ?></label>
+                </div>
+                <div class="item">
+                    <input type="radio" name="rating" value="3" id="rating_3">
+                    <label for="rating_3"><?php _e('3 Stars & Up', 'your-theme'); ?></label>
+                </div>
+                <div class="item">
+
+                    <input type="radio" name="rating" value="4" id="rating_4">
+                    <label for="rating_4"><?php _e('4 Stars & Up', 'your-theme'); ?></label>
+                </div>
+                <div class="item">
+                    <input type="radio" name="rating" value="5" id="rating_5">
+                    <label for="rating_5"><?php _e('5 Stars Only', 'your-theme'); ?></label>
+                </div>
+            </div>
+
+        </div>
+
 
         <!-- Nút Submit -->
         <button type="submit" class="button">Áp dụng bộ lọc</button>

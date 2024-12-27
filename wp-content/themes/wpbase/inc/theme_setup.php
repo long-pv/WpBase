@@ -77,5 +77,6 @@ function basetheme_scripts()
     //add custom main css/js
     wp_enqueue_style('basetheme-style-main', get_template_directory_uri() . '/assets/css/main.css', array(), _S_VERSION);
     wp_enqueue_script('basetheme-script-main', get_template_directory_uri() . '/assets/js/main.js', array(), _S_VERSION, true);
+    wp_localize_script('basetheme-script-main', 'custom_ajax', array('ajax_url' => admin_url('admin-ajax.php')));
 }
 add_action('wp_enqueue_scripts', 'basetheme_scripts');
