@@ -126,6 +126,30 @@
         $('.btn-primary-submit-review').data('product_id', value);
     });
 
+    $(".product_list_slider").slick({
+        slidesToShow: 4,
+        slidesToScroll: 2,
+        autoplay: false,
+        autoplaySpeed: 5000,
+        arrows: true,
+
+        responsive: [{
+            breakpoint: 1200,
+            settings: {
+                slidesToShow: 2,
+                slidesToScroll: 1,
+            },
+        },
+            {
+                breakpoint: 768,
+                settings: {
+                    slidesToShow: 1,
+                    slidesToScroll: 1,
+                },
+            },
+        ],
+    });
+
     $(document).on("click", ".btn-primary-submit-review", function (e) {
         rating = $('input[name="rating"]:checked').val();
         comment = $('#comment').val();

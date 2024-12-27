@@ -120,29 +120,35 @@
             </div>
         <?php endif; ?>
 
-
+        <?php $rating = isset($_GET['rating']) ? intval($_GET['rating']) : 0 ?>
         <div class="rating_filter">
-            <label for="rating_filter"><?php _e('Filter by Rating', 'your-theme'); ?></label>
+            <h4><?php _e('Filter by Rating', 'your-theme'); ?></h4>
             <div class="content_select">
                 <div class="item">
-                    <input type="radio" name="rating" value="1" id="rating_1">
+                    <input type="radio" name="rating" <?php echo ($rating == 0) ? 'checked ' : '' ?> value="0"
+                           id="rating_0">
+                    <label for="rating_0"><?php _e('Tất cả', 'your-theme'); ?></label>
+                </div>
+                <div class="item">
+                    <input type="radio" name="rating" <?php echo ($rating == 1) ? 'checked ' : '' ?> value="1"
+                           id="rating_1">
                     <label for="rating_1"><?php _e('1 Star & Up', 'your-theme'); ?></label>
                 </div>
                 <div class="item">
-                    <input type="radio" name="rating" value="2" id="rating_2">
+                    <input type="radio" name="rating" <?php echo ($rating == 2) ? 'checked ' : '' ?> value="2" id="rating_2">
                     <label for="rating_2"><?php _e('2 Stars & Up', 'your-theme'); ?></label>
                 </div>
                 <div class="item">
-                    <input type="radio" name="rating" value="3" id="rating_3">
+                    <input type="radio" name="rating" <?php echo ($rating == 3) ? 'checked ' : '' ?> value="3" id="rating_3">
                     <label for="rating_3"><?php _e('3 Stars & Up', 'your-theme'); ?></label>
                 </div>
                 <div class="item">
 
-                    <input type="radio" name="rating" value="4" id="rating_4">
+                    <input type="radio" name="rating" <?php echo ($rating == 4) ? 'checked ' : '' ?> value="4" id="rating_4">
                     <label for="rating_4"><?php _e('4 Stars & Up', 'your-theme'); ?></label>
                 </div>
                 <div class="item">
-                    <input type="radio" name="rating" value="5" id="rating_5">
+                    <input type="radio" name="rating" <?php echo ($rating == 5) ? 'checked ' : '' ?> value="5" id="rating_5">
                     <label for="rating_5"><?php _e('5 Stars Only', 'your-theme'); ?></label>
                 </div>
             </div>

@@ -37,19 +37,9 @@ $product_id = get_the_ID();
         </h3>
         <div class="productItem__price">
             <?php
-            $regular_price = $product->get_regular_price();
-            $sale_price = $product->get_sale_price();
-
-            if ($regular_price == 0): ?>
-                <span class="contact-text">Liên hệ</span>
-            <?php elseif ($product->is_on_sale()): ?>
-                <span class="regular-price-sale">
-                    <?php echo wc_price($regular_price); ?>
-                </span>
-                <span class="regular-price"><?php echo wc_price($sale_price); ?></span>
-            <?php else: ?>
-                <span class="regular-price"><?php echo wc_price($regular_price); ?></span>
-            <?php endif; ?>
+            if ( $price_html = $product->get_price_html() ) : ?>
+            <span class="price"><?php echo $price_html; ?></span>
+            <?php endif;  ?>
         </div>
 
         <?php if (shortcode_exists('woosc')) : ?>

@@ -48,8 +48,8 @@ if (!empty($_GET['min_price']) && !empty($_GET['max_price'])) {
 }
 
 
-if (!empty($_GET['rating'])) {
-    $rating = floatval($_GET['rating']);
+if (!empty($_GET['rating'] && intval($_GET['rating']) > 0)) {
+    $rating = intval($_GET['rating']);
     $args['meta_query'][] = array(
         array(
             'key' => '_wc_average_rating', // Trường meta chứa điểm sao
@@ -60,22 +60,17 @@ if (!empty($_GET['rating'])) {
     );
 }
 
-
-
-if (!empty($_GET['product_attributes'])) {
-    $product_attributes = array_map('intval', $_GET['product_attributes']);
-    foreach ($product_attributes as $attribute_id) {
-        $term = get_term($attribute_id);
-        if ($term) {
-            $args['tax_query'][] = array(
-                'taxonomy' => $term->taxonomy,
-                'field' => 'term_id',
-                'terms' => $attribute_id,
-            );
-        }
-    }
+if (!empty($_GET['rating'] && intval($_GET['rating']) > 0)) {
+    $rating = intval($_GET['rating']);
+    $args['meta_query'][] = array(
+        array(
+            'key' => '_wc_average_rating', // Trường meta chứa điểm sao
+            'value' => $rating, // Giá trị để so sánh
+            'compare' => '>=', // So sánh lớn hơn hoặc bằng
+            'type' => 'NUMERIC' // Chỉ định kiểu dữ liệu là số
+        ),
+    );
 }
-
 
 
 // Kết hợp tax_query nếu tồn tại nhiều điều kiện
@@ -101,6 +96,12 @@ switch ($order_by) {
     case 'popularity':
         $args['orderby'] = 'meta_value_num';
         $args['meta_key'] = 'total_sales'; // Sắp xếp theo số lượng bán
+        $args['order'] = 'DESC';
+        break;
+
+    case 'rating':
+        $args['orderby'] = 'meta_value_num';
+        $args['meta_key'] = '_wc_average_rating'; // Sắp xếp theo số lượng bán
         $args['order'] = 'DESC';
         break;
 

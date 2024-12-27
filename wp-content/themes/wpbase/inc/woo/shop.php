@@ -6,7 +6,7 @@ function custom_woocommerce_catalog_orderby($sortby)
     $sortby = array(
         'menu_order' => 'Thứ tự mặc định',
         'popularity' => 'Bán chạy nhất',
-        // 'rating' => 'Xếp hạng cao',
+         'rating' => 'Xếp hạng cao',
         // 'date' => 'Mới nhất',
         'price' => 'Giá: Thấp đến Cao',
         'price-desc' => 'Giá: Cao đến Thấp',
@@ -21,6 +21,13 @@ add_action('after_setup_theme', 'yourtheme_woocommerce_support');
 function yourtheme_woocommerce_support()
 {
     add_theme_support('woocommerce');
+    // Enabling WooCommerce product gallery features (are off by default since WC 3.0.0).
+    // zoom.
+    add_theme_support( 'wc-product-gallery-zoom' );
+    // lightbox.
+    add_theme_support( 'wc-product-gallery-lightbox' );
+    // swipe.
+    add_theme_support( 'wc-product-gallery-slider' );
 }
 
 // số lượng sản phẩm trong 1 category
