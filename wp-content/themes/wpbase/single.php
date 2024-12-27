@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The template for displaying all single posts
  *
@@ -27,7 +28,7 @@ get_header();
                     <?php
                     if (has_post_thumbnail()):
                         $caption = get_the_post_thumbnail_caption(get_the_ID());
-                        ?>
+                    ?>
                         <div class="imgWrap wp-caption mb-4">
                             <img class="m-auto" src="<?php echo get_the_post_thumbnail_url(); ?>"
                                 alt="<?php the_title(); ?>">
@@ -37,7 +38,7 @@ get_header();
                                 </p>
                             <?php endif; ?>
                         </div>
-                        <?php
+                    <?php
                     endif;
                     ?>
 
@@ -57,11 +58,11 @@ get_header();
                 $post_prev = get_adjacent_post(true, 'news', false);
                 $post_next = get_adjacent_post(true, 'news', true);
                 if ($post_prev || $post_next):
-                    ?>
+                ?>
                     <div class="post-single-navigation d-flex align-items-stretch mt-5">
                         <?php
                         if ($post_prev):
-                            ?>
+                        ?>
                             <a href="<?php echo get_permalink($post_prev->ID); ?>" class="mr-auto w-50 h-100 pr-4">
                                 <?php echo get_the_title($post_prev->ID); ?>
                             </a>
@@ -69,7 +70,7 @@ get_header();
 
                         <?php
                         if ($post_next):
-                            ?>
+                        ?>
                             <a href="<?php echo get_permalink($post_next->ID); ?>" class="ml-auto w-50 h-100 text-right pl-4">
                                 <?php echo get_the_title($post_next->ID); ?>
                             </a>
@@ -77,6 +78,15 @@ get_header();
                     </div>
                 <?php endif; ?>
             </div>
+        </div>
+
+        <div class="comments_open">
+            <?php
+            // Kiểm tra nếu bài viết có bình luận và bình luận chưa đóng
+            if (comments_open() || get_comments_number()) :
+                comments_template(); // Bao gồm phần bình luận
+            endif;
+            ?>
         </div>
     </div>
 </div>
@@ -96,7 +106,7 @@ $args_latest_posts = array(
 );
 $latest_posts = new WP_Query($args_latest_posts);
 if ($latest_posts->have_posts()):
-    ?>
+?>
     <section class="secSpace homePage__latest bg-light">
         <div class="container">
             <div class="secHeading">
@@ -108,9 +118,9 @@ if ($latest_posts->have_posts()):
                 $categories = get_the_category();
                 if (!empty($categories) && $categories[0]):
                     $category_link = get_category_link($categories[0]);
-                    ?>
+                ?>
                     <a class="secHeading__link" href="<?php echo $category_link; ?>">Xem thêm</a>
-                    <?php
+                <?php
                 endif;
                 ?>
             </div>
@@ -118,17 +128,17 @@ if ($latest_posts->have_posts()):
                 <?php
                 while ($latest_posts->have_posts()):
                     $latest_posts->the_post();
-                    ?>
+                ?>
                     <div class="col-md-6 col-lg-4 mb-3">
                         <?php get_template_part('template-parts/single/post'); ?>
                     </div>
-                    <?php
+                <?php
                 endwhile;
                 ?>
             </div>
         </div>
     </section>
-    <?php
+<?php
 endif;
 wp_reset_postdata();
 ?>
