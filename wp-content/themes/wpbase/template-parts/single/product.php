@@ -1,11 +1,12 @@
 <?php
 global $product;
+$product_id = get_the_ID();
 ?>
 
 <article class="productItem" data-mh="productItem">
     <a href="<?php the_permalink(); ?>" class="imgGroup productItem__img" aria-label="<?php the_title(); ?>">
         <?php
-        $image_id = get_post_thumbnail_id(get_the_ID());
+        $image_id = get_post_thumbnail_id($product_id);
         ?>
         <picture>
             <source media="(min-width:768px)" srcset="<?php echo img_url($image_id, 'medium'); ?>">
@@ -16,17 +17,17 @@ global $product;
     <div class="productItem__content">
 
         <?php
-        if ($product->is_on_sale()) {
+        if ($product->is_on_sale()) :
             $regular_price = $product->get_regular_price();
             $sale_price = $product->get_sale_price();
 
             if ($regular_price > 0):
                 $discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
-                ?>
+        ?>
                 <div class="sale_notification">Sale <?php echo $discount_percentage; ?>%</div>
-                <?php
+        <?php
             endif;
-        }
+        endif;
         ?>
 
         <h3 class="h4 productItem__title" data-mh="title_product">
@@ -51,9 +52,14 @@ global $product;
             <?php endif; ?>
         </div>
 
+        <?php if (shortcode_exists('woosc')) : ?>
+            <div class="my-3">
+                <?php echo do_shortcode('[woosc id="' . $product_id . '"]'); ?>
+            </div>
+        <?php endif; ?>
+
         <div class="productItem__quick-view">
-            <a href="javascript:void(0);" class="quick-view-button"
-                data-product_id="<?php echo esc_attr($product->get_id()); ?>">
+            <a href="javascript:void(0);" class="quick-view-button" data-product_id="<?php echo esc_attr($product_id); ?>">
                 Xem Nhanh
             </a>
         </div>

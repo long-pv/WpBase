@@ -4,11 +4,11 @@ function activate_my_plugins()
     $plugins = [
         'advanced-custom-fields-pro\acf.php',
         'classic-editor\classic-editor.php',
-        'duplicator\duplicator.php',
-        'duplicate-post\duplicate-post.php',
-        'wordpress-seo\wp-seo.php',
-        'wp-cerber\wp-cerber.php',
-        'all-in-one-wp-migration-master\all-in-one-wp-migration.php',
+        // 'duplicator\duplicator.php',
+        // 'duplicate-post\duplicate-post.php',
+        // 'wordpress-seo\wp-seo.php',
+        // 'wp-cerber\wp-cerber.php',
+        // 'all-in-one-wp-migration-master\all-in-one-wp-migration.php',
     ];
 
     foreach ($plugins as $plugin) {

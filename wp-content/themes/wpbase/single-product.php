@@ -122,20 +122,26 @@ get_header();
 						<?php
 
 						if ($product->is_type('variable')) {
-							$available_variations = $product->get_available_variations();
+							if ($product instanceof WC_Product_Variable) {
+								$available_variations = $product->get_available_variations();
+							} else {
+								$available_variations = [];
+							}
 
 							$min_price = null;
 							$max_price = null;
 
-							foreach ($available_variations as $variation) {
-								$variation_price = $variation['display_price'];
+							if ($available_variations) {
+								foreach ($available_variations as $variation) {
+									$variation_price = $variation['display_price'];
 
-								if ($min_price === null || $variation_price < $min_price) {
-									$min_price = $variation_price;
-								}
+									if ($min_price === null || $variation_price < $min_price) {
+										$min_price = $variation_price;
+									}
 
-								if ($max_price === null || $variation_price > $max_price) {
-									$max_price = $variation_price;
+									if ($max_price === null || $variation_price > $max_price) {
+										$max_price = $variation_price;
+									}
 								}
 							}
 
@@ -220,6 +226,12 @@ get_header();
 							endif;
 						}
 						?>
+
+						<?php if (shortcode_exists('woosc')) : ?>
+							<div class="my-3">
+								<?php echo do_shortcode('[woosc id="' . $product_id . '"]'); ?>
+							</div>
+						<?php endif; ?>
 
 						<?php
 						if (!empty($categories)):
