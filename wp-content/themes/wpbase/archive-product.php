@@ -1,7 +1,7 @@
 <?php
 get_header();
 
-$paged = $_GET['paging'] ? $_GET['paging'] : 1;
+$paged = !empty($_GET['paging']) ? intval($_GET['paging']) : 1;
 
 // Thực hiện WP_Query
 $args = array(

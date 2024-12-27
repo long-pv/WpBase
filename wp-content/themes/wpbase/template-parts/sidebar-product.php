@@ -128,6 +128,7 @@
                     'max_price',
                     'product_tags',
                     'orderby',
+                    'product_attributes',
                 )
             )
         );
