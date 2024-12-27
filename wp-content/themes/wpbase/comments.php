@@ -272,4 +272,60 @@ function basetheme_comment_callback($comment, $args, $depth)
 	input[type="hidden"] {
 		display: none;
 	}
+
+	/* phân trang */
+	/* Container cho phân trang bình luận */
+	.nav-links {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 30px;
+		padding: 0;
+	}
+
+	/* Các nút phân trang */
+	.nav-previous,
+	.nav-next {
+		display: inline-flex;
+	}
+
+	/* Liên kết phân trang */
+	.nav-previous a,
+	.nav-next a {
+		padding: 10px 20px;
+		background-color: #0073e6;
+		color: #fff;
+		text-decoration: none;
+		border-radius: 5px;
+		font-size: 1em;
+		transition: background-color 0.3s ease, transform 0.3s ease;
+	}
+
+	/* Hover hiệu ứng */
+	.nav-previous a:hover,
+	.nav-next a:hover {
+		background-color: #005bb5;
+		transform: translateY(-2px);
+	}
+
+	/* Hiệu ứng focus cho liên kết */
+	.nav-previous a:focus,
+	.nav-next a:focus {
+		background-color: #005bb5;
+		text-decoration: underline;
+	}
+
+	/* Style cho các liên kết phân trang đã được click (active) */
+	.nav-previous a:active,
+	.nav-next a:active {
+		background-color: #003d8b;
+	}
+
+	/* Đảm bảo các nút phân trang được căn lề trái và phải */
+	.nav-previous {
+		margin-right: auto;
+	}
+
+	.nav-next {
+		margin-left: auto;
+	}
 </style>
