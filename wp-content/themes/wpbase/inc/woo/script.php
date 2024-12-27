@@ -2,43 +2,39 @@
 function add_custom_woo_script()
 {
     if (!is_admin()):
-        ?>
+?>
         <!-- custom woocommerce -->
         <script type="text/javascript">
-            jQuery(document).ready(function ($) {
+            jQuery(document).ready(function($) {
                 // tự động cập nhật giỏ hàng khi có thay đổi
                 var btn_update_cart = $('button[name="update_cart"]');
                 btn_update_cart.css('visibility', 'hidden'); // ẩn nút update cart
-                $(document).on("change", "input.input-text.qty", function () {
+                $(document).on("change", "input.input-text.qty", function() {
                     $('button[name="update_cart"]').click();
                 });
 
                 // tăng số lượng của giỏ hàng
-                $(document).on("wc_fragment_refresh updated_wc_div added_to_cart", function () {
+                $(document).on("wc_fragment_refresh updated_wc_div added_to_cart", function() {
                     $.ajax({
                         url: '<?php echo admin_url('admin-ajax.php'); ?>',
                         type: "POST",
                         data: {
                             action: "update_cart_count",
                         },
-                        beforeSend: function () {
-                            $("#ajax-loader").show();
+                        success: function(response) {
+                            $(".header__wooCartCount").text(response.cart_count);
+                            // Cập nhật chi tiết mini cart
+                            $(".cart_collapse_html").html(response.mini_cart);
                         },
-                        success: function (response) {
-                            $(".header__wooCartCount").text(response);
-                        },
-                        error: function (error) {
+                        error: function(error) {
                             alert('Something went wrong.');
-                        },
-                        complete: function () {
-                            $("#ajax-loader").hide();
                         },
                     });
                 });
             });
         </script>
         <!-- end -->
-        <?php
+    <?php
     endif;
 }
 add_action('wp_footer', 'add_custom_woo_script', 99);
@@ -55,8 +51,8 @@ function add_quick_view_popup()
     </div>
 
     <script>
-        jQuery(document).ready(function ($) {
-            $('.quick-view-button').on('click', function (e) {
+        jQuery(document).ready(function($) {
+            $('.quick-view-button').on('click', function(e) {
                 e.preventDefault();
 
                 var productId = $(this).data('product_id');
@@ -68,33 +64,33 @@ function add_quick_view_popup()
                         action: 'load_quick_view',
                         product_id: productId
                     },
-                    beforeSend: function () {
+                    beforeSend: function() {
                         $("#ajax-loader").show();
                     },
-                    success: function (response) {
+                    success: function(response) {
                         $('#quick-view-product-content').html(response);
                         $('#quick-view-popup').fadeIn();
                     },
-                    error: function (error) {
+                    error: function(error) {
                         alert('Something went wrong.');
                     },
-                    complete: function () {
+                    complete: function() {
                         $("#ajax-loader").hide();
                     },
                 });
             });
 
             // Đóng popup
-            $('.close-popup, #quick-view-popup').on('click', function () {
+            $('.close-popup, #quick-view-popup').on('click', function() {
                 $('#quick-view-popup').fadeOut();
             });
 
             // Ngăn không đóng khi nhấp vào nội dung popup
-            $('.quick-view-content').on('click', function (e) {
+            $('.quick-view-content').on('click', function(e) {
                 e.stopPropagation();
             });
         });
     </script>
-    <?php
+<?php
 }
 add_action('wp_footer', 'add_quick_view_popup', 99);
