@@ -1,5 +1,73 @@
 <?php
 get_header();
+
+$paged = $_GET['paging'] ? $_GET['paging'] : 1;
+
+// Thực hiện WP_Query
+$args = array(
+    'post_type' => 'product',
+    'post_status' => 'publish',
+    'posts_per_page' => 9,
+    'paged' => $paged,
+);
+
+if (!empty($_GET['title'])) {
+    $args['s'] = sanitize_text_field($_GET['title']);
+}
+
+if (!empty($_GET['product_cat'])) {
+    $args['tax_query'][] = array(
+        array(
+            'taxonomy' => 'product_cat',
+            'field'    => 'slug',
+            'terms'    => sanitize_text_field($_GET['product_cat']),
+        ),
+    );
+}
+
+if (!empty($_GET['product_tags'])) {
+    $product_tags = array_map('intval', $_GET['product_tags']);
+    $args['tax_query'][] = array(
+        array(
+            'taxonomy' => 'product_tag',
+            'field'    => 'term_id',
+            'terms'    => $product_tags,
+        ),
+    );
+}
+
+if (!empty($_GET['min_price']) && !empty($_GET['max_price'])) {
+    $min_price = floatval($_GET['min_price']);
+    $max_price = floatval($_GET['max_price']);
+    $args['meta_query'][] = array(
+        'key'     => '_price',
+        'value'   => array($min_price, $max_price),
+        'compare' => 'BETWEEN',
+        'type'    => 'DECIMAL',
+    );
+}
+
+if (!empty($_GET['product_attributes'])) {
+    $product_attributes = array_map('intval', $_GET['product_attributes']);
+    foreach ($product_attributes as $attribute_id) {
+        $term = get_term($attribute_id);
+        if ($term) {
+            $args['tax_query'][] = array(
+                'taxonomy' => $term->taxonomy,
+                'field'    => 'term_id',
+                'terms'    => $attribute_id,
+            );
+        }
+    }
+}
+
+// Kết hợp tax_query nếu tồn tại nhiều điều kiện
+if (!empty($args['tax_query'])) {
+    $args['tax_query']['relation'] = 'AND';
+}
+
+$query = new WP_Query($args);
+
 ?>
 <div class="secSpace">
     <div class="product_cat_wrap">
@@ -11,11 +79,8 @@ get_header();
             </h1>
 
             <div class="catalog_ordering">
-                <?php
-                $total_products = wc_get_loop_prop('total');
-                ?>
                 <div class="woocommerce-result-count">
-                    <span><?php echo esc_html($total_products); ?> </span> kết quả
+                    <span><?php echo $query->found_posts; ?> </span> kết quả
                 </div>
 
                 <?php woocommerce_catalog_ordering(); ?>
@@ -26,21 +91,38 @@ get_header();
                     <?php get_template_part('template-parts/sidebar-product'); ?>
                 </div>
                 <div class="col-lg-9">
-                    <?php if ($total_products): ?>
-                        <div class="list-product-cat row list_product">
-                            <?php while (have_posts()):
-                                the_post(); ?>
+                    <?php if ($query->have_posts()) : ?>
+                        <div class="row">
+                            <?php
+                            while ($query->have_posts()) :
+                                $query->the_post(); ?>
+
                                 <div class="col-lg-4 col-md-6">
                                     <?php get_template_part('template-parts/single/product'); ?>
                                 </div>
-                            <?php endwhile; ?>
+                            <?php
+                            endwhile;
+                            ?>
                         </div>
-                        <?php pagination(); ?>
                         <?php
-                    else:
+                        echo '<div class="pagination">';
+                        echo paginate_links(
+                            array(
+                                'total' => $query->max_num_pages,
+                                'current' => max(1, $paged),
+                                'format' => '?paging=%#%',
+                                'end_size' => 2,
+                                'mid_size' => 1,
+                                'prev_text' => __('Prev', 'basetheme'),
+                                'next_text' => __('Next', 'basetheme'),
+                            )
+                        );
+                        echo '</div>';
                         ?>
-                        <h3>Không có kết quả nào.</h3>
-                    <?php endif; ?>
+                    <?php
+                    endif;
+                    wp_reset_postdata();
+                    ?>
                 </div>
             </div>
         </div>
@@ -54,7 +136,7 @@ get_footer();
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script>
-    jQuery(document).ready(function ($) {
+    jQuery(document).ready(function($) {
         var minPrice = parseFloat($("#slider-range").data("min"));
         var maxPrice = parseFloat($("#slider-range").data("max"));
 
@@ -66,7 +148,7 @@ get_footer();
             min: minPrice,
             max: maxPrice,
             values: [minVal, maxVal],
-            slide: function (event, ui) {
+            slide: function(event, ui) {
                 $("#min-price").val(ui.values[0]);
                 $("#max-price").val(ui.values[1]);
                 $("#min-label").text("$" + ui.values[0]);

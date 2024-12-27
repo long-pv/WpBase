@@ -15,6 +15,10 @@
         <?php if (is_post_type_archive('product')): ?>
             <div class="filter-item">
                 <label>Danh mục sản phẩm</label>
+                <div>
+                    <input type="radio" id="cat_all" name="product_cat" value="" <?php checked(!isset($_GET['product_cat']) || $_GET['product_cat'] == ''); ?>>
+                    <label for="cat_all">Tất cả danh mục</label>
+                </div>
                 <?php
                 $categories = get_terms(array(
                     'taxonomy' => 'product_cat',
@@ -29,10 +33,6 @@
                         </label>
                     </div>
                 <?php endforeach; ?>
-                <div>
-                    <input type="radio" id="cat_all" name="product_cat" value="" <?php checked(!isset($_GET['product_cat']) || $_GET['product_cat'] == ''); ?>>
-                    <label for="cat_all">Tất cả danh mục</label>
-                </div>
             </div>
         <?php endif; ?>
 
@@ -54,7 +54,7 @@
                 ?>
                     <label>
                         <input type="checkbox" name="product_tags[]" value="<?php echo esc_attr($tag->term_id); ?>" <?php echo $checked; ?>>
-                        <?php echo esc_html($tag->name); ?> 
+                        <?php echo esc_html($tag->name); ?>
                         (<?php echo $tag->count ?? 0; ?>)
                     </label>
                     <br>
@@ -118,7 +118,19 @@
         <!-- Nút Submit -->
         <button type="submit" class="button">Áp dụng bộ lọc</button>
         <?php
-        $reset_url = esc_url(remove_query_arg(array('title', 'product_cat', 'min_price', 'max_price', 'product_tags')));
+        $reset_url = esc_url(
+            remove_query_arg(
+                array(
+                    'paging',
+                    'title',
+                    'product_cat',
+                    'min_price',
+                    'max_price',
+                    'product_tags',
+                    'orderby',
+                )
+            )
+        );
         ?>
         <a href="<?php echo $reset_url; ?>" class="button" id="reset-filters">
             Reset bộ lọc
