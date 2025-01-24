@@ -37,8 +37,8 @@ $product_id = get_the_ID();
         </h3>
         <div class="productItem__price">
             <?php
-            if ( $price_html = $product->get_price_html() ) : ?>
-            <span class="price"><?php echo $price_html; ?></span>
+            if ($price_html = $product->get_price_html()) : ?>
+                <span class="price"><?php echo $price_html; ?></span>
             <?php endif;  ?>
         </div>
 

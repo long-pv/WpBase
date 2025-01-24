@@ -15,22 +15,22 @@ $categories = get_the_category($post_id);
         <?php
         if (!empty($categories)):
             $first_category = $categories[0];
-            ?>
+        ?>
             <a href="<?php echo get_category_link($first_category->term_id) ?>" class="singlePost__cat wow">
                 <?php echo $first_category->name; ?>
             </a>
-            <?php
+        <?php
         endif;
         ?>
 
         <?php
         $user_id = get_current_user_id();
         if ($user_id):
-            $favorite_posts = get_user_meta($user_id, 'favorite_posts', true) ?? [];
+            $favorite_posts = get_user_meta($user_id, 'favorite_posts', true) ?: [];
             $active_class = in_array($post_id, $favorite_posts) ? 'active' : '';
-            ?>
+        ?>
             <span class="favorite_posts <?php echo $active_class; ?>" data-post_id="<?php echo $post_id; ?>"></span>
-            <?php
+        <?php
         endif;
         ?>
     </div>
