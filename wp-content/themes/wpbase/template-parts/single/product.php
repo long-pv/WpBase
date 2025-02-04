@@ -42,6 +42,10 @@ $product_id = get_the_ID();
             <?php endif;  ?>
         </div>
 
+        <div class="my-3">
+            <?php echo do_shortcode('[compare_button id="' . $product_id . '"]'); ?>
+        </div>
+
         <?php if (shortcode_exists('woosc')) : ?>
             <div class="my-3">
                 <?php echo do_shortcode('[woosc id="' . $product_id . '"]'); ?>

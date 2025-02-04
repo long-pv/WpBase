@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Functions hook include
  */
@@ -20,3 +21,4 @@ require get_template_directory() . '/inc/woo/orders.php';
 require get_template_directory() . '/inc/woo/registration.php';
 require get_template_directory() . '/inc/woo/polylang_custom.php';
 require get_template_directory() . '/inc/woo/review.php';
+require get_template_directory() . '/inc/woo/compare.php';
