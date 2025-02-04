@@ -624,3 +624,111 @@ $secSpaceSP: 32px;
         }
     }
 }
+
+/* quick-view-style.css */
+
+/* Bố cục tổng thể */
+.quick-view-product {
+    display: flex;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 20px auto;
+    overflow: hidden;
+}
+
+/* Ảnh sản phẩm */
+.quick-view-image img {
+    max-width: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+    height: auto;
+}
+
+/* Thông tin sản phẩm */
+.quick-view-info {
+    flex: 1;
+    padding: 15px;
+}
+
+/* Tên sản phẩm */
+.quick-view-info h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #333;
+    font-weight: bold;
+}
+
+/* Mô tả ngắn */
+.quick-view-info p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+/* Thông tin chi tiết */
+.quick-view-sku,
+.quick-view-categories,
+.quick-view-stock-status {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #444;
+}
+
+/* Giá sản phẩm */
+.quick-view-price {
+    font-size: 20px;
+    font-weight: bold;
+    color: #e74c3c;
+    margin: 15px 0;
+}
+
+/* Nút chức năng */
+.quick-view-buttons a.button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px 10px 5px 0;
+    background-color: #3498db;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s ease, transform 0.2s ease;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Hiệu ứng hover */
+.quick-view-buttons a.button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+/* Nút mua ngay */
+.quick-view-buttons a.buy-now {
+    background-color: #e67e22;
+}
+
+.quick-view-buttons a.buy-now:hover {
+    background-color: #d35400;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .quick-view-product {
+        flex-direction: column;
+    }
+
+    .quick-view-info {
+        padding: 10px;
+    }
+
+    .quick-view-buttons a.button {
+        width: 100%;
+        margin: 5px 0;
+    }
+}

@@ -6,7 +6,7 @@ function custom_woocommerce_catalog_orderby($sortby)
     $sortby = array(
         'menu_order' => 'Thứ tự mặc định',
         'popularity' => 'Bán chạy nhất',
-         'rating' => 'Xếp hạng cao',
+        'rating' => 'Xếp hạng cao',
         // 'date' => 'Mới nhất',
         'price' => 'Giá: Thấp đến Cao',
         'price-desc' => 'Giá: Cao đến Thấp',
@@ -23,11 +23,11 @@ function yourtheme_woocommerce_support()
     add_theme_support('woocommerce');
     // Enabling WooCommerce product gallery features (are off by default since WC 3.0.0).
     // zoom.
-    add_theme_support( 'wc-product-gallery-zoom' );
+    add_theme_support('wc-product-gallery-zoom');
     // lightbox.
-    add_theme_support( 'wc-product-gallery-lightbox' );
+    add_theme_support('wc-product-gallery-lightbox');
     // swipe.
-    add_theme_support( 'wc-product-gallery-slider' );
+    add_theme_support('wc-product-gallery-slider');
 }
 
 // số lượng sản phẩm trong 1 category
@@ -127,23 +127,43 @@ function load_quick_view()
     if (!$product) {
         wp_send_json_error();
     }
-    ?>
-    <div class="quick-view-image">
-        <?php echo $product->get_image(); ?>
-    </div>
-    <div class="quick-view-info">
-        <h2><?php echo $product->get_name(); ?></h2>
-        <p><?php echo $product->get_short_description(); ?></p>
-        <div class="quick-view-price">
-            <?php echo $product->get_price_html(); ?>
+
+    // Lấy các thông tin sản phẩm
+    $sku = $product->get_sku();
+    $stock_status = $product->is_in_stock() ? 'Còn hàng' : 'Hết hàng';
+    $categories = wc_get_product_category_list($product_id);
+    $add_to_cart_url = wc_get_checkout_url() . '?add-to-cart=' . $product_id;
+?>
+    <div class="quick-view-product">
+        <div class="quick-view-image">
+            <?php echo $product->get_image(); ?>
         </div>
-        <div class="quick-view-view-details">
-            <a href="<?php echo get_permalink($product_id); ?>" class="button view-details">
-                Xem chi tiết
-            </a>
+        <div class="quick-view-info">
+            <h2><?php echo $product->get_name(); ?></h2>
+            <p><?php echo $product->get_short_description(); ?></p>
+            <div class="quick-view-sku">
+                <strong>SKU:</strong> <?php echo $sku ? $sku : 'N/A'; ?>
+            </div>
+            <div class="quick-view-categories">
+                <strong>Danh mục:</strong> <?php echo $categories; ?>
+            </div>
+            <div class="quick-view-stock-status">
+                <strong>Tình trạng:</strong> <?php echo $stock_status; ?>
+            </div>
+            <div class="quick-view-price">
+                <?php echo $product->get_price_html(); ?>
+            </div>
+            <div class="quick-view-buttons">
+                <a href="<?php echo get_permalink($product_id); ?>" class="button view-details">
+                    Xem chi tiết
+                </a>
+                <a href="<?php echo esc_url($add_to_cart_url); ?>" class="button buy-now">
+                    Mua ngay
+                </a>
+            </div>
         </div>
     </div>
-    <?php
+<?php
     die();
 }
 add_action('wp_ajax_load_quick_view', 'load_quick_view');
