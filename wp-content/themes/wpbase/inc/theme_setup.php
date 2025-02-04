@@ -35,6 +35,9 @@ function basetheme_setup()
     if (current_user_can('subscriber') && !is_admin()) {
         show_admin_bar(false);
     }
+
+    // hoạt động của template comments
+    add_theme_support('comments');
 }
 add_action('after_setup_theme', 'basetheme_setup');
 

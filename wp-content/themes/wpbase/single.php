@@ -82,10 +82,10 @@ get_header();
 
         <div class="comments_open">
             <?php
-            // Kiểm tra nếu bài viết có bình luận và bình luận chưa đóng
-            if (comments_open() || get_comments_number()) :
-                comments_template(); // Bao gồm phần bình luận
-            endif;
+            // Kiểm tra xem bài viết có cho phép bình luận không
+            if (comments_open() || get_comments_number()) {
+                comments_template(); // Gọi file comments.php
+            }
             ?>
         </div>
     </div>
