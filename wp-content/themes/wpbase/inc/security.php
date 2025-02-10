@@ -1,20 +1,14 @@
 <?php
-
-/**
- * Plugin Name: Security setup
- * Description: Some basic security settings.
- * Version: 1.0.0
- * Author: Longpv
- * License: GPLv2
- */
-
 // remove wp_version
 function vf_remove_wp_version_strings($src)
 {
     global $wp_version;
-    parse_str(parse_url($src, PHP_URL_QUERY), $query);
-    if (!empty($query['ver']) && $query['ver'] === $wp_version) {
-        $src = remove_query_arg('ver', $src);
+    $query_string = parse_url($src, PHP_URL_QUERY);
+    if ($query_string) {
+        parse_str($query_string, $query);
+        if (!empty($query['ver']) && $query['ver'] === $wp_version) {
+            $src = remove_query_arg('ver', $src);
+        }
     }
     return $src;
 }
@@ -38,164 +32,6 @@ add_filter('login_errors', 'vf_login_errors');
 // Disable XML-RPC
 add_filter('xmlrpc_enabled', '__return_false');
 
-// upload size limit 2MB
-add_filter('upload_size_limit', 'PBP_increase_upload');
-function PBP_increase_upload($bytes)
-{
-    return 524288 * 4 * 10;
-}
-
-// Remove the Comments menu from the Dashboard
-function remove_comments_menu()
-{
-    remove_menu_page('edit-comments.php');
-}
-add_action('admin_menu', 'remove_comments_menu');
-
-// Remove wp's default comment function
-function disable_comments_and_pings_post_type()
-{
-    // Remove comments displayed in posts
-    remove_post_type_support('post', 'comments');
-    remove_post_type_support('post', 'trackbacks');
-
-    // Automatically update status in admin settings
-    // if (get_option('default_ping_status') != 'closed') {
-    //     update_option('default_ping_status', 'closed');
-    // }
-    // if (get_option('default_comment_status') != 'closed') {
-    //     update_option('default_comment_status', 'closed');
-    // }
-    // if (get_option('comments_notify') != 0) {
-    //     update_option('comments_notify', 0);
-    // }
-    // if (get_option('moderation_notify') != 1) {
-    //     update_option('moderation_notify', 1);
-    // }
-    // if (get_option('comment_registration') != 1) {
-    //     update_option('comment_registration', 1);
-    // }
-    // if (get_option('close_comments_for_old_posts') != 1) {
-    //     update_option('close_comments_for_old_posts', 1);
-    // }
-    // if (get_option('require_name_email') != 1) {
-    //     update_option('require_name_email', 1);
-    // }
-    // if (get_option('show_comments_cookies_opt_in') != 1) {
-    //     update_option('show_comments_cookies_opt_in', 1);
-    // }
-    // if (get_option('thread_comments') != 1) {
-    //     update_option('thread_comments', 1);
-    // }
-    // if (get_option('page_comments') != 1) {
-    //     update_option('page_comments', 1);
-    // }
-    // if (get_option('close_comments_days_old') != 1) {
-    //     update_option('close_comments_days_old', 1);
-    // }
-    // if (get_option('default_pingback_flag') != 0) {
-    //     update_option('default_pingback_flag', 0);
-    // }
-    // if (get_option('comment_moderation') != 1) {
-    //     update_option('comment_moderation', 1);
-    // }
-    // if (get_option('comment_previously_approved') != 1) {
-    //     update_option('comment_previously_approved', 1);
-    // }
-    // if (get_option('comment_max_links') != 1) {
-    //     update_option('comment_max_links', 1);
-    // }
-    // if (get_option('show_avatars') != 0) {
-    //     update_option('show_avatars', 0);
-    // }
-
-    // Always close the user registration function
-    // if (get_option('users_can_register') == 1) {
-    //     update_option('users_can_register', 0);
-    // }
-}
-add_action('admin_init', 'disable_comments_and_pings_post_type');
-
-// Set cookie timeout 14 day
-// add_filter('auth_cookie_expiration', 'cl_expiration_filter', 99, 3);
-// function cl_expiration_filter($seconds, $user_id, $remember)
-// {
-
-//     if ($remember) {
-//         $expiration = 14 * 24 * 60 * 60;
-//     } else {
-//         $expiration = 15 * 60;
-//     }
-
-//     if (PHP_INT_MAX - time() < $expiration) {
-//         $expiration = PHP_INT_MAX - time() - 5;
-//     }
-
-//     return $expiration;
-// }
-
-// Limit the type of files uploaded through the form
-function restrict_file_types($mimes)
-{
-    $allowed_mime_types = array(
-        'jpg|jpeg|jpe' => 'image/jpeg',
-        'png' => 'image/png',
-        'gif' => 'image/gif',
-        'pdf' => 'application/pdf',
-        'mp4' => 'video/mp4',
-        // 'gif' => 'image/gif',
-        // 'doc' => 'application/msword',
-        // 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        // 'csv' => 'text/csv',
-        // 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
-
-    $mimes = array_intersect($allowed_mime_types, $mimes);
-
-    return $mimes;
-}
-// add_filter('upload_mimes', 'restrict_file_types');
-
-// redirect wp-admin and wp-register.php to the homepage
-add_action('init', 'custom_login_redirect');
-function custom_login_redirect()
-{
-    // prevent users from entering the registration page
-    if (strpos($_SERVER['REQUEST_URI'], 'wp-register.php') !== false) {
-        wp_redirect(home_url('/404'));
-        exit();
-    }
-
-    // prevent users from entering the wp-admin page
-    // if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false && !is_admin() && !defined('DOING_AJAX') && !is_user_logged_in()) {
-    //     wp_redirect(home_url('/404'));
-    //     exit();
-    // }
-
-    // Particularly, urls containing xmlrpc.php give status 403
-    if (strpos($_SERVER['REQUEST_URI'], 'xmlrpc.php') !== false) {
-        status_header(403);
-        exit();
-    }
-}
-
-// Apply a filter to the field value before saving
-function custom_modify_text_field($value, $post_id, $field)
-{
-    $value_change = custom_replace_value($value);
-
-    return $value_change;
-}
-add_filter('acf/update_value', 'custom_modify_text_field', 10, 3);
-
-// Apply a filter to the title before saving
-// add_filter('title_save_pre', 'clear_tag_html_post_title');
-// function clear_tag_html_post_title($title)
-// {
-//     $title = custom_replace_value($title);
-//     return strip_tags($title);
-// }
-
 // Block CORS in WordPress
 add_action('init', 'add_cors_http_header');
 add_action('send_headers', 'add_cors_http_header');
@@ -204,7 +40,6 @@ function add_cors_http_header()
     header("Access-Control-Allow-Origin: *");
     header("X-Powered-By: none");
 }
-
 function cl_customize_rest_cors()
 {
     remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
@@ -217,32 +52,6 @@ function cl_customize_rest_cors()
     });
 }
 add_action('rest_api_init', 'cl_customize_rest_cors', 15);
-
-// Removed scripts imported from editor in admin
-add_filter('content_save_pre', 'custom_content_save');
-function custom_content_save($content)
-{
-    $content = custom_replace_value($content);
-    $content = preg_replace('/\b(?:o[nN][eE]?[rR][rR]?[oO][rR]?)\b/i', '', $content);
-
-    return $content;
-}
-
-function custom_replace_value($text)
-{
-    $special_characters = [
-        '<script>',
-        '</script>',
-        'alert(',
-        '$(',
-        '&lt;script&gt;',
-        '&lt;/script&gt',
-        'document.',
-    ];
-    $text = str_replace($special_characters, '', $text);
-
-    return $text;
-}
 
 // Disable some endpoints for unauthenticated users
 add_filter('rest_endpoints', 'disable_default_endpoints');
@@ -286,43 +95,11 @@ function custom_login_logo()
 {
     echo '<style type="text/css">
     #login h1 a {
-      background-image: url(' . get_template_directory_uri() . '/assets/images/logo_login.svg) !important;
-      background-position: center center !important;
-      background-size: contain !important;
-      width: 100% !important;
-      height: 80px !important;
       display: none !important;
-      background-color: #fff;
     }
   </style>';
 }
 add_action('login_head', 'custom_login_logo');
-
-// change login logo url
-function custom_login_logo_url()
-{
-    return home_url();
-}
-add_filter('login_headerurl', 'custom_login_logo_url');
-
-
-// prevent access to the author page to get information
-add_action('template_redirect', 'redirect_author_pages');
-function redirect_author_pages()
-{
-    if (is_author()) {
-        wp_redirect(home_url('/404'));
-        exit();
-    }
-}
-
-// Remove the "View" button from the user's row actions
-// function remove_user_row_actions($actions)
-// {
-//     unset($actions['view']);
-//     return $actions;
-// }
-// add_filter('user_row_actions', 'remove_user_row_actions', 10, 1);
 
 // allow script iframe tag within posts
 function allow_iframe_script_tags($allowedposttags)
@@ -434,48 +211,4 @@ function set_default_image_settings_on_login($user_login, $user)
 
     update_user_meta($user_id, $meta_key, $current_settings);
 }
-
 add_action('wp_login', 'set_default_image_settings_on_login', 10, 2);
-
-add_action('admin_footer', 'custom_script_admin');
-function custom_script_admin()
-{
-?>
-    <script>
-        jQuery(document).ready(function($) {
-            // Validate post title
-            if ($('#post').length > 0) {
-                $('#post').submit(function() {
-                    var title_post = $('#title').val();
-                    if (title_post.trim() === '') {
-                        alert('Please enter "Title".');
-                        $('#title').focus();
-                        return false;
-                    }
-                });
-            }
-
-            // Prevent users from using weak passwords
-            $(".pw-weak").remove();
-        });
-    </script>
-<?php
-}
-
-function remove_styles_and_scripts_from_content($content)
-{
-    $content = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $content);
-    $content = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $content);
-
-    return $content;
-}
-add_filter('the_content', 'remove_styles_and_scripts_from_content', 99);
-
-function add_dropdown_arrow_to_menu($items, $args)
-{
-    if ($args->theme_location) {
-        $items = preg_replace('/(<a.*?>)(.*)<\/a>/i', '<span class="dropdown-arrow"></span>$1$2</a>', $items);
-    }
-    return $items;
-}
-add_filter('wp_nav_menu_items', 'add_dropdown_arrow_to_menu', 10, 2);

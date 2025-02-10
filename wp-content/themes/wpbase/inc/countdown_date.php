@@ -35,7 +35,7 @@ function add_countdown_date_script()
         </style>
 
         <script type="text/javascript">
-            $(document).ready(function() {
+            jQuery(document).ready(function($) {
 
                 $('.countDown').each(function() {
                     let this_el = $(this);
