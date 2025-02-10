@@ -648,8 +648,6 @@ get_header();
 <?php
 get_footer();
 ?>
-<link href="https://code.jquery.com/ui/1.12.1/themes/flick/jquery-ui.css" rel="stylesheet" type="text/css">
-<script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script src="<?php echo get_template_directory_uri() . '/assets/js/jquery.ui.scrolltabs.js'; ?>"></script>
 <!-- stripe -->
 <script src="https://js.stripe.com/v3/"></script>

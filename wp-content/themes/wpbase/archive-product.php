@@ -177,9 +177,6 @@ $query = new WP_Query($args);
 <?php
 get_footer();
 ?>
-<!-- jQuery UI -->
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script>
     jQuery(document).ready(function ($) {
         var minPrice = parseFloat($("#slider-range").data("min"));
