@@ -1,5 +1,5 @@
 // Bootstrap overrides
-$grid-gutter-width: 32px !default;
+$grid-gutter-width: 24px !default;
 
 //grid breakpoints
 $grid-breakpoints: (
@@ -25,7 +25,6 @@ $secondary : #29C06D; //2
 $success : #30E07F; //3
 $info : #36FF92; //4
 $warning : #E74C3C; //5
-// $danger                     : #F1F1F2; //6
-// $light                      : #F0F0F0;
-// $dark                       : #464646;
-// $muted                      : #C4C4C4;
+// $danger : #E74C3C; //5
+// $light : #E74C3C; //5
+// $dark : #E74C3C; //5
