@@ -7,6 +7,30 @@ function basetheme_setup()
     add_theme_support('automatic-feed-links');
     add_theme_support('title-tag');
     add_theme_support('post-thumbnails');
+    add_theme_support(
+        'html5',
+        array(
+            'search-form',
+            'comment-form',
+            'comment-list',
+            'gallery',
+            'caption',
+            'style',
+            'script',
+        )
+    );
+    add_theme_support('customize-selective-refresh-widgets');
+    add_theme_support(
+        'custom-logo',
+        array(
+            'height'      => 250,
+            'width'       => 250,
+            'flex-width'  => true,
+            'flex-height' => true,
+        )
+    );
+    // woocommerce
+    add_theme_support('woocommerce');
 
     // This theme uses wp_nav_menu() in one location.
     register_nav_menus(
@@ -35,9 +59,6 @@ function basetheme_setup()
     if (current_user_can('subscriber') && !is_admin()) {
         show_admin_bar(false);
     }
-
-    // hoạt động của template comments
-    add_theme_support('comments');
 }
 add_action('after_setup_theme', 'basetheme_setup');
 
