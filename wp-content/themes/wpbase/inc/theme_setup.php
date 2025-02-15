@@ -39,17 +39,7 @@ function basetheme_setup()
         )
     );
 
-    // set size image default
-    if (get_option('thumbnail_size_w') != THUMBNAIL_SIZE) {
-        update_option('thumbnail_size_w', THUMBNAIL_SIZE);
-        update_option('thumbnail_size_h', THUMBNAIL_SIZE);
-    }
-
-    if (get_option('medium_size_w') != MEDIUM_SIZE) {
-        update_option('medium_size_w', MEDIUM_SIZE);
-        update_option('medium_size_h', MEDIUM_SIZE);
-    }
-
+    // set size image large default
     if (get_option('large_size_w') != LARGE_SIZE) {
         update_option('large_size_w', LARGE_SIZE);
         update_option('large_size_h', LARGE_SIZE);
