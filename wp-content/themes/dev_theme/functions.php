@@ -72,18 +72,6 @@ function dev_theme_setup()
 		)
 	);
 
-	// Set up the WordPress core custom background feature.
-	add_theme_support(
-		'custom-background',
-		apply_filters(
-			'dev_theme_custom_background_args',
-			array(
-				'default-color' => 'ffffff',
-				'default-image' => '',
-			)
-		)
-	);
-
 	// Add theme support for selective refresh for widgets.
 	add_theme_support('customize-selective-refresh-widgets');
 
@@ -117,26 +105,19 @@ function dev_theme_content_width()
 }
 add_action('after_setup_theme', 'dev_theme_content_width', 0);
 
-/**
- * Register widget area.
- *
- * @link https://developer.wordpress.org/themes/functionality/sidebars/#registering-a-sidebar
- */
-function dev_theme_widgets_init()
+// xóa các menu k cần thiết trong Appearance
+function remove_appearance_menus()
 {
-	register_sidebar(
-		array(
-			'name'          => esc_html__('Sidebar', 'dev_theme'),
-			'id'            => 'sidebar-1',
-			'description'   => esc_html__('Add widgets here.', 'dev_theme'),
-			'before_widget' => '<section id="%1$s" class="widget %2$s">',
-			'after_widget'  => '</section>',
-			'before_title'  => '<h2 class="widget-title">',
-			'after_title'   => '</h2>',
-		)
-	);
+	// Xóa "Theme File Editor"
+	remove_submenu_page('themes.php', 'theme-editor.php');
+
+	// Xóa "patterns"
+	remove_submenu_page('themes.php', 'site-editor.php?path=/patterns');
+
+	// xóa tool chỉnh sửa mặc định trong plugins
+	remove_submenu_page('plugins.php', 'plugin-editor.php');
 }
-add_action('widgets_init', 'dev_theme_widgets_init');
+add_action('admin_menu', 'remove_appearance_menus', 999);
 
 /**
  * Enqueue scripts and styles.
