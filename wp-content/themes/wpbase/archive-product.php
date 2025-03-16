@@ -48,7 +48,7 @@ if (!empty($_GET['min_price']) && !empty($_GET['max_price'])) {
 }
 
 
-if (!empty($_GET['rating'] && intval($_GET['rating']) > 0)) {
+if (!empty($_GET['rating']) && intval($_GET['rating']) > 0) {
     $rating = intval($_GET['rating']);
     $args['meta_query'][] = array(
         array(
@@ -60,7 +60,7 @@ if (!empty($_GET['rating'] && intval($_GET['rating']) > 0)) {
     );
 }
 
-if (!empty($_GET['rating'] && intval($_GET['rating']) > 0)) {
+if (!empty($_GET['rating']) && intval($_GET['rating']) > 0) {
     $rating = intval($_GET['rating']);
     $args['meta_query'][] = array(
         array(
@@ -178,7 +178,7 @@ $query = new WP_Query($args);
 get_footer();
 ?>
 <script>
-    jQuery(document).ready(function ($) {
+    jQuery(document).ready(function($) {
         var minPrice = parseFloat($("#slider-range").data("min"));
         var maxPrice = parseFloat($("#slider-range").data("max"));
 
@@ -190,7 +190,7 @@ get_footer();
             min: minPrice,
             max: maxPrice,
             values: [minVal, maxVal],
-            slide: function (event, ui) {
+            slide: function(event, ui) {
                 $("#min-price").val(ui.values[0]);
                 $("#max-price").val(ui.values[1]);
                 $("#min-label").text("$" + ui.values[0]);

@@ -35,10 +35,5 @@ require get_template_directory() . '/inc/comments.php';
 require get_template_directory() . '/inc/center_image_editing.php';
 require get_template_directory() . '/inc/use_all_tags_edit.php';
 require get_template_directory() . '/inc/turn_off_wp_ver.php';
-// woocommerce
-if (class_exists('WooCommerce')) {
-    require get_template_directory() . '/inc/woo/index.php';
-}
-
 require get_template_directory() . '/inc/page_demo.php';
 require get_template_directory() . '/inc/stripe/index.php';
