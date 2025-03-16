@@ -1,12 +1,9 @@
 <?php
 // includes files core
-require get_template_directory() . '/inc/define.php';
-require get_template_directory() . '/inc/theme_setup.php';
 require get_template_directory() . '/inc/auto_active_plugin.php';
 require get_template_directory() . '/inc/breadcrumbs.php';
 require get_template_directory() . '/inc/cpt_custom.php';
 require get_template_directory() . '/inc/view_post.php';
-// require get_template_directory() . '/inc/security.php';
 require get_template_directory() . '/inc/template-functions.php';
 require get_template_directory() . '/inc/pagination.php';
 require get_template_directory() . '/inc/write_log.php';
@@ -35,6 +32,9 @@ require get_template_directory() . '/inc/login_facebook.php';
 require get_template_directory() . '/inc/check_recaptcha.php';
 require get_template_directory() . '/inc/pagination_ajax.php';
 require get_template_directory() . '/inc/comments.php';
+require get_template_directory() . '/inc/center_image_editing.php';
+require get_template_directory() . '/inc/use_all_tags_edit.php';
+require get_template_directory() . '/inc/turn_off_wp_ver.php';
 // woocommerce
 if (class_exists('WooCommerce')) {
     require get_template_directory() . '/inc/woo/index.php';

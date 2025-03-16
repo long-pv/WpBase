@@ -41,13 +41,7 @@ get_header();
 						<div class="product-gallery">
 							<?php foreach ($attachment_ids as $attachment_id): ?>
 								<div class="gallery-item">
-									<picture>
-										<source media="(min-width:768px)"
-											srcset="<?php echo img_url($attachment_id, 'large') ?>">
-										<img width="400" height="400" loading="lazy"
-											src="<?php echo img_url($attachment_id, 'medium') ?>"
-											alt="gallery large item <?php echo $attachment_id; ?>">
-									</picture>
+									<?php echo img_html($attachment_id) ?>
 								</div>
 							<?php endforeach; ?>
 						</div>
@@ -55,9 +49,7 @@ get_header();
 						<div class="product-thumbnails">
 							<?php foreach ($attachment_ids as $attachment_id): ?>
 								<div class="thumbnail-item">
-									<img width="200" height="200" loading="lazy"
-										src="<?php echo img_url($attachment_id, 'thumbnail') ?>"
-										alt="gallery thumbnail item <?php echo $attachment_id; ?>">
+									<?php echo img_html($attachment_id) ?>
 								</div>
 							<?php endforeach; ?>
 						</div>
@@ -67,9 +59,9 @@ get_header();
 							$image_id = get_post_thumbnail_id(get_the_ID());
 							?>
 							<picture>
-								<source media="(min-width:768px)" srcset="<?php echo img_url($image_id, 'large') ?>">
+								<source media="(min-width:768px)" srcset="<?php echo img_html($image_id, 'large') ?>">
 								<img width="400" height="400" loading="lazy"
-									src="<?php echo img_url($image_id, 'medium') ?>" alt="<?php the_title(); ?>">
+									src="<?php echo img_html($image_id, 'medium') ?>" alt="<?php the_title(); ?>">
 							</picture>
 
 						</div>

@@ -8,11 +8,7 @@ $product_id = get_the_ID();
         <?php
         $image_id = get_post_thumbnail_id($product_id);
         ?>
-        <picture>
-            <source media="(min-width:768px)" srcset="<?php echo img_url($image_id, 'medium'); ?>">
-            <img width="300" height="300" loading="lazy" src="<?php echo img_url($image_id, 'thumbnail'); ?>"
-                alt="<?php the_title(); ?>">
-        </picture>
+        <?php echo img_html($image_id); ?>
     </a>
     <div class="productItem__content">
 

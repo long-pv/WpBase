@@ -5,10 +5,7 @@ $categories = get_the_category($post_id);
 ?>
 <article id="post-<?php echo $post_id; ?>" class="singlePost">
     <div class="imgGroup">
-        <picture>
-            <source media="(min-width:992px)" srcset="<?php echo img_url($thumbnail_id, 'medium'); ?>">
-            <img src="<?php echo img_url($thumbnail_id, 'thumbnail'); ?>" alt="<?php the_title(); ?>">
-        </picture>
+        <?php echo img_html($thumbnail_id); ?>
 
         <a class="singlePost__link" href="<?php the_permalink(); ?>"></a>
 
