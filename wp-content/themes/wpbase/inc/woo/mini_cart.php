@@ -100,5 +100,65 @@ function cart_collapse()
         </div>
     </div>
 
-<?php
+    <?php
 }
+
+function update_cart_count()
+{
+    $cart_count = WC()->cart->get_cart_contents_count();
+
+    // Bắt đầu buffer để lấy nội dung mini cart
+    ob_start();
+    cart_collapse();
+    $mini_cart = ob_get_clean();
+
+    // Trả về dữ liệu JSON
+    wp_send_json([
+        'cart_count' => $cart_count,
+        'mini_cart' => $mini_cart,
+    ]);
+
+    wp_die();
+}
+add_action('wp_ajax_update_cart_count', 'update_cart_count');
+add_action('wp_ajax_nopriv_update_cart_count', 'update_cart_count');
+
+function add_custom_woo_script()
+{
+    if (!is_admin()):
+    ?>
+        <!-- custom woocommerce -->
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // tự động cập nhật giỏ hàng khi có thay đổi
+                var btn_update_cart = $('button[name="update_cart"]');
+                btn_update_cart.css('visibility', 'hidden'); // ẩn nút update cart
+                $(document).on("change", "input.input-text.qty", function() {
+                    $('button[name="update_cart"]').click();
+                });
+
+                // tăng số lượng của giỏ hàng
+                $(document).on("wc_fragment_refresh updated_wc_div added_to_cart", function() {
+                    $.ajax({
+                        url: custom_ajax.ajax_url,
+                        type: "POST",
+                        data: {
+                            action: "update_cart_count",
+                        },
+                        success: function(response) {
+                            $(".header__wooCartCount").text(response.cart_count);
+                            // Cập nhật chi tiết mini cart
+                            $(".cart_collapse_html").html(response.mini_cart);
+                        },
+                        error: function(error) {
+                            alert('Something went wrong.');
+                        },
+                    });
+                });
+            });
+        </script>
+        <!-- end -->
+<?php
+    endif;
+}
+add_action('wp_footer', 'add_custom_woo_script', 99);

@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * Template name: Woo Checkout
  * The template for displaying all pages
  *
  * This is the template that displays all pages by default.
@@ -17,9 +18,7 @@ get_header();
 ?>
 <div class="py-section">
     <div class="container">
-        <div class="editor">
-            <?php the_content(); ?>
-        </div>
+        <?php echo do_shortcode('[woocommerce_checkout]'); ?>
     </div>
 </div>
 <?php

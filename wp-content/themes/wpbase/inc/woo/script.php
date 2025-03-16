@@ -1,44 +1,4 @@
 <?php
-function add_custom_woo_script()
-{
-    if (!is_admin()):
-?>
-        <!-- custom woocommerce -->
-        <script type="text/javascript">
-            jQuery(document).ready(function($) {
-                // tự động cập nhật giỏ hàng khi có thay đổi
-                var btn_update_cart = $('button[name="update_cart"]');
-                btn_update_cart.css('visibility', 'hidden'); // ẩn nút update cart
-                $(document).on("change", "input.input-text.qty", function() {
-                    $('button[name="update_cart"]').click();
-                });
-
-                // tăng số lượng của giỏ hàng
-                $(document).on("wc_fragment_refresh updated_wc_div added_to_cart", function() {
-                    $.ajax({
-                        url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                        type: "POST",
-                        data: {
-                            action: "update_cart_count",
-                        },
-                        success: function(response) {
-                            $(".header__wooCartCount").text(response.cart_count);
-                            // Cập nhật chi tiết mini cart
-                            $(".cart_collapse_html").html(response.mini_cart);
-                        },
-                        error: function(error) {
-                            alert('Something went wrong.');
-                        },
-                    });
-                });
-            });
-        </script>
-        <!-- end -->
-    <?php
-    endif;
-}
-add_action('wp_footer', 'add_custom_woo_script', 99);
-
 function add_quick_view_popup()
 {
     ?>
