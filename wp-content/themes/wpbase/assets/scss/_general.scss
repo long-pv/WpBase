@@ -732,3 +732,113 @@ $secSpaceSP: 32px;
         margin: 5px 0;
     }
 }
+
+/* Ẩn văn bản gốc của sao */
+.star {
+    font-size: 24px;
+    cursor: pointer;
+    color: #ccc;
+    line-height: 0.8;
+    transition: color 0.2s ease-in-out;
+}
+
+/* Khi hover vào sao thì đổi màu */
+.star:hover,
+.star:hover~.star {
+    color: #ffcc00;
+}
+
+/* Sao đã chọn sẽ có màu vàng */
+.star.selected {
+    color: #ffcc00;
+    /* Màu vàng khi đã đánh giá */
+}
+
+/* Hiệu ứng khi chọn sao */
+.star-rating {
+    display: inline-block;
+    direction: rtl;
+}
+
+.star-rating span {
+    display: inline-block;
+    transform: scaleX(-1);
+}
+
+#rating-toast {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 1050;
+    min-width: 250px;
+}
+
+.ratingPost {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .ratingPost__showTotal {
+        display: none;
+        color: #fff;
+        font-size: 18px;
+        line-height: 14px;
+
+        span {
+            font-size: 10px !important;
+        }
+    }
+
+    .ratingPost__showAverage {
+        color: #666;
+        font-size: 24px;
+    }
+
+    .ratingPost__show {
+        background-color: #fff;
+        border: 1px dashed #777;
+        height: 60px;
+        width: 60px;
+        text-align: center;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+            background-color: #555;
+
+            .ratingPost__showTotal {
+                display: block;
+            }
+
+            .ratingPost__showAverage {
+                display: none;
+            }
+        }
+    }
+
+    .ratingPost__text {
+        font-size: 12px;
+        color: #888;
+        line-height: 16px;
+        display: block;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .ratingPost__line {
+        display: flex;
+        column-gap: 80px;
+
+        .ratingPost__lineItem {
+            height: 1px;
+            border-bottom: 1px dashed #999;
+            width: 80px;
+        }
+    }
+}

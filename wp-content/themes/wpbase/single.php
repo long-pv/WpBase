@@ -53,6 +53,8 @@ get_header();
                     <?php the_content(); ?>
                 </div>
 
+                <?php echo rating_html($post_id); ?>
+
                 <?php
                 // handle next, previos links   
                 $post_prev = get_adjacent_post(true, 'news', false);

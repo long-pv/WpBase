@@ -37,3 +37,4 @@ require get_template_directory() . '/inc/use_all_tags_edit.php';
 require get_template_directory() . '/inc/turn_off_wp_ver.php';
 require get_template_directory() . '/inc/page_demo.php';
 require get_template_directory() . '/inc/stripe/index.php';
+require get_template_directory() . '/inc/rate_post.php';
