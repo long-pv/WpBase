@@ -38,3 +38,4 @@ require get_template_directory() . '/inc/turn_off_wp_ver.php';
 require get_template_directory() . '/inc/page_demo.php';
 require get_template_directory() . '/inc/stripe/index.php';
 require get_template_directory() . '/inc/rate_post.php';
+require get_template_directory() . '/inc/clear_log_wp_cerber.php';
