@@ -7,7 +7,8 @@ function register_cpt_post_types()
             'slug' => 'su_kien',
             'cap' => false,
             'hierarchical' => false,
-            'position' => false
+            'position' => false,
+            'icon' => 'dashicons-calendar'
         ],
     ];
 
@@ -35,6 +36,7 @@ function register_cpt($post_type, $data = [])
     $hierarchical = !empty($data['hierarchical']) ? $data['hierarchical'] : false;
     $position = !empty($data['position']) ? $data['position'] : 30;
     $attributes = $hierarchical == true ? 'page-attributes' : '';
+    $icon = !empty($data['icon']) ? $data['icon'] : 'dashicons-admin-post';
 
     $labels = [
         'name' => $data['labels'],
@@ -54,7 +56,7 @@ function register_cpt($post_type, $data = [])
         'supports'           => array('title', 'editor', 'thumbnail', 'revisions', 'author', $attributes),
         'show_in_nav_menus'  => true,
         'show_ui'            => true,
-        'menu_icon'          => 'dashicons-admin-post',
+        'menu_icon'          => $icon,
         'archive_title'      => $data['labels'],
         'menu_position'      => $position,
     );
