@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -91,7 +91,9 @@ final class CRB_Nexus {
 			if ( isset( $response['redirect'] ) ) {
 				if ( $redirect_to = crb_array_get( $response, 'redirect_url' ) ) {
 					nexus_diag_log( '> > > Redirecting to ' . $redirect_to );
-					// TODO should we use wp_safe_redirect()???
+					CRB_Globals::$redirect_url = $redirect_to;
+
+                    // TODO should we use crb_safe_redirect()???
 					header( 'Location: ' . $redirect_to, true, 302 );
 					exit;
 				}
@@ -286,7 +288,7 @@ final class CRB_Nexus {
 		$data[ rand() ] = rand(); // random checksum for identical requests
 
 		if ( crb_get_settings( 'master_locale' ) ) {
-			$data['master_locale'] = ( crb_get_settings( 'admin_lang' ) ) ? 'en_US' : get_user_locale();
+			$data['master_locale'] = crb_get_admin_locale();
 		}
 
 		if ( ! cerber_is_wp_ajax()
@@ -338,7 +340,7 @@ final class CRB_Nexus {
 			CURLOPT_DNS_CACHE_TIMEOUT => 1 * 3600,
 			CURLOPT_SSL_VERIFYHOST    => 2,
 			CURLOPT_SSL_VERIFYPEER    => true,
-			//CURLOPT_CERTINFO          => 1, doesn't work
+			//CURLOPT_CERTINFO          => 1,
 			//CURLOPT_VERBOSE          => 1,
 			CURLOPT_CAINFO            => ABSPATH . WPINC . '/certificates/ca-bundle.crt',
 			CURLOPT_ENCODING          => '', // allows built-in compressions
@@ -377,8 +379,14 @@ final class CRB_Nexus {
 		}
 
 		$ret = json_decode( $response, true );
+
 		if ( JSON_ERROR_NONE != json_last_error() ) {
 			return new WP_Error( 'nexus_json_decode_error', 'Unable to decode the response from the remote website: ' . json_last_error_msg(), substr( $response, 0, 3000 ) );
+		}
+
+		if ( ! isset( $ret['payload'] )
+		     || ! isset( $ret['echo'] ) ) {
+			return new WP_Error( 'nexus_invalid_client_response', 'Invalid client response.' );
 		}
 
 		if ( is_array( $ret['payload'] ) ) {
@@ -675,21 +683,15 @@ function nexus_add_client( $token ) {
 		$url = $t[5];
     }
 
-	$no_https = ( 'https://' !== substr( $url, 0, 8 ) ) ? true : false;
-
 	$data                     = array();
 	$data['site_pass']        = $t[0];
 	$data['site_echo']        = $t[1];
 	$data['x_field']          = $t[2];
 	$data['x_num']            = $t[3];
 	// These are shown in the dashboard, make them safe
-	$data['site_url']         = substr( esc_url( $url ), 0, 250 );
+	$data['site_url']         = substr( crb_escape_url( $url ), 0, 250 );
 	$data['site_name']        = mb_substr( crb_generic_escape( htmlspecialchars_decode( $t[6] ) ), 0, 250 );
 	$data['site_name_remote'] = $data['site_name'];
-
-	$data = array_map( function ( $e ) {
-		return '"' . cerber_db_real_escape( $e ) . '"';
-	}, $data );
 
 	if ( cerber_db_get_var( 'SELECT id FROM ' . cerber_get_db_prefix() . CERBER_MS_TABLE . ' WHERE site_url = ' . $data['site_url'] ) ) {
 		cerber_admin_notice( __( 'The website you are trying to add is already in the list', 'wp-cerber' ) );
@@ -701,15 +703,15 @@ function nexus_add_client( $token ) {
 	else {
 		$site_id = cerber_db_get_var( ' SELECT LAST_INSERT_ID()' );
 		$edit = cerber_admin_link( 'nexus_sites', array( 'site_id' => $site_id ) );
-		cerber_admin_message( __( 'The website has been added successfully', 'wp-cerber' )
+
+        cerber_admin_message( __( 'The website has been added successfully', 'wp-cerber' )
                               . '&nbsp; [ <a href="' . $edit . '">' . __( 'Click to edit', 'wp-cerber' ) . '</a> | '
-		                      . ' <a href="' . wp_nonce_url( cerber_admin_link() . '&amp;cerber_admin_do=nexus_switch&nexus_site_id=' . $site_id, 'control', 'cerber_nonce' ) . '">' . __( 'Switch to the Dashboard', 'wp-cerber' ) . '</a> ]' );
-		if ( $no_https ) {
-			//cerber_admin_notice( __( 'Note: No SSL encryption is enabled on the website this can lead to data leakage.', 'wp-cerber' ) );
+		                      . ' <a href="' . cerber_admin_link_add( [ 'cerber_admin_do' => 'nexus_switch', 'nexus_site_id' => $site_id ] ) . '">' . __( 'Switch to the Dashboard', 'wp-cerber' ) . '</a> ]' );
+
+        if ( 'https://' !== substr( $url, 0, 8 ) ) {
 			cerber_admin_notice( __( 'Keep in mind: You have added the website that does not support SSL encryption. This may lead to data leakage.', 'wp-cerber' ) );
 		}
 
-		//cerber_bg_task_add( array( 'func' => 'nexus_send', 'args' => array( array( 'type' => 'hello' ), $site_id ) ), true );
 		nexus_add_bg_refresh( $site_id );
 	}
 
@@ -827,9 +829,8 @@ function nexus_delete_client( $ids ) {
 
 	if ( $ret ) {
 		$num = cerber_db_get_var( 'SELECT ROW_COUNT()' );
-		cerber_admin_message( sprintf( _n( 'Website has been deleted', '%s websites have been deleted', $num, 'wp-cerber' ), $num ) );
-
-		__( '%s websites have been deleted', 'wp-cerber' ); // registration for _n()
+		/* translators: Placeholder %d will be replaced by the number of deleted websites. */
+		cerber_admin_message( sprintf( _n( 'Website has been deleted', '%d websites have been deleted', $num, 'wp-cerber' ), $num ) );
 
 		foreach ( $ids as $id ) {
 			nexus_delete_list( $id );
@@ -1064,10 +1065,12 @@ function nexus_update_updates( $pl_updates ) {
 
 function nexus_get_update( $plugin, $version = null ) {
 
-	$update = cerber_get_set( 'nexus_upd_' . sha1( $plugin ) );
+	if ( ! $update = cerber_get_set( 'nexus_upd_' . sha1( $plugin ) ) ) {
+		return false;
+	}
 
 	if ( $version
-         && version_compare( $version, $update['new_version'], '>=' ) ) {
+	     && version_compare( $version, $update['new_version'], '>=' ) ) {
 		return false;
 	}
 
@@ -1134,8 +1137,7 @@ function nexus_set_context() {
 		$url = cerber_admin_link();
 	}
 
-	wp_safe_redirect( $url );
-
+	crb_safe_redirect( $url );
 	exit();
 }
 
@@ -1276,7 +1278,7 @@ function nexus_schedule_refresh() {
 }
 
 function nexus_add_bg_refresh( $client_id ) {
-	cerber_bg_task_add( 'nexus_send', array( 'args' => array( array( 'type' => 'hello' ), $client_id ) ) );
+	cerber_bg_task_add( 'nexus_send', array( 'args' => array( array( 'type' => 'hello' ), $client_id ), 'load_admin' => 1 ) );
 	cerber_bg_task_add( 'nexus_refresh_client_servers', array( 'args' => array( $client_id ) ) );
 }
 
@@ -1591,7 +1593,7 @@ function nexus_refresh_client_servers( $client_id ) {
 	}
 
 	if ( $srv_country && ! isset( $list[ $srv_country ] ) ) {
-		$list[ $srv_country ] = cerber_country_name( $srv_country );
+		$list[ $srv_country ] = crb_get_country_name( $srv_country );
 		cerber_update_set( 'nexus_countries', $list );
 	}
 

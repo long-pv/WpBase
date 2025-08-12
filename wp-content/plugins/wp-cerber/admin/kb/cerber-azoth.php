@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -41,13 +41,17 @@ final class CRB_Explainer {
 
 	private static $done_sts = array();
 
+	/* Prevents duplicates when including links to the logs in the explainer */
+
+	private static $done_links = array();
+
 	/**
 	 * Generates UI HTML elements for displaying extended information on event as a popup
 	 *
 	 * @param int $activity Activity ID
 	 * @param int $status Status ID
 	 * @param int $user_id User ID
-	 * @param string $set_list Comma-separated list of settings from the log entry
+	 * @param string $settings Comma-separated list of settings from the log entry
 	 * @param string $ip IP address
 	 * @param string $control Link text to open the popup
 	 * @param string $closing_html To be displayed bellow the explainer text, no block-level HTML tags are allowed
@@ -57,11 +61,9 @@ final class CRB_Explainer {
 	 *
 	 * @since 9.6.1.3
 	 */
-	static function create_popup( $activity, $status, $user_id, $set_list, $ip = '', $control = '', $closing_html = '', $footer = '' ) {
+	static function create_popup( int $activity, int $status, int $user_id, string $settings, string $ip = '', string $control = '', string $closing_html = '', string $footer = '' ): string {
 
-		if ( $set_list ) {
-			$set_list = explode( ',', $set_list );
-		}
+		$set_list = $settings ? explode( ',', $settings ) : array();
 
 		self::$activity = $activity;
 		self::$closing_html = $closing_html;
@@ -86,9 +88,9 @@ final class CRB_Explainer {
 	/**
 	 * Generates a KB explainer for an event
 	 *
-	 * @param int $activity
-	 * @param int $status
-	 * @param int $user_id
+	 * @param int $activity Activity ID
+	 * @param int $status Status ID
+	 * @param int $user_id User ID
 	 * @param array $set_list List of settings from the log entry
 	 *
 	 * @return string Sanitized HTML
@@ -96,6 +98,7 @@ final class CRB_Explainer {
 	 * @since 9.6.1.3
 	 */
 	static function create( $activity, $status = 0, $user_id = 0, $set_list = array() ) {
+		self::$done_links = array();
 		self::$done_sts = array();
 		self::$user_id = $user_id;
 
@@ -181,10 +184,16 @@ final class CRB_Explainer {
 			$st_desc = '';
 		}
 
+		if ( self::$user_id ) {
+			$act_link = self::get_user_log_link();
+		}
+		else {
+			$act_link = self::get_ip_log_link();
+		}
+
 		// Now build the explainer
 
 		$expl = array();
-		$act_link = self::get_ip_log_link();
 
 		if ( $kb_entry = self::get_kb_data( $type, $id ) ) {
 
@@ -232,7 +241,7 @@ final class CRB_Explainer {
 			// Documentation links
 
 			if ( $link = $kb_entry['doc_link'] ?? '' ) {
-				$link = esc_url( $link );
+				$link = crb_escape_url( $link );
 				$expl['kb_link'] = array( array( crb_get_icon( 'know_more' ) . '<a href="' . $link . '" target="_blank">' . $link . '</a>' ) );
 			}
 
@@ -279,7 +288,7 @@ final class CRB_Explainer {
 				if ( ( $setting = cerber_settings_config( array( 'setting' => $sts ) ) )
 				     && $title = $setting['title'] ?? '' ) {
 
-					$settings[ $sts ] = array( $title, $setting['tab_id'] );
+					$settings[ $sts ] = array( $title, $setting['page_tab_id'] );
 				}
 
 				$settings[ $sts ] = self::get_setting_desc( $sts );
@@ -287,7 +296,7 @@ final class CRB_Explainer {
 		}
 
 		if ( $kb['kb_url'] ) {
-			$doc_link = esc_url( $kb['kb_url'] );
+			$doc_link = crb_escape_url( $kb['kb_url'] );
 		}
 		else {
 			$doc_link = '';
@@ -317,7 +326,7 @@ final class CRB_Explainer {
 
 		if ( $setting = cerber_settings_config( array( 'setting' => $setting_id ) ) ) {
 			if ( $title = $setting['title'] ?? '' ) {
-				$tab = $setting['tab_id'];
+				$tab = $setting['page_tab_id'];
 				$bm = '#' . CRB_SETTING_PREFIX . 'global-' . $setting_id;
 			}
 		}
@@ -340,34 +349,57 @@ final class CRB_Explainer {
 	}
 
 	/**
-	 * Returns the link to the activity log, if applicable in the context
+	 * Returns a link to the IP activity log if applicable, empty string otherwise
 	 *
-	 * @return string|false
+	 * @return string
 	 */
-	static function get_ip_log_link() {
-		if ( ! self::$ip ) {
-			return false;
+	static function get_ip_log_link(): string {
+		if ( ! self::$ip
+		     || ( self::$done_links[ self::$ip ] ?? false ) ) {
+			return '';
 		}
 
-		$show = false;
+		self::$done_links[ self::$ip ] = 1;
 
-		if ( cerber_block_check( self::$ip ) ) {
-			$show = true;
-		}
-		elseif ( self::$activity ) {
+		$normal = true;
+
+		if ( self::$activity ) {
 			$in = crb_get_activity_set( 'suspicious' );
 			if ( in_array( self::$activity, $in ) ) {
-				$show = true;
+				$normal = false;
 			}
 		}
 
-		if ( $show ) {
-			return crb_get_icon( 'activity' ) . '<a href="' . cerber_admin_link( 'activity' ) . '&filter_set=1&filter_ip=' . self::$ip . '">' . __( 'View log of suspicious and malicious activity from this IP address', 'wp-cerber' ) . '</a>';
+		$args = array( 'filter_ip' => self::$ip );
+
+		if ( ! $normal ) {
+			$args['filter_set'] = 1;
+			$txt = __( 'View the log of suspicious and malicious activity from this IP address', 'wp-cerber' );
+		}
+		else {
+			$txt = __( 'View all activity from this IP address', 'wp-cerber' );
 		}
 
-		return false;
+		return crb_get_icon( 'activity' ) . '<a href="' . cerber_admin_link( 'activity', $args ) . '">' . $txt . '</a>';
 	}
 
+	/**
+	 * Returns a link to the user activity log if applicable, empty string otherwise
+	 *
+	 * @return string
+	 */
+	static function get_user_log_link(): string {
+		if ( ! self::$user_id
+		     || ( self::$done_links[ self::$user_id ] ?? false ) ) {
+			return '';
+		}
+
+		self::$done_links[ self::$user_id ] = 1;
+
+		return crb_get_icon( 'activity' ) . '<a href="' . cerber_admin_link( 'activity', [
+				'filter_user'  => self::$user_id
+			] ) . '">' . __( 'View recent activity and security-related events for this user', 'wp-cerber' ) . '</a>';
+	}
 }
 
 final class CRB_Wisdom {
@@ -402,12 +434,13 @@ final class CRB_Wisdom {
 	static function load() {
 		self::$ready = true;
 		self::$kb = array();
+		$locale = self::determine_locale();
 
-		if ( self::$kb = cerber_cache_get( 'azoth_data' . self::determine_locale() ) ) {
+		if ( self::$kb = cerber_cache_get( 'azoth_data' . $locale ) ) {
 			return;
 		}
 
-		$data = cerber_get_set( 'azoth_loaded' . self::determine_locale() );
+		$data = cerber_get_set( 'azoth_loaded' . $locale );
 
 		if ( ! $data
 		     && ! $data = self::load_local_file() ) {
@@ -416,7 +449,7 @@ final class CRB_Wisdom {
 
 		self::$kb = $data['azoth'];
 
-		cerber_cache_set( 'azoth_data' . self::determine_locale(), self::$kb, 8 * 3600 );
+		cerber_cache_set( 'azoth_data' . $locale, self::$kb, 8 * 3600 );
 	}
 
 	/**
@@ -427,7 +460,11 @@ final class CRB_Wisdom {
 	 * @since 9.6.1.3
 	 */
 	static function load_local_file() {
-		if ( ! $json_text = file_get_contents( __DIR__ . '/data/azoth_data.json' ) ) {
+
+		$kb_file = __DIR__ . '/data/azoth_data.json';
+
+		if ( ! file_exists( $kb_file )
+		     || ! $json_text = file_get_contents( $kb_file ) ) {
 			return false;
 		}
 
@@ -456,23 +493,14 @@ final class CRB_Wisdom {
 
 		$user_locale = self::determine_locale( $user_id );
 
-		$response = wp_remote_get( 'https://downloads.wpcerber.com/azoth/azoth_data' . $user_locale . '.json' );
+		$loaded = crb_get_remote_json( 'https://downloads.wpcerber.com/azoth/azoth_data' . $user_locale . '.json' );
 
-		if ( crb_is_wp_error( $response ) ) {
+		if ( crb_is_wp_error( $loaded ) ) {
 
-			return $response;
+			return $loaded;
 		}
 
-		if ( ! $body = wp_remote_retrieve_body( $response ) ) {
-
-			return;
-		}
-
-		$loaded = json_decode( $body, true );
-
-		if ( ! $loaded
-		     || JSON_ERROR_NONE != json_last_error()
-		     || empty( $loaded['azoth'] )
+		if ( empty( $loaded['azoth'] )
 		     || empty( $loaded['kb_updated'] ) ) {
 
 			return;
@@ -510,15 +538,17 @@ final class CRB_Wisdom {
 	 *
 	 * @since 9.6.1.3
 	 */
-	static function scheduled_updating() {
+	static function schedule_updating() {
 
-		if ( get_site_transient( 'cerber_update_kb' ) ) {
+		$user_locale = self::determine_locale();
+
+		if ( get_site_transient( 'cerber_update_kb' . $user_locale ) ) {
 			return;
 		}
 
 		cerber_bg_task_add( array( 'CRB_Wisdom', 'load_remote_file' ), array( 'load_admin' => 1, 'args' => array( get_current_user_id() ) ) );
 
-		set_site_transient( 'cerber_update_kb', 1, 24 * 3600 );
+		set_site_transient( 'cerber_update_kb' . $user_locale, time(), 24 * 3600 );
 	}
 
 	/**
@@ -531,19 +561,38 @@ final class CRB_Wisdom {
 	 *
 	 * @since 9.6.1.3
 	 */
-	static function determine_locale( $user_id = 0 ) {
+	static function determine_locale( $user_id = 0 ): string {
 		static $user_locale;
 
-		if ( crb_get_settings( 'admin_lang' ) ) {
-			return '';
-		}
-
 		if ( ! $user_locale ) {
-			$user_locale = crb_sanitize_id( get_user_locale( $user_id ) );
+			$user_locale = crb_sanitize_id( crb_get_admin_locale( (int) $user_id ) );
 			$user_locale = ( 0 === strpos( $user_locale, 'en_' ) ) ? '' : '_' . $user_locale;
 		}
 
 		return $user_locale;
 	}
 
+	/**
+	 * Clears all cached data.
+	 * Typically, we use it when we need fresh data loaded from the disk or, if it's missing, from WP Cerber's cloud.
+	 *
+	 * @param bool $remote If true, forces to reload data from the cloud instantly. Should be used on installing a new version of WP Cerber.
+	 *
+	 * @return void
+	 *
+	 * @since 9.6.5.14
+	 */
+	static function clear_cache( $remote = false ) {
+		$user_locale = self::determine_locale();
+
+		cerber_cache_delete( 'azoth_data' . $user_locale );
+		cerber_delete_set( 'azoth_loaded' . $user_locale );
+
+		if ( $remote ) {
+			delete_site_transient( 'cerber_update_kb'.$user_locale );
+		}
+		else {
+			set_site_transient( 'cerber_update_kb'.$user_locale, time(), 120 );
+		}
+	}
 }

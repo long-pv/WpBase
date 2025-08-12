@@ -134,3 +134,11 @@ ul li#wp-admin-bar-crb_site_switch {
     text-align: center;
     border-radius: 3px;
 }
+
+.crb-secret-token {
+    padding:1em;
+    background-color: #fff;
+    border: solid 1px #d6d6d6;
+    word-break: break-all;
+    margin: 1em 0;
+}

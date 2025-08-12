@@ -80,6 +80,7 @@ function register_cpt($post_type, $data = [])
             'read_private_posts' => 'read_private_' . $post_type,
         ];
         $args['capabilities'] = $capabilities;
+        $args['capability_type'] = array($post_type, $post_type . 's');
     }
 
     register_post_type($post_type, $args);

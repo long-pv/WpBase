@@ -1,6 +1,7 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-23 CERBER TECH INC., https://cerber.tech
+	Copyright (C) 2015-23 Markov Gregory, https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -35,11 +36,10 @@
 if ( ! defined( 'WPINC' ) ) { exit; }
 
 const WHOIS_ERR_EXPIRE = 300;
-const WHOIS_OK_EXPIRE = 4 * 3600;
+const WHOIS_OK_EXPIRE = 24 * 3600;
 const WHOIS_IO_TIMEOUT = 3;
-const CRB_NO_COUNTRY = '??';
 
-require_once( __DIR__ . '/cerber-ripe.php' );
+require_once( dirname( __FILE__ ) . '/cerber-ripe.php' );
 
 /**
  * Get WHOIS info about a given IP
@@ -71,15 +71,11 @@ function cerber_ip_whois_info( $ip ) {
 	$data = cerber_parse_whois_data( $whois_info );
 
 	// Special case - network was transferred to RIPE
-	if ( isset( $data['ReferralServer'] )
-	     && $data['ReferralServer'] == 'whois://whois.ripe.net' ) {
+	if ( isset( $data['ReferralServer'] ) && $data['ReferralServer'] == 'whois://whois.ripe.net' ) {
 		return ripe_readable_info( $ip );
 	}
 
-	$data = crb_attr_escape( $data );
-
 	$table1 = '';
-
 	if ( ! empty( $data ) ) {
 		$table1 = '<table class="whois-object"><tr><td colspan="2"><b>FILTERED WHOIS INFO</b></td></tr>';
 		foreach ( $data as $key => $value ) {
@@ -97,21 +93,19 @@ function cerber_ip_whois_info( $ip ) {
 	}
 
 	$table2 = '<table class="whois-object crb-raw-data"><tr><td><b>RAW WHOIS INFO</b></td></tr>';
-	$table2 .= '<tr><td><pre>' . crb_escape( $whois_info ) . "\n WHOIS server: " . $whois_server . '</pre></td></tr>';
+	$table2 .= '<tr><td><pre>' . $whois_info . "\n WHOIS server: " . $whois_server . '</pre></td></tr>';
 	$table2 .= '</table>';
 
 	$info = $table1 . $table2;
 
-	// Other possible fields with abuse email address
-	if ( empty( $data['abuse-mailbox'] ) ) {
-		$data['abuse-mailbox'] = $data['OrgAbuseEmail'] ?? '';
+	// Other possible field with abuse email address
+	if ( empty( $data['abuse-mailbox'] ) && ! empty( $data['OrgAbuseEmail'] ) ) {
+		$data['abuse-mailbox'] = $data['OrgAbuseEmail'];
 	}
-
 	if ( empty( $data['abuse-mailbox'] ) ) {
 		foreach ( $data as $field ) {
 			$maybe_email = trim( $field );
-			if ( false !== strpos( $maybe_email, 'abuse' )
-			     && is_email( $maybe_email ) ) {
+			if ( false !== strpos( $maybe_email, 'abuse' ) && is_email( $maybe_email ) ) {
 				$data['abuse-mailbox'] = $maybe_email;
 				break;
 			}
@@ -119,145 +113,99 @@ function cerber_ip_whois_info( $ip ) {
 	}
 
 	// Network
-	$data['network'] = $data['inetnum'] ?? $data['NetRange'] ?? '';
+	if ( ! empty( $data['inetnum'] ) ) {
+		$data['network'] = $data['inetnum'];
+	}
+	elseif ( ! empty( $data['NetRange'] ) ) {
+		$data['network'] = $data['NetRange'];
+	}
 
 	$ret['data'] = $data;
 	$ret['whois'] = $info;
 	return $ret;
 }
-/**
- * Get WHOIS info for a given IP
- *
- * @param string $ip IP address
- *
- * @return array|string Array on error
- *
+/*
+ * Get WHOIS info fro given IP
  * @since 2.7
+ *
  */
-function cerber_get_whois( $ip ) {
-	$key = 'WHS-' . cerber_get_id_ip( $ip );
-
-	if ( ! $info = cerber_get_set( $key, null, false ) ) {
-		$whois_server = cerber_get_whois_server( $ip );
-
-		if ( is_array( $whois_server ) ) {
-			return $whois_server;
-		}
-
-		$info = make_whois_request( $whois_server, $ip );
-
-		if ( is_array( $info ) ) {
-			return $info;
-		}
-
-		cerber_update_set( $key, $info, null, false, time() + WHOIS_OK_EXPIRE );
+function cerber_get_whois($ip){
+	$key = 'WHS-'.cerber_get_id_ip($ip);
+	$info = get_transient($key);
+	if (false === $info) {
+		$whois_server = cerber_get_whois_server($ip);
+		if (is_array($whois_server)) return $whois_server;
+		$info = make_whois_request($whois_server, $ip);
+		if (is_array($info)) return $info;
+		set_transient( $key, $info , WHOIS_OK_EXPIRE );
 	}
-
 	return $info;
 }
-/**
- * Find out what server stores WHOIS info for a given IP
+/*
+ * Find out what is server storing WHOIS info for given IP
+ * @since 2.7
  *
- * @param string $ip IP Address
- *
- * @return mixed|string[] Array on error, hostname on success
  */
 function cerber_get_whois_server( $ip ) {
 	$key = 'SRV-' . cerber_get_id_ip( $ip );
+	$server = get_transient( $key );
 
-	if ( ! $server = cerber_get_set( $key, null, false ) ) {
+	if ( false === $server ) {
 		$w = make_whois_request( 'whois.iana.org', $ip );
-
 		if ( is_array( $w ) ) {
 			return $w;
 		}
-
 		preg_match( '/^whois\:\s+([\w\.\-]{3,})/m', $w, $data );
-
-		if ( empty( $data[1] )
-		     || ! crb_is_valid_hostname( $data[1] ) ) {
-			return array( 'error' => 'No valid WHOIS server was found for IP ' . $ip );
+		if ( ! isset( $data[1] ) ) {
+			return array( 'error' => 'No WHOIS server was found for IP ' . $ip );
 		}
-
 		$server = $data[1];
-
-		cerber_update_set( $key, $server, null, false, time() + WHOIS_OK_EXPIRE );
+		set_transient( $key, $server, WHOIS_OK_EXPIRE );
 	}
 
 	return $server;
 }
-/**
- * Attempts to parse textual WHOIS response to associative array
- *
- * @param string $text
- *
- * @return array
- *
+/*
+ * Attempt to parse TXT WHOIS response to associative array
  * @since 2.7
+ *
  */
-function cerber_parse_whois_data( $text ) {
-	$lines = explode( "\n", $text );
-	$lines = array_filter( $lines );
+function cerber_parse_whois_data($txt){
+	$lines = explode("\n",$txt);
+	$lines = array_filter($lines);
 	$ret = array();
-
 	foreach ( $lines as $line ) {
-		if ( preg_match( '/^([\w\-]+)\:\s+(.+)/', trim( $line ), $data ) ) {
-			$ret[ $data[1] ] = $data[2];
-		}
+		if (preg_match( '/^([\w\-]+)\:\s+(.+)/', trim($line), $data )) $ret[$data[1]] = $data[2];
 	}
-
 	return $ret;
 }
-/**
- * Retrieve RAW text information about an IP address by using WHOIS protocol
+/*
  *
- * @param string $hostname WHOIS server
- * @param string $ip IP address
- *
- * @return string|string[] Array on error
- *
+ * Retrieve RAW IP information by using WHOIS protocol
  * @since 2.7
+ *
  */
-function make_whois_request( $hostname, $ip ) {
-	if ( ! $socket = @fsockopen( $hostname, 43, $errno, $errstr, WHOIS_IO_TIMEOUT ) ) {
-		return array( 'error' => 'Network error: ' . $errstr . ' (WHOIS server: ' . $hostname . ').' );
+function make_whois_request($server, $ip) {
+	if ( ! $f = @fsockopen( $server, 43, $errno, $errstr, WHOIS_IO_TIMEOUT ) ) {
+		return array( 'error' => 'Network error: ' . $errstr . ' (WHOIS server: ' . $server . ').' );
 	}
-
 	#Set the timeout for answering
-	if ( ! stream_set_timeout( $socket, WHOIS_IO_TIMEOUT ) ) {
-		return array( 'error' => 'WHOIS: Unable to set IO timeout.' );
-	}
-
+	if (!stream_set_timeout($f,WHOIS_IO_TIMEOUT)) return array('error'=>'WHOIS: Unable to set IO timeout.');
 	#Send the IP address to the whois server
-	if ( false === fwrite( $socket, "$ip\r\n" ) ) {
-		return array( 'error' => 'WHOIS: Unable to send request to remote WHOIS server (' . $hostname . ').' );
-	}
-
+	if (false === fwrite($f, "$ip\r\n" )) return array('error'=>'WHOIS: Unable to send request to remote WHOIS server ('.$server.').');
 	//Set the timeout limit for reading again
-	if ( ! stream_set_timeout( $socket, WHOIS_IO_TIMEOUT ) ) {
-		return array( 'error' => 'WHOIS: Unable to set IO timeout.' );
-	}
-
+	if (!stream_set_timeout($f,WHOIS_IO_TIMEOUT)) return array('error'=>'WHOIS: Unable to set IO timeout.');
 	//Set socket in non-blocking mode
-	if ( ! stream_set_blocking( $socket, 0 ) ) {
-		return array( 'error' => 'WHOIS: Unable to set IO non-blocking mode.' );
-	}
-
-	//If connection is still valid
-	if ( $socket ) {
+	if (!stream_set_blocking( $f, 0 )) return array('error'=>'WHOIS: Unable to set IO non-blocking mode.');
+	//If connection still valid
+	if ($f) {
 		$data = '';
-		while ( ! feof( $socket ) ) {
-			$data .= fread( $socket, 256 );
+		while (!feof($f)) {
+			$data .= fread($f,256);
 		}
 	}
-	else {
-		return array( 'error' => 'Unable to get WHOIS response.' );
-	}
-
-	if ( ! $data ) {
-		return array( 'error' => 'Remote WHOIS server return empty response (' . $hostname . ').' );
-	}
-
+	else return array('error'=>'Unable to get WHOIS response.');
+	if (!$data) return array('error'=>'Remote WHOIS server return empty response ('.$server.').');
 	return $data;
 }
 
@@ -271,28 +219,25 @@ function make_whois_request( $hostname, $ip ) {
  */
 function cerber_get_flag_html( $code, $txt = '' ) {
 
-	if ( ! $code || $code == CRB_NO_COUNTRY ) {
-		return $txt;
+	if ( ! $code ) {
+		return '';
 	}
 
-	return '<div class="crb-country-label"><img alt="' . $code . '" class="crb-country-flag" src="' . CRB_Globals::assets_url( 'flags/' ) . strtolower( $code ) . '.png">' . $txt . '</div>';
+	//return '<span class="crb-country" style="background: url(\'' . CRB_Globals::$assets_url . 'flags/' . strtolower( $code ) . '.gif\') no-repeat left;">' . $txt . '</span>';
+	return '<div class="crb-country-label"><img alt="' . $code . '" class="crb-country-flag" src="' . CRB_Globals::$assets_url . 'flags/' . strtolower( $code ) . '.png">' . $txt . '</div>';
 }
-
-/**
+/*
  *
- * Country name from two-letter code
+ * Country name from two letter code
  * ISO 3166-1 alpha-2
- *
- * @param string $code
- *
- * @return string
- *
  * @since 2.7
+ *
  */
 function cerber_country_name( $code ) {
+	global $wpdb, $cerber_country_names;
 	static $cache, $locale;
 
-	if ( ! $code || $code == CRB_NO_COUNTRY ) {
+	if ( ! $code ) {
 		return __( 'Unknown', 'wp-cerber' );
 	}
 
@@ -303,37 +248,39 @@ function cerber_country_name( $code ) {
 	$code = strtoupper( $code );
 	$ret = '';
 
-	$locale = crb_get_bloginfo( 'language' );
-
-	if ( $locale != 'pt-BR'
-	     && $locale != 'zh-CN' ) {
-
-		$locale = substr( $locale, 0, 2 );
-
-		if ( ! in_array( $locale, array( 'de', 'en', 'es', 'fr', 'ja', 'ru' ) ) ) {
-			$locale = 'en';
+	if (!isset($locale)) {
+		$locale = crb_get_bloginfo( 'language' );
+		if ( $locale != 'pt-BR' && $locale != 'zh-CN' ) {
+			$locale = substr( $locale, 0, 2 );
+			if ( ! in_array( $locale, array( 'de', 'en', 'es', 'fr', 'ja', 'ru' ) ) ) {
+				$locale = 'en';
+			}
 		}
 	}
 
-	$ret = cerber_db_get_var( 'SELECT country_name FROM ' . CERBER_GEO_TABLE . ' WHERE country = "' . $code . '" AND locale = "' . $locale . '"' );
+	$ret = cerber_db_get_var( 'SELECT country_name FROM ' . CERBER_GEO_TABLE . ' WHERE country = "'.$code.'" AND locale = "'.$locale.'"' );
 
-	if ( $ret ) {
+	if ($ret) {
 		$cache[ $code ] = $ret;
-
 		return $ret;
 	}
 
-	$ret = CERBER_COUNTRY_NAMES[ $code ] ?? __( 'Unknown', 'wp-cerber' );
+	if ( isset( $cerber_country_names[ $code ] ) ) {
+		$ret =  $cerber_country_names[ $code ];
+	}
+	else {
+		$ret = __( 'Unknown', 'wp-cerber' );
+	}
 
 	$cache[ $code ] = $ret;
-
 	return $ret;
 }
 
 function cerber_get_country_list() {
+	global $cerber_country_names;
 
 	$ret = array();
-	foreach ( CERBER_COUNTRY_NAMES as $code => $name ) {
+	foreach ( $cerber_country_names as $code => $name ) {
 		$ret[ $code ] = cerber_country_name( $code );
 	}
 
@@ -345,7 +292,7 @@ function cerber_get_country_list() {
 	return $ret;
 }
 
-const CERBER_COUNTRY_NAMES = array(
+$cerber_country_names = array(
 	'AF' => 'Afghanistan',
 	'AL' => 'Albania',
 	'AX' => 'Aland Islands',

@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -70,7 +70,7 @@ if ( ! function_exists( 'wp_logout' ) ) :
 	function wp_logout() {
 		$user_id = get_current_user_id();
 
-		CRB_Globals::$do_not_log[ CRB_EV_UST ] = true;
+		CRB_Activity::set_ignore( CRB_EV_UST );
 
 		wp_destroy_current_session();
 		wp_clear_auth_cookie();

@@ -1,7 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
-
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -20,6 +19,15 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+/*
+
+*========================================================================*
+|                                                                        |
+|	       ATTENTION!  Do not change or edit this file!                  |
+|                                                                        |
+*========================================================================*
+
+*/
 const CERBER_PIN_LENGTH = 4;
 const CERBER_PIN_EXPIRES = 15;
 
@@ -35,7 +43,7 @@ final class CRB_2FA {
 	 *
 	 * @return bool|WP_Error
 	 */
-	static function enforce( $login, $user ) {
+	static function main_controller( $login, $user ) {
 		static $done = false;
 
 		if ( $done ) {
@@ -127,7 +135,7 @@ final class CRB_2FA {
 			$home .= '/';
 		}
 
-		wp_safe_redirect( $home );
+		crb_safe_redirect( $home );
 		exit;
 
 	}
@@ -359,7 +367,7 @@ final class CRB_2FA {
 
 			self::delete_2fa( $current_user_id );
 			cerber_user_logout( $sts );
-			wp_redirect( get_home_url() );
+			crb_redirect( get_home_url() );
 
 			exit;
 		}
@@ -377,7 +385,7 @@ final class CRB_2FA {
 			if ( $go ) {
 				cerber_user_logout( 28 );
 
-				wp_redirect( $go );
+				crb_redirect( $go );
 				exit;
 			}
 		}
@@ -386,7 +394,7 @@ final class CRB_2FA {
 			cerber_soft_block_add( cerber_get_remote_ip(), 721 );
 			cerber_user_logout( 542 );
 
-			wp_redirect( get_home_url() );
+			crb_redirect( get_home_url() );
 			exit;
 		}
 
@@ -412,7 +420,7 @@ final class CRB_2FA {
 			self::delete_2fa( $current_user_id );
 
 			cerber_log( CRB_EV_LIN, $twofactor['login'], $current_user_id, 27 );
-			cerber_login_history( $current_user_id, true );
+			crb_update_login_history( $current_user_id, true );
 
 			cerber_2fa_checker( true );
 
@@ -422,7 +430,7 @@ final class CRB_2FA {
 
 			$url = ( ! empty( $twofactor['to'] ) ) ? $twofactor['to'] : get_home_url();
 
-			wp_safe_redirect( $url );
+			crb_safe_redirect( $url );
 			exit;
 		}
 
@@ -781,7 +789,7 @@ final class CRB_2FA {
 				$ds[] = __( 'Hostname:', 'wp-cerber' ) . ' ' . @gethostbyaddr( cerber_get_remote_ip() );
 
 				if ( $c = lab_get_country( cerber_get_remote_ip(), false ) ) {
-					$ds[] = __( 'Location:', 'wp-cerber' ) . '' . cerber_country_name( $c ) . ' (' . $c . ')';
+					$ds[] = __( 'Location:', 'wp-cerber' ) . '' . crb_get_country_name( $c ) . ' (' . $c . ')';
 				}
 			}
 

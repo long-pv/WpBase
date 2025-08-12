@@ -1,8 +1,6 @@
 <?php
 /*
-	Cerber Laboratory (cerberlab.net) specific routines.
-
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -19,6 +17,7 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
 */
 
 /*
@@ -155,7 +154,7 @@ function lab_reputation_update( $ip, $ip_data ) {
  * Send request to a Cerber Lab node.
  *
  * @param array $workload Workload
- * @param string|int Return this element from the payload if it exists
+ * @param string|int $payload_key Return this element from the payload if it exists
  *
  * @return array|bool
  */
@@ -177,17 +176,18 @@ function lab_api_send_request( $workload = array(), $payload_key = null ) {
 	$site = lab_get_site_meta( false );
 
 	$request = array(
-		'key'      => $key,
-		'workload' => $workload,
-		'push'     => $push,
-		'lang'     => $site['lang'],
-		'wp_ver'   => $site['wp_ver'],
-		'multi'    => (bool) is_multisite(),
-		'version'  => CERBER_VER,
-		'PHP'      => PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION,
-		'sapi'     => PHP_SAPI,
-		'srv_name' => substr( $_SERVER['SERVER_SOFTWARE'] ?? '', 0, 30 ),
-		'time'     => time(),
+		'key'          => $key,
+		'workload'     => $workload,
+		'push'         => $push,
+		'lang'         => (string) $site['lang'],
+		'wp_ver'       => (string) $site['wp_ver'],
+		'multi'        => is_multisite() ? 1 : 0,
+		'version'      => CERBER_VER,
+		'PHP'          => PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION,
+		'sapi'         => PHP_SAPI,
+		'srv_name'     => substr( $_SERVER['SERVER_SOFTWARE'] ?? '', 0, 30 ),
+		'cache_status' => (int) CRB_Cache::checker(),
+		'time'         => time(),
 	);
 
 	if ( lab_lab() ) {
@@ -228,19 +228,11 @@ function lab_api_send_request( $workload = array(), $payload_key = null ) {
 function lab_send_request( $request, $node_id = null, $scheme = null ) {
 	global $node_delay, $cerber_lab_last_net_error, $cerber_lab_last_node_id;
 
-	$node = lab_get_node( $node_id );
-
-	if ( ! $scheme ) {
-		if ( crb_get_settings( 'cerberproto' ) ) {
-			$scheme = 'https';
-		}
-		else {
-			$scheme = 'http';
-		}
-	}
-	elseif ( $scheme != 'http' || $scheme != 'https' ) {
+	if ( $scheme != 'http' && $scheme != 'https' ) {
 		$scheme = 'https';
 	}
+
+	$node = lab_get_node( $node_id );
 
 	$body = array();
 	$body['container'] = $request;
@@ -600,15 +592,15 @@ function lab_save_push( $ip, $reason_id, $details = null ) {
 /**
  * Get data for lab
  *
- * @return array|bool
+ * @return array
  */
-function lab_get_push() {
+function lab_get_push(): array {
 	$result = cerber_db_get_results( 'SELECT * FROM ' . CERBER_LAB_TABLE );
 	if ( $result ) {
 		return array( 'type_1' => $result );
 	}
 
-	return false;
+	return [];
 }
 
 function lab_trunc_push(){

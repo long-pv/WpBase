@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -626,14 +626,25 @@ final class CRB_DS {
 		return $value;
 	}
 
+	/**
+	 * Restrict access to updating roles data
+	 *
+	 * @param mixed $value Normally, it's an array containing all roles data
+	 * @param string $option
+	 * @param mixed $old_value Normally, it's an array containing all roles data
+	 *
+	 * @return array|mixed
+	 */
 	static function role_processor( &$value, $option, &$old_value ) {
 
-		if ( ! is_array( $value )
-		     || ( substr( $option, - 11 ) != '_user_roles' ) ) {
+		$role_key = wp_roles()->role_key;
+
+		if ( $option !== $role_key ) {
 			return $value;
 		}
 
-		if ( serialize( $value ) === serialize( $old_value ) ) {
+		if ( is_array( $value ) && is_array( $old_value )
+		     && serialize( $value ) === serialize( $old_value ) ) {
 			return $value;
 		}
 
@@ -655,12 +666,12 @@ final class CRB_DS {
 	/**
 	 * Check if role data can be updated
 	 *
-	 * @param $value
-	 * @param $old_value
+	 * @param array $value
+	 * @param array $old_value
 	 *
 	 * @return bool True if update is permitted
 	 */
-	static function role_update_permitted( &$value, &$old_value ) {
+	static function role_update_permitted( &$value, &$old_value ): bool {
 
 		if ( crb_get_settings( 'ds_4roles_acl' ) && crb_acl_is_white() ) {
 			return true;

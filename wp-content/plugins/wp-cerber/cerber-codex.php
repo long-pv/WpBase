@@ -1,4 +1,25 @@
 <?php
+/*
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
+
+    Licenced under the GNU GPL.
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+*/
+
 /**
  * Status/report/diagnostic domain-specific messages
  *
@@ -34,16 +55,16 @@ const CRB_PL726 = 'ECPL42';
 const CRB_PL727 = 'ECPL43';
 
 /**
- * Returns an error message corresponding to a given WP Cerber's error ID.
+ * Returns an error message corresponding to the given WP Cerber error ID.
  *
- * @param string|null $id The error ID. If not provided, returns an array of all error messages.
+ * @param string $id The error ID. If not provided, returns an array of all error messages.
  *
- * @return string|array The error message string if an ID is provided and exists in the error message array,
- *               otherwise a string indicating an unknown error ID, or an array of all error messages.
+ * @return string|string[]  The error message string if the ID is provided and exists in the error message array,
+ *                          otherwise a string indicating an unknown error ID, or an array of all error messages.
  *
  * @since 9.6.2.4
  */
-function crb_get_error_msg( string $id = null ) {
+function crb_get_error_msg( $id = '' ) {
 	static $messages;
 
 	if ( ! $messages ) {

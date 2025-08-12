@@ -5,13 +5,39 @@ final class CRB_Request {
 	private static $clean_uri = null; // No trailing slash, GET parameters and other junk symbols
 	private static $uri_script = null; // With path and the starting slash (if script)
 	private static $site_root = null; // Without trailing slash and path (site domain or IP address plus schema only)
-	private static $sub_folder = null; // Without trailing slash and site domain
+
+	private static $home_path = ''; // The URL path to the website home folder, no trailing slash
+	private static $wp_path = ''; // The URL path to the WordPress files, no trailing slash
+
 	private static $the_path = null;
 	private static $files = array();
 	private static $recursion_counter = 0; // buffer overflow attack protection
 	private static $el_counter = 0; // buffer overflow attack protection
 	private static $bad_request = false; // buffer overflow attack protection
 	private static $commenting = null; // A comment is submitted
+
+	const WP_FILES = [
+		'/index.php',
+		'/wp-activate.php',
+		'/wp-blog-header.php',
+		'/wp-comments-post.php',
+		'/wp-config-sample.php',
+		'/wp-config.php',
+		'/wp-cron.php',
+		'/wp-links-opml.php',
+		'/wp-load.php',
+		'/wp-login.php',
+		'/wp-mail.php',
+		'/wp-settings.php',
+		'/wp-signup.php',
+		'/wp-trackback.php',
+		'/xmlrpc.php',
+	];
+
+	const WP_FOLDERS = [
+		'/wp-admin/',
+		'/wp-includes/',
+	];
 
 	/**
 	 * Returns clean "Request URI" without trailing slash and GET parameters
@@ -51,27 +77,54 @@ final class CRB_Request {
 		return self::$clean_uri;
 	}
 
-	static function parse_site_url() {
+	/**
+	 * Parses website URLs and extracts hostname (domain or IP address), website installation (home) folder, WordPress installation folder.
+	 *
+	 * @return void
+	 */
+	static function parse_site_urls() {
 		if ( isset( self::$site_root ) ) {
 			return;
 		}
 
-		list( self::$site_root, self::$sub_folder ) = crb_parse_site_url();
+		list( self::$site_root, self::$home_path ) = crb_parse_home_url();
+
+		if ( cerber_get_home_url() == cerber_get_site_url() ) {
+			self::$wp_path = self::$home_path;
+		}
+		else {
+			self::$wp_path = crb_parse_site_url()[1];
+		}
 	}
 
 	/**
-	 * If the WordPress is installed in a subfolder, returns the subfolder without trailing slash. The empty string otherwise.
+	 * If the website is installed in a subfolder, returns the subfolder without trailing slash. The empty string otherwise.
 	 *
 	 * @return string Empty string if not in a subfolder
 	 *
 	 * @since 9.3.1
 	 */
-	static function get_site_path() {
+	static function get_site_path(): string {
 		if ( ! isset( self::$site_root ) ) {
-			self::parse_site_url();
+			self::parse_site_urls();
 		}
 
-		return self::$sub_folder;
+		return self::$home_path;
+	}
+
+	/**
+	 * The folder where the WordPress files are installed. No trailing slash.
+	 *
+	 * @return string Returns empty string if WordPress files or the website are not installed in a folder
+	 *
+	 * @since 9.6.5.8
+	 */
+	static function get_wp_path(): string {
+		if ( ! isset( self::$site_root ) ) {
+			self::parse_site_urls();
+		}
+
+		return self::$wp_path;
 	}
 
 	/**
@@ -81,7 +134,7 @@ final class CRB_Request {
 	 */
 	static function full_url() {
 
-		self::parse_site_url();
+		self::parse_site_urls();
 
 		return self::$site_root . $_SERVER['REQUEST_URI'];
 
@@ -89,7 +142,7 @@ final class CRB_Request {
 
 	static function full_url_clean() {
 
-		self::parse_site_url();
+		self::parse_site_urls();
 
 		return self::$site_root . self::URI();
 
@@ -150,9 +203,9 @@ final class CRB_Request {
 	 * @return bool True if requested URI match the given string and it's not malformed
 	 */
 	static function is_equal( $slug ) {
-		self::parse_site_url();
+		self::parse_site_urls();
 		$slug = ( $slug[0] != '/' ) ? '/' . $slug : $slug;
-		$slug = self::$sub_folder . rtrim( $slug, '/' );
+		$slug = self::$home_path . rtrim( $slug, '/' );
 		$uri = rtrim( $_SERVER['REQUEST_URI'], '/' );
 
 		if ( strlen( $slug ) === strlen( $uri )
@@ -176,18 +229,32 @@ final class CRB_Request {
 		return self::$uri_script;
 	}
 
-	// @since 7.9.2
+	/**
+	 * Checks if the request URI strictly contains the given executable script.
+	 * The script file name in the request URI must matches the given script strictly.
+	 * Takes into consideration all installation paths automatically.
+	 *
+	 * @param string|array $val Script name without any query parameters, e.g. "/wp-admin/profile.php"
+	 * @param bool $multiview
+	 *
+	 * @return bool
+	 *
+	 * @since 7.9.2
+	 */
 	static function is_script( $val, $multiview = false ) {
-		if ( ! self::script() ) {
+		if ( ! $uri_script = self::script() ) {
 			return false;
 		}
-		//$uri_script = self::$uri_script;
-		self::parse_site_url();
-		if ( self::$sub_folder ) {
-			$uri_script = substr( self::$uri_script, strlen( self::$sub_folder ) );
+
+		self::parse_site_urls();
+
+		if ( self::$wp_path
+		     && 0 === strpos( $uri_script, self::$wp_path . '/' ) ) {
+			$uri_script = substr( $uri_script, strlen( self::$wp_path ) );
 		}
-		else {
-			$uri_script = self::$uri_script;
+		elseif ( self::$home_path
+		     && 0 === strpos( $uri_script, self::$home_path . '/' ) ) {
+			$uri_script = substr( $uri_script, strlen( self::$home_path ) );
 		}
 
 		if ( is_array( $val ) ) {
@@ -197,6 +264,32 @@ final class CRB_Request {
 		}
 		elseif ( $uri_script == $val ) {
 			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Determines if the given file path matches a standard WordPress script.
+	 *
+	 * The script path must start with a leading slash, e.g., "/wp-activate.php" or "/wp-admin/admin.php".
+	 *
+	 * @param string $script Relative file path starting with a slash.
+	 *
+	 * @return bool True if the file path matches a WordPress script, false otherwise.
+	 *
+	 * @since 9.6.5.8
+	 */
+	public static function is_wordpress_script( string $script ): bool {
+
+		if ( in_array( $script, self::WP_FILES, true ) ) {
+			return true;
+		}
+
+		foreach ( self::WP_FOLDERS as $folder_prefix ) {
+			if ( strpos( $script, $folder_prefix ) === 0 ) {
+				return true;
+			}
 		}
 
 		return false;
@@ -248,9 +341,10 @@ final class CRB_Request {
 	}
 
 	/**
-	 * The request path with leading and trailing slashes
-	 * The path is relative to the home folder of WP
-	 * No subfolder is included if WP is installed in a subfolder
+	 * The request path with leading and trailing slashes.
+	 *
+	 * No subfolder is included if the website or/and WordPress are installed in a folder.
+	 * The path is relative to the home folder of website or WordPress installation folder.
 	 *
 	 * @return string
 	 *
@@ -258,42 +352,82 @@ final class CRB_Request {
 	 */
 	static function get_relative_path() {
 
-		if ( ! isset( self::$the_path ) ) {
+		if ( self::$the_path !== null ) {
+			return self::$the_path;
+		}
 
-			if ( $path = $_SERVER['PATH_INFO'] ?? '' ) {
-				$path = str_replace( '%', '%25', $path );
+		if ( ( $path = $_SERVER['PATH_INFO'] ?? '' )
+		     && $path !== '/' ) { // Skip specific cases when the script name in the request is not the same as specified in the permalink setting
+			$path = str_replace( '%', '%25', $path );
+
+			$path = rawurldecode( $path );
+		}
+		elseif ( $path = $_SERVER['REQUEST_URI'] ) {
+
+			if ( $pos = strpos( $path, '?' ) ) {
+				$path = substr( $path, 0, $pos );
 			}
-			elseif ( $path = $_SERVER['REQUEST_URI'] ) {
 
-				if ( $pos = strpos( $path, '?' ) ) {
-					$path = substr( $path, 0, $pos );
-				}
-
-				if ( $pos = strpos( $path, '#' ) ) {
-					$path = substr( $path, 0, $pos );
-				}
-			}
-			else {
-				self::$the_path = '/';
-
-				return self::$the_path;
+			if ( $pos = strpos( $path, '#' ) ) {
+				$path = substr( $path, 0, $pos );
 			}
 
 			$path = rawurldecode( $path );
 
-			$end = ( mb_substr( $path, -1, 1 ) == '/' ) ? '/' : '';
-
-			$path = trim( $path, '/' );
-
-			if ( $site_path = self::get_site_path() ) {
-				$len = mb_strlen( $site_path );
-				$path = mb_substr( $path, $len );
+			if ( ( $begin_with = self::get_wp_path() )
+			     && 0 === mb_strpos( $path, $begin_with . '/' ) ) {
+				$path = mb_substr( $path, mb_strlen( $begin_with ) );
 			}
+			elseif ( ( $begin_with = self::get_site_path() )
+			         && 0 === mb_strpos( $path, $begin_with . '/' ) ) {
+				$path = mb_substr( $path, mb_strlen( $begin_with ) );
+			}
+		}
+		else {
+			self::$the_path = '/';
 
-			self::$the_path = '/' . $path . ( ( $path ) ? $end : '' );
+			return self::$the_path;
 		}
 
+		$end = ( mb_substr( $path, -1, 1 ) == '/' ) ? '/' : '';
+		$path = trim( $path, '/' );
+
+		self::$the_path = '/' . $path . ( $path ? $end : '' );
+
 		return self::$the_path;
+	}
+
+	/**
+	 * Returns requested REST route without leading and trailing slashes for any valid REST API request
+	 *
+	 * @return string Empty string if no valid REST API request/route detected
+	 *
+	 * @since 9.6.5.8 Replaced crb_get_rest_path()
+	 */
+	static function get_rest_api_path(): string {
+		static $ret;
+
+		if ( isset( $ret ) ) {
+			return $ret;
+		}
+
+		$ret = '';
+
+		if ( isset( $_REQUEST['rest_route'] ) ) {
+			$ret = trim( $_REQUEST['rest_route'], '/' );
+		}
+		elseif ( cerber_is_permalink_enabled()
+		         && $path = CRB_Request::get_relative_path() ) {
+
+			$path = trim( $path, '/' );
+			$prefix = rest_get_url_prefix() . '/';
+
+			if ( 0 === strpos( $path, $prefix ) ) {
+				$ret = substr( $path, strlen( $prefix ) );
+			}
+		}
+
+		return $ret;
 	}
 
 	/**

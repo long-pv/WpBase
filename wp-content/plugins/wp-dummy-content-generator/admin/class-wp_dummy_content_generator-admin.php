@@ -74,7 +74,8 @@ class wp_dummy_content_generator_Admin {
 		 */
 
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/wp_dummy_content_generator-admin-min.css', array(), $this->version, 'all' );
-		wp_enqueue_style( 'dtable_'.$this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/jquery.dataTables.css', $this->version, 'all' );
+		wp_enqueue_style( 'dtable_'.$this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/jquery.dataTables.css', array(), $this->version, 'all' );
+		wp_enqueue_style( 'dashboard_'.$this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/wp_dummy_content_generator-dashboard.css', array(), $this->version, 'all' );
 
 	}
 

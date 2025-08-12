@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -42,7 +42,7 @@ add_action( 'admin_init', function () {
 
 	crb_show_phpinfo();
 	crb_settings_processor();
-	crb_do_export();
+	crb_do_export_settings();
 	crb_do_import();
 	crb_delete_alert();
 	crb_admin_headers();
@@ -516,7 +516,7 @@ add_action( 'wp_ajax_cerber_ref_upload', function () {
 
 		// Step 1, saving file
 
-		if ( ! is_uploaded_file( $_FILES['refile']['tmp_name'] ) ) {
+        if ( ! is_uploaded_file( $_FILES['refile']['tmp_name'] ) ) {
 			$error = 'Unable to read uploaded file';
 		}
 
@@ -724,7 +724,6 @@ function cerber_show_quarantine() {
 
 	$rows = array();
 	$ofs = get_option( 'gmt_offset' ) * 3600;
-	$confirm = ' onclick="return confirm(\'' . __( 'Are you sure?', 'wp-cerber' ) . '\');"';
 
 	foreach ( $list as $file ) {
 		$p = array(
@@ -734,10 +733,10 @@ function cerber_show_quarantine() {
 		);
 
 		$p['crb_scan_adm'] = 'delete';
-		$delete = '<a ' . $confirm . ' href="' . cerber_admin_link_add( $p ) . '">' . __( 'Delete', 'wp-cerber' ) . '</a>';
+		$delete = '<a class="crb-confirm-action" href="' . cerber_admin_link_add( $p ) . '">' . __( 'Delete', 'wp-cerber' ) . '</a>';
 
 		$p['crb_scan_adm'] = 'restore';
-		$restore = ( ! $file['can'] ) ? '' : ' | <a ' . $confirm . ' href="' . cerber_admin_link_add( $p ) . '">' . __( 'Restore', 'wp-cerber' ) . '</a>';
+		$restore = ( ! $file['can'] ) ? '' : ' | <a class="crb-confirm-action" href="' . cerber_admin_link_add( $p ) . '">' . __( 'Restore', 'wp-cerber' ) . '</a>';
 
 		$moved = strtotime( $file['date'] ) - $ofs;
 		$will = cerber_auto_date( $file['scan_id'] + DAY_IN_SECONDS * crb_get_settings( 'scan_qcleanup' ) );
@@ -843,7 +842,7 @@ function cerber_quarantine_do( $what, $scan_id, $qfile ) {
 			if ( $data['can'] ) {
 				$target_dir = dirname( $data['source'] );
 				if ( ! file_exists( $target_dir ) && ! mkdir( $target_dir, 0755, true ) ) {
-					$err = 'Unable to create the folder <b>' . $target_dir . '</b>. Check permissions of parent folders.';
+					$err = 'Unable to create directory: <b>' . $target_dir . '</b>. Check permissions of parent directories.';
 				}
 				if ( ! $err ) {
 					if ( @rename( $file, $data['source'] ) ) {
@@ -851,7 +850,7 @@ function cerber_quarantine_do( $what, $scan_id, $qfile ) {
 						crb_qr_total_update( -1 );
 					}
 					else {
-						$err = 'A file error occurred while restoring the file. Check permissions of folders.';
+						$err = 'A file error occurred while restoring the file. Check permissions of directories.';
 					}
 				}
 			}
@@ -891,11 +890,10 @@ function cerber_show_ignore() {
 	$list = array_slice( $list, $first, $per_page );
 
 	$rows = array();
-	$confirm = ' onclick="return confirm(\'' . __( 'Are you sure?', 'wp-cerber' ) . '\');"';
 
 	foreach ( $list as $key => $file ) {
 
-		$delete = '<a ' . $confirm . ' href="' . cerber_admin_link_add( array(
+		$delete = '<a class="crb-confirm-action" href="' . cerber_admin_link_add( array(
 				'cerber_admin_do' => 'scan_tegrity',
 				'crb_scan_adm'    => 'remove_ignore',
 				'crb_file_id'     => $key
@@ -1053,25 +1051,19 @@ function crb_scan_insights_brief( $scan_id ) {
 	$result = '<h3>' . __( 'Brief summary', 'wp-cerber' ) . '</h3>';
 
 	$list = array(
-		array( 'WordPress root folder (ABSPATH) ', ABSPATH ),
-		array( 'WordPress uploads folder', cerber_get_upload_dir() ),
-		array( 'WordPress content folder', dirname( cerber_get_plugins_dir() ) ),
-		array( 'WordPress plugins folder', cerber_get_plugins_dir() ),
-		array( 'WordPress themes folder', cerber_get_themes_dir() ),
-		array( 'WordPress must-use plugin folder (WPMU_PLUGIN_DIR) ', WPMU_PLUGIN_DIR ),
-		array( 'PHP folder for uploading files', ini_get( 'upload_tmp_dir' ) ),
-		array( 'Server folder for temporary files', sys_get_temp_dir() ),
-		array( 'Server folder for users\' session data', session_save_path() ),
+		array( 'WordPress root directory (ABSPATH) ', ABSPATH ),
+		array( 'WordPress uploads directory', cerber_get_upload_dir() ),
+		array( 'WordPress content directory', dirname( cerber_get_plugins_dir() ) ),
+		array( 'WordPress plugins directory', cerber_get_plugins_dir() ),
+		array( 'WordPress themes directory', cerber_get_themes_dir() ),
+		array( 'WordPress must-use plugin directory (WPMU_PLUGIN_DIR) ', WPMU_PLUGIN_DIR ),
+		array( 'PHP directory for uploading files', ini_get( 'upload_tmp_dir' ) ),
+		array( 'Server directory for temporary files', sys_get_temp_dir() ),
+		array( 'Server directory for users\' session data', session_save_path() ),
 	);
 
-	/*
-	It's not scanned by the scanner
-	$cerber_folder = cerber_get_my_folder();
-	if ( ! crb_is_wp_error( $cerber_folder ) ) {
-		$list[] = array( 'WP Cerber\'s folder', $cerber_folder );
-	}*/
-
 	$folders = array();
+
 	foreach ( $list as $item ) {
 		if ( ! $item[1] || ! @file_exists( $item[1] ) ) {
 			continue;
@@ -1094,14 +1086,14 @@ function crb_scan_insights_brief( $scan_id ) {
 		if ( $sum = array_sum( $files ) ) {
 			$sum = crb_size_format( $sum );
 		}
-		$folders[] = array( 'Above the WordPress installation folder', '', count( $files ), $sum );
+		$folders[] = array( 'Above the WordPress installation directory', '', count( $files ), $sum );
 	}
 
 	$column = array_column( $folders, 2 );
 	array_multisort( $column, SORT_DESC, $folders );
 
 	return $result . cerber_make_table( $folders, array(
-			__( 'Folder', 'wp-cerber' ),
+			__( 'Directory', 'wp-cerber' ),
 			__( 'Path', 'wp-cerber' ),
 			__( 'Files', 'wp-cerber' ),
 			__( 'Space Occupied', 'wp-cerber' )
@@ -1174,7 +1166,7 @@ function crb_scan_insights_exts( $scan_id ) {
 	foreach ( $list as $ext => $data ) {
 		$text = ( $ext == '.' ) ? $none : $ext;
 		$result[] = array(
-			'<a href="' . $base . esc_attr( '&fext=' . $ext ) . '">' . $text . '</a>',
+			'<a href="' . $base . '&amp;fext=' . esc_attr( $ext ) . '">' . $text . '</a>',
 			$data[0],
 			crb_size_format( $data[1] ),
 			crb_size_format( min( $data[2] ) ),
@@ -1470,33 +1462,47 @@ function crb_show_admin_announcement( $text = '', $big = true ) {
 }
 
 /**
- * Returns GET (query string) params of the currently displayed page
+ * Retrieves query parameters from the URL of the currently displayed page or AJAX referrer.
  *
- * @return array
+ * Supports both standard requests and AJAX requests. For AJAX requests, query parameters
+ * are extracted from the "referrer_page_url" request field. If the query parameters do not
+ * contain specific keys from the $list, those keys are added with empty string values.
+ *
+ * @param array $list An optional list of specific query parameters to retrieve.
+ *                    Missing query parameters will be included in the result with empty string values.
+ *
+ * @return array An associative array of query parameters with basic sanitization applied.
+ *
  */
-function crb_get_referrer_params() {
+function crb_get_referrer_params( array $list = array() ): array {
+
+	$query_params = array();
 
 	if ( cerber_is_wp_ajax() ) {
-		$referrer = array();
 		if ( $ref_url = crb_get_request_field( 'referrer_page_url' ) ) {
 			if ( $temp = parse_url( $ref_url, PHP_URL_QUERY ) ) {
-				parse_str( $temp, $referrer );
+				parse_str( $temp, $query_params );
 			}
 		}
 	}
 	else {
-		$referrer = crb_get_query_params();
+		$query_params = crb_get_query_params();
 	}
 
-	if ( ! is_array( $referrer ) ) {
-		$referrer = array();
+	if ( ! is_array( $query_params ) ) {
+		$query_params = array();
 	}
 
-	array_walk_recursive( $referrer, function ( &$item ) {
-		$item = preg_replace( '/[^\w\-.:*|@]/i', '', $item ); // Some sanitization
+	if ( ! empty( $list ) ) {
+		$default_values = array_fill_keys( $list, '' );
+		$query_params = array_merge( $default_values, array_intersect_key( $query_params, $default_values ) );
+	}
+
+	array_walk_recursive( $query_params, function ( &$item ) {
+		$item = preg_replace( '/[^\w\-.:*|@]/i', '', $item ); // Some basic sanitization
 	} );
 
-	return $referrer;
+	return $query_params;
 }
 
 /**
@@ -1508,12 +1514,16 @@ function crb_get_referrer_params() {
  *
  * @since 9.5.5.8
  */
-function crb_get_file_owner( $file ) {
+function crb_get_file_owner( $file ): string {
 
 	$ret = '';
 	$file_type = crb_detect_file_type( $file );
 
 	switch ( $file_type ) {
+		case CERBER_FT_WP:
+			$ret = 'WordPress';
+			break;
+
 		case CERBER_FT_PLUGIN:
 
 			$parts = explode( DIRECTORY_SEPARATOR, ltrim( mb_substr( $file, strlen( cerber_get_plugins_dir() ) ), DIRECTORY_SEPARATOR ), 2 );
@@ -1533,6 +1543,7 @@ function crb_get_file_owner( $file ) {
 			}
 
 			break;
+
 		case CERBER_FT_THEME:
 
 			$parts = explode( DIRECTORY_SEPARATOR, ltrim( mb_substr( $file, strlen( cerber_get_themes_dir() ) ), DIRECTORY_SEPARATOR ), 2 );
@@ -1549,6 +1560,62 @@ function crb_get_file_owner( $file ) {
 	return $ret;
 }
 
+/**
+ * Checks for the existence of installed WP Cerber translation files for a given WordPress locale.
+ *
+ * It checks files in the /wp-content/languages/plugins/ directory (see also WP_LANG_DIR).
+ *
+ * @param string $locale True if translation files exists for the given WP locale.
+ *
+ * @return bool
+ *
+ * @since 9.6.6.14
+ */
+function crb_is_translation_exists( string $locale ): bool {
+	$installed = wp_get_installed_translations( 'plugins' );
+
+	return ! empty( $installed['wp-cerber'][ $locale ] );
+}
+
+/**
+ * Forces the download of translation files for a specified locale.
+ *
+ * This function forces WordPress to download the WP Cerber translation files (.mo and .po)
+ * from the WP Cerber translation repository.
+ *
+ * It bypasses any checks and always overwrites any existing translation files
+ * in the /wp-content/languages/plugins/ directory (see also WP_LANG_DIR).
+ *
+ * @param string $locale The WordPress locale to download (e.g., 'es_ES', 'fr_FR').
+ *
+ * @return void
+ *
+ * @since 9.6.6.14
+ */
+function crb_download_translations( string $locale ) {
+	ob_start();
+
+	require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	require_once ABSPATH . 'wp-includes/pluggable.php';
+	require_once ABSPATH . 'wp-admin/includes/misc.php';
+
+	WP_Filesystem();
+	$upgrader = new Language_Pack_Upgrader( new WP_Upgrader_Skin() );
+
+	$translation_data = (object) array(
+		'type'     => 'plugin',
+		'slug'     => 'wp-cerber',
+		'language' => $locale,
+		'version'  => CERBER_VER,
+		'package'  => 'https://downloads.wpcerber.com/translations/wp-cerber/' . $locale . '.zip',
+	);
+
+	$upgrader->upgrade( $translation_data );
+
+	ob_get_clean();
+}
 
 add_filter( 'manage_application-passwords-user_columns', function ( $columns ) {
 	end( $columns );

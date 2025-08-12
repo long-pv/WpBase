@@ -1,5 +1,5 @@
 /**
- *	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+ *	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
  */
 jQuery( function( $ ) {
 

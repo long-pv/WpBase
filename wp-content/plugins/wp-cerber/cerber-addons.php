@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -237,6 +237,8 @@ final class CRB_Addons {
 	 * @return bool
 	 */
 	static function register_addon( $file, $addon_id, $name, $requires = '', $settings = null, $cb = null ) {
+		$addon_id = crb_sanitize_id( $addon_id );
+
 		if ( isset( self::$addons[ $addon_id ] ) ) {
 			return false;
 		}
@@ -350,10 +352,10 @@ final class CRB_Addons {
 
 		$ret = cerber_settings_update( array( CRB_ADDON_STS => $save ) );
 
-		if ( ( $cb = $addon['callback'] ?? false )
-		     & is_callable( $cb ) ) {
-			crb_sanitize_deep( $new_settings ); // Protect add-on code from unfiltered values
-			call_user_func( $cb, $new_settings );
+		if ( ! empty( $addon['callback'] )
+		     && is_callable( $addon['callback'] ) ) {
+			crb_sanitize_deep( $new_settings );
+			call_user_func( $addon['callback'], $new_settings );
 		}
 
 		return $ret;

@@ -1,19 +1,19 @@
 <?php
 /*
-	Plugin Name: WP Cerber Security, Anti-spam & Malware Scan
+	Plugin Name: WP Cerber Security, Anti-spam, and Malware Scan
 	Plugin URI: https://wpcerber.com
-	Description: Defends WordPress against hacker attacks, spam, trojans, and viruses. Malware scanner and integrity checker. Hardening WordPress with a set of comprehensive security algorithms. Spam protection with a sophisticated bot detection engine and reCAPTCHA. Tracks user and intruder activity with powerful email, mobile and desktop notifications.
+	Description: Continuously evolving security solution that defends WordPress against hacker attacks, spam, trojans, and malware. Hardens WordPress with comprehensive security algorithms, limits login attempts, enforces two-factor authentication, and restricts access based on country using GeoIP policies. Features a powerful malware scanner and integrity checker to detect and eliminate threats. Blocks spam using a sophisticated bot detection engine and reCAPTCHA. Tracks user and intruder activity with real-time alerts via email, mobile, and desktop notifications.
 	Author: Cerber Tech Inc.
 	Author URI: https://talk.wpcerber.com
 	Update URI: https://downloads.wpcerber.com/versions/wp-cerber.json
-	Version: 9.6.5
-	Requires PHP: 7.0
-	Requires at least: 5.5
+	Version: 9.6.9
+	Requires PHP: 7.3
+	Requires at least: 5.8
 	Text Domain: wp-cerber
 	Domain Path: /languages
 	Network: true
 
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -33,11 +33,11 @@
 
 */
 
-const CERBER_VER = '9.6.5';
+const CERBER_VER = '9.6.9';
 
 // Must be also updated in the header above
-const CERBER_REQ_PHP = '7.0';
-const CERBER_REQ_WP = '5.5';
+const CERBER_REQ_PHP = '7.3';
+const CERBER_REQ_WP = '5.8';
 
 const CERBER_PLUGIN_ID = 'wp-cerber/wp-cerber.php';
 

@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -64,34 +64,40 @@ const CERBER_COMPILED = 'cerber_compiled';
 
 // Add-on settings
 const CRB_ADDON_STS = 'crb_addon_settings';
+// Role-based settings
+const CRB_ROLE_STS = 'crb_role_policies';
 
 // PRO settings
 const CRB_PRO_SETS = array( CERBER_OPT_E, CERBER_OPT_P );
+const CRB_PRO_TYPE_VAL = 1;
+const CRB_PRO_TYPE_GET = 2;
 const CRB_PRO_SETTINGS = array(
-	'nologinhint_msg',
-	'nopasshint_msg',
-	'reglimit',
-	'reglimit_num',
-	'reglimit_min',
-	'regwhite',
-	'regwhite_msg',
-	'email_mask',
-	'email_format',
-	'notify_plugin_update_freq',
-	'notify_plugin_update_brf',
-	'notify_plugin_update_to',
-	'use_smtp',
-	'pbrate',
-	'pbnotify',
-	'pb_mask',
-	'pb_format',
-	'scan_media',
-	'scan_abon_pl',
-	'scan_abon_pl_period',
-	'scan_owner_pl',
-	'customcomm'
+	'nologinhint_msg'           => [],
+	'nopasshint_msg'            => [],
+	'reglimit'                  => [],
+	'reglimit_num'              => [],
+	'reglimit_min'              => [],
+	'regwhite'                  => [],
+	'regwhite_msg'              => [],
+	'emlist_msg'                => [],
+	'email_mask'                => [],
+	'email_format'              => [],
+	'notify_plugin_update_freq' => [],
+	'notify_plugin_update_brf'  => [],
+	'notify_plugin_update_to'   => [],
+	'use_smtp'                  => [],
+	'pbrate'                    => [],
+	'pbnotify'                  => [],
+	'pb_mask'                   => [],
+	'pb_format'                 => [],
+	'scan_media'                => [],
+	'scan_abon_pl'              => [],
+	'scan_abon_pl_period'       => [],
+	'scan_owner_pl'             => [],
+	'customcomm'                => [],
+	//'nonexisting_local'         => [ CRB_PRO_TYPE_GET, 'nonusers' ],
+	'prohibited_rule'           => [ CRB_PRO_TYPE_VAL, 0 ],
 );
-
 const CRB_PRO_POLICIES = array(
 	'sess_limit'        => array( 2, '' ),
 	'sess_limit_policy' => array( 2, 0 ),
@@ -300,7 +306,6 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'cookiepref' => '',
 
 			'subnet'           => 0,
-			'nonusers'         => 0,
 			'wplogin'          => 0,
 			'noredirect'       => 0,
 			'page404'          => 1,
@@ -308,6 +313,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'main_use_proxy'   => 0,
 			'cerber_sw_repo'   => 1,
 			'cerber_sw_auto'   => 0,
+			'log_crb_errors'   => 1,
 
 			'loginpath'     => '',
 			'loginnowp'     => 0,
@@ -323,11 +329,11 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'keeplog_auth'   => 90,
 			'ip_extra'       => 1,
 			'cerberlab'      => 1,
-			'cerberproto'    => 1,
 			'usefile'        => 0,
 			'dateformat'     => '',
 			'plain_date'     => 0,
 			'admin_lang'     => 0,
+			'admin_locale'   => 0,
 			'top_admin_menu' => 1,
 			'no_white_my_ip' => 0,
 			//'log_errors'   => 1
@@ -351,27 +357,31 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'restwhite'           => array( 'oembed', 'wp-site-health' ),
 			'cleanhead'           => 1,
 		),
-		CERBER_OPT_U     => array(
-			'authonly'       => 0,
-			'authonlyacl'    => 0,
-			'authonlymsg'    => '',
-			'authonlyredir'  => '',
-			'regwhite'       => 0,
-			'regwhite_msg'   => '',
-			'reglimit_num'   => 3,
-			'reglimit_min'   => 60,
-			'emrule'         => 0,
-			'emlist'         => array(),
-			'prohibited'     => array(),
-			'app_pwd'        => 1,
-			'auth_expire'    => '',
-			'no_rememberme'  => 0,
-			'usersort'       => 0,
-			'pdata_erase'    => 0,
-			'pdata_sessions' => 0,
-			'pdata_export'   => 0,
-			'pdata_act'      => 0,
-			'pdata_trf'      => array(),
+		CERBER_OPT_U => array(
+			'authonly'          => 0,
+			'authonlyacl'       => 0,
+			'authonlymsg'       => '',
+			'authonlyredir'     => '',
+			'regwhite'          => 0,
+			'regwhite_msg'      => '',
+			'reglimit_num'      => 3,
+			'reglimit_min'      => 60,
+			'emrule'            => 0,
+			'emlist'            => array(),
+			'emlist_msg'        => '',
+			//'nonexisting_local' => 0,
+			'nonusers'          => 0,
+			'prohibited'        => array(),
+			'prohibited_rule'   => 0,
+			'app_pwd'           => 1,
+			'auth_expire'       => '',
+			'no_rememberme'     => 0,
+			'usersort'          => 0,
+			'pdata_erase'       => 0,
+			'pdata_sessions'    => 0,
+			'pdata_export'      => 0,
+			'pdata_act'         => 0,
+			'pdata_trf'         => array(),
 		),
 		CERBER_OPT_A     => array(
 			'botscomm'         => 0,
@@ -489,7 +499,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'ds_4opts_list'  => array(),
 			'ds_4opts_acl'   => 0,
 		),
-		CERBER_OPT_S => array(
+		CERBER_OPT_S     => array(
 			'scan_cpt'            => array(),
 			'scan_uext'           => array( 'tmp', 'temp', 'bak' ),
 			'scan_exclude'        => array(),
@@ -546,7 +556,7 @@ function cerber_get_defaults( $setting = null, $dynamic = true ) {
 			'slave_diag'   => 0,
 		),
 		'other_settings' => array(
-			'crb_role_policies' => array(),
+			CRB_ROLE_STS => array(),
 			CRB_ADDON_STS       => array(),
 		),
 	);
@@ -609,22 +619,28 @@ function crb_get_default_pro() {
 		}
 
 		// 2. Get setting-level PRO settings
-		$pro = array_merge( $pro, array_intersect_key( crb_get_default_values(), array_flip( CRB_PRO_SETTINGS ) ) );
+		$pro = array_merge( $pro, array_intersect_key( crb_get_default_values(), CRB_PRO_SETTINGS ) );
+
 	}
 
 	return $pro;
 }
 
 /**
- * Upgrades WP Cerber settings from previous versions and formats
+ * Upgrades WP Cerber settings from previous versions and formats.
+ * Initializes values of newly introduced settings.
+ * Saves initialized settings. Deletes obsolete settings.
  *
- * @param string $ver The previous version we are upgrading from
+ * @param string $ver The previous version we are upgrading from.
  *
  * @return void
  */
 function cerber_upgrade_settings( $ver = '' ) {
 
-	if ( $ver && version_compare( $ver, '9.3.4', '<' ) ) {
+	if ( $ver
+	     && defined( 'CRB_DOING_UPGRADE' ) && CRB_DOING_UPGRADE
+	     && version_compare( $ver, '9.3.4', '<' ) ) {
+
 		$settings = _cerber_get_site_old_options();
 
 		// Run it after all add-ons are loaded
@@ -640,24 +656,58 @@ function cerber_upgrade_settings( $ver = '' ) {
 		$settings = array();
 	}
 
-	// Renaming specific settings if we've changed them in the code (old => new)
+	$setting_defs = crb_get_settings_fields();
+	$upgrade_from = array();
+	$obsolete = array();
 
-	$changes = array(
-		'notify' => 'notify_above-enabled', // 9.6.1.1
-		'above'  => 'notify_above' // 9.6.1.1
-	);
+	// Step 1. Copying an existing setting if this is specified in the setting configuration. Since 9.6.7.5.
 
-	foreach ( $changes as $old => $new ) {
-		if ( isset( $settings[ $old ] ) ) {
-			$settings[ $new ] = $settings[ $old ];
+	foreach ( $setting_defs as $id => $config ) {
+		if ( ( $from = $config['upgrade_once'] ?? '' )
+		     && isset( $settings[ $from ] )
+		     && ! isset( $settings[ $id ] ) ) {
+			$settings[ $id ] = $settings[ $from ];
+		}
+		elseif ( $old = $config['upgrade_delete'] ?? '' ) {
+			$upgrade_from[ $old ] = $id;
 		}
 	}
 
-	// End of renaming
+	// Step 2. Copying existing but now obsolete settings to newly introduced ones.
+
+	// These are exceptions for virtual settings that have no hardcoded configurations (generated on the fly input fields).
+
+	$virtual = array(
+		'notify' => 'notify_above-enabled', // 9.6.1.1
+	);
+
+	$upgrade_from = array_merge( $upgrade_from, $virtual );
+
+	foreach ( $upgrade_from as $old => $new ) {
+		if ( isset( $settings[ $old ] )
+		     && ! isset( $settings[ $new ] ) ) {
+			$settings[ $new ] = $settings[ $old ];
+		}
+
+		$obsolete[] = $old;
+	}
+
+	// Step 3. Some hard-coded exceptions and logic
+
+	if ( $ver
+	     && version_compare( $ver, '9.6.7', '<' ) ) {
+
+		// Set English if it was enabled previously via 'admin_lang' and the repo is enabled
+
+		if ( ! empty( $settings['admin_lang'] )
+		     && ! empty( $settings['cerber_sw_repo'] ) ) {
+			$settings['admin_locale'] = 'en_US'; // @since 9.6.7
+		}
+	}
+
+	// Step 4. Add new setting values that require no specific processing when upgrading - simply use their default values
 
 	$defs = crb_get_default_values();
-
-	// Add new settings (fields) with their default values
 
 	foreach ( $defs as $field_name => $default ) {
 		if ( ! isset( $settings[ $field_name ] ) ) {
@@ -665,11 +715,9 @@ function cerber_upgrade_settings( $ver = '' ) {
 		}
 	}
 
-	// Remove outdated fields
+	// All new settings are initialized now -------------------------------------------
 
-	$settings = array_intersect_key( $settings, $defs );
-
-	// New format of some settings
+	// Step 5. New format of some specific settings, apply new format to their values
 
 	if ( $settings['botswhite'] ) {
 		foreach ( $settings['botswhite'] as &$item ) {
@@ -687,11 +735,13 @@ function cerber_upgrade_settings( $ver = '' ) {
 		}
 	}
 
-	// @since 9.3.4 all WP Cerber settings use a new format
+	// Save updated settings. Since 9.3.4 all WP Cerber settings use a new format of storing them
 
 	cerber_load_admin_code();
 
-	cerber_settings_update( $settings, 'all' ); // @since 9.3.4
+	cerber_settings_update( $settings, 'all' );
+
+	cerber_settings_delete( $obsolete );
 
 	// Remove orphans and deprecated stuff
 
@@ -713,7 +763,7 @@ function cerber_upgrade_settings( $ver = '' ) {
  * @param bool $purge_cache If true, purges the static cache. Default is false.
  * @param bool $use_defaults Used exclusively during the plugin activation process. Default is false.
  *
- * @return array|mixed|false Returns the setting value if the setting ID is provided and exists.
+ * @return mixed[]|mixed|false Returns the setting value if the setting ID is provided and exists.
  *                           Returns an array of all settings if no setting ID is provided.
  *                           Returns false if the setting ID is provided but the setting with the given ID doesn't exist.
  */
@@ -749,17 +799,46 @@ function crb_get_settings( $setting_id = '', $purge_cache = false, $use_defaults
 			$sql_new = 'SELECT option_value FROM ' . $wpdb->options . ' WHERE option_name = "' . CERBER_CONFIG . '"';
 		}
 
-		$set_new = cerber_db_get_var( $sql_new );
+		$settings_raw = cerber_db_get_var( $sql_new );
 
-		if ( $set_new ) {
-			$cache = crb_unserialize( $set_new );
+		if ( $settings_raw ) {
+			$cache = crb_unserialize( $settings_raw );
 		}
 		elseif ( $use_defaults ) {
 			$cache = crb_get_default_values();
 		}
 
-		if ( ! lab_lab() && $use_defaults ) {
-			$cache = array_merge( $cache, crb_get_default_pro() );
+		if ( ! lab_lab() ) {
+
+			$defaults_pro = crb_get_default_pro();
+
+			if ( $use_defaults ) {
+				$cache = array_merge( $cache, $defaults_pro );
+			}
+			else {
+				foreach ( CRB_PRO_SETTINGS as $id => $config ) {
+					$type = $config[0] ?? null;
+					$source = $config[1] ?? null;
+
+					switch ( $type ) {
+						case CRB_PRO_TYPE_VAL:
+							$cache[ $id ] = $source;
+							break;
+
+						case CRB_PRO_TYPE_GET:
+							if ( array_key_exists( $source, $cache ) ) {
+								$cache[ $id ] = $cache[ $source ];
+							}
+							elseif ( array_key_exists( $source, $defaults_pro ) ) {
+								$cache[ $id ] = $defaults_pro[ $source ];
+							}
+							else {
+								$cache[ $id ] = '';
+							}
+							break;
+					}
+				}
+			}
 		}
 
 		// Compatibility with Cloudflare add-on version 1.2 and older
@@ -955,7 +1034,7 @@ function cerber_get_email( $type = '', $args = array() ) {
 
 	if ( $list = $args['user_list'] ?? false ) {
 		foreach ( $list as $user_id ) {
-			if ( $u = get_userdata( $user_id ) ) {
+			if ( $u = crb_get_userdata( $user_id ) ) {
 				$emails[] = $u->display_name . ' <' . $u->user_email . '>';
 			}
 		}
@@ -1068,7 +1147,7 @@ function cerber_get_role_policies( $role ) {
 
 	$defaults = crb_get_default_pol_pro();
 
-	if ( ! $conf = crb_get_settings( 'crb_role_policies' ) ) {
+	if ( ! $conf = crb_get_settings( CRB_ROLE_STS ) ) {
 
 		// @since 9.6
 

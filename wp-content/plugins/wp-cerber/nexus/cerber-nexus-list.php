@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -85,7 +85,7 @@ class CRB_Nexus_Sites extends WP_List_Table {
 		$this->settings    = get_site_option( '_cerber_slist_screen', array() );
 		$this->show_url    = crb_array_get( $this->settings, 'url_name' );
 		$this->hide_ip     = crb_array_get( $this->settings, 'srv_ip' );
-		$this->base_switch = wp_nonce_url( cerber_admin_link() . '&cerber_admin_do=nexus_switch&back=' . urlencode( $_SERVER['REQUEST_URI'] ), 'control', 'cerber_nonce' );
+		$this->base_switch = cerber_admin_link_add( [ 'cerber_admin_do' => 'nexus_switch', 'back' => $_SERVER['REQUEST_URI'] ] );
 		$this->base_sites  = cerber_admin_link( 'nexus_sites' );
 	}
 
@@ -290,7 +290,7 @@ class CRB_Nexus_Sites extends WP_List_Table {
 		//$login        = $item['site_url'] ;
 		//$set['login'] = ' <a href="' . $login . '" target="_blank">' . __( 'Log in', 'wp-cerber' ) . '</a>';
 
-		$switch        = $this->base_switch . '&nexus_site_id=' . $item['id'];
+		$switch        = $this->base_switch . '&amp;nexus_site_id=' . $item['id'];
 		$set['switch'] = ' <a href="' . $switch . '">' . __( 'Switch to', 'wp-cerber' ) . '</a>';
 
 		$url = ( $this->show_url ) ? '<div class="crb-managed-url">' . $item['site_url'] . '</div>' : '';
@@ -309,9 +309,11 @@ class CRB_Nexus_Sites extends WP_List_Table {
 		if ( ! $groups ) {
 			$groups = nexus_get_groups();
 		}
-		if ( ! $base_scan ) {
-			$base_scan = wp_nonce_url( cerber_admin_link( 'scan_main' ) . '&amp;cerber_admin_do=nexus_switch', 'control', 'cerber_nonce' );
+
+        if ( ! $base_scan ) {
+	        $base_scan = cerber_admin_link( 'scan_main', [ 'cerber_admin_do' => 'nexus_switch' ], true );
 		}
+
 		if ( ! $pup ) {
 			$pup = nexus_get_update( CERBER_PLUGIN_ID );
 		}
@@ -341,7 +343,7 @@ class CRB_Nexus_Sites extends WP_List_Table {
 					}
 					$txt = cerber_auto_date( $val );
 
-					return '<a href="' . $base_scan . '&nexus_site_id=' . $item['id'] . '">' . $txt . '</a>' . $v;
+					return '<a href="' . $base_scan . '&amp;nexus_site_id=' . $item['id'] . '">' . $txt . '</a>' . $v;
 				}
 
 				return '<span style="color: red;">' . __( 'Never', 'wp-cerber' ) . '</span>';
@@ -378,7 +380,7 @@ class CRB_Nexus_Sites extends WP_List_Table {
 					}
 				}
 
-				$ret = '<a href="' . $this->base_sites . '&filter_server_id=' . $item['server_id'] . '">' . str_replace( '.', '<wbr>.', $srv[1] ) . '</a>';
+				$ret = '<a href="' . $this->base_sites . '&amp;filter_server_id=' . $item['server_id'] . '">' . str_replace( '.', '<wbr>.', $srv[1] ) . '</a>';
 
 				if ( $this->hide_ip ) {
 					return $ret;
@@ -391,7 +393,7 @@ class CRB_Nexus_Sites extends WP_List_Table {
 				return crb_country_html( $item['server_country'] );
 			case 'site_grp':
 				if ( $ret = crb_array_get( $groups, $item['group_id'], 'Not set' ) ) {
-					$ret = '<a href="' . $this->base_sites . '&filter_group_id=' . $item['group_id'] . '">' . $ret . '</a>';
+					$ret = '<a href="' . $this->base_sites . '&amp;filter_group_id=' . $item['group_id'] . '">' . $ret . '</a>';
 				}
 
 				return $ret;
@@ -413,12 +415,8 @@ class CRB_Nexus_Sites extends WP_List_Table {
 			parent::no_items();
 		}
 		else {
-			$no_master = wp_nonce_url( add_query_arg( array(
-				'cerber_admin_do' => 'nexus_set_role',
-				'nexus_set_role'  => 'none',
-			) ), 'control', 'cerber_nonce' );
-
-			echo __( 'No websites configured.', 'wp-cerber' ) . ' <a class="thickbox" href="' . CRB_ADD_MANAGED_LNK . '">' . __( 'Add a new one', 'wp-cerber' ) . '</a> | <a href="' . $no_master . '">' . __( 'Disable main website mode', 'wp-cerber' ) . '</a>';
+			$disable_main = cerber_admin_link_add( [ 'cerber_admin_do' => 'nexus_set_role', 'nexus_set_role' => 'none' ] );
+			echo __( 'No websites configured.', 'wp-cerber' ) . ' <a class="thickbox" href="' . CRB_ADD_MANAGED_LNK . '">' . __( 'Add a new one', 'wp-cerber' ) . '</a> | <a href="' . $disable_main . '">' . __( 'Disable main website mode', 'wp-cerber' ) . '</a>';
 		}
 	}
 }

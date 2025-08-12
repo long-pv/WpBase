@@ -1,5 +1,5 @@
 /**
- *	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+ *	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
  */
 jQuery( function( $ ) {
 
@@ -59,8 +59,19 @@ jQuery( function( $ ) {
         }
     });
 
+    // Plain confirmation dialog for click actions in the admin UI
+
+    $(document.body).on('click', '.crb-confirm-action', function (event) {
+
+        const message = $(this).data('user_message') || crb_admin_messages.are_you_sure;
+
+        if (!confirm(message)) {
+            event.preventDefault();
+        }
+    });
 
     /* WP Comments page */
+
     let comtable = 'table.wp-list-table.comments';
 
     if (typeof crb_lab_available !== 'undefined' && crb_lab_available && $(comtable).length) {
@@ -141,7 +152,6 @@ jQuery( function( $ ) {
     // ACL management
 
     $(".acl-table .delete_entry").on('click', function () {
-        /* if (!confirm('<?php _e('Are you sure?','wp-cerber') ?>')) return; */
         $.post(ajaxurl, {
                 action: 'cerber_ajax',
                 acl_delete: $(this).data('ip'),
@@ -151,8 +161,6 @@ jQuery( function( $ ) {
             onDeleteResponse,
             'json'
         );
-        /*$(this).parent().parent().fadeOut(500);*/
-        /* $(this).closest("tr").FadeOut(500); */
     });
 
     function onDeleteResponse(server_response) {
@@ -194,12 +202,17 @@ jQuery( function( $ ) {
     let crb_traffic = $('#crb-traffic');
 
     crb_traffic.find('tr.crb-toggle td.crb-request').on('click', function (event) {
-        //alert(event.target.tagName);
+        event.preventDefault();
+
         if ($(event.target).data('no-js') === 1) {
             return;
         }
-        let request_details = $(this).parent().next();
-        request_details.toggle();
+
+        let request_details = $(this).closest('tr').next('.crb-request-details');
+
+        if (request_details.length) {
+            request_details.toggle();
+        }
     });
 
     $('#traffic-search-btn').on('click', function (event) {

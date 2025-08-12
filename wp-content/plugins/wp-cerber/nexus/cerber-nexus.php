@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2015-24 CERBER TECH INC., https://wpcerber.com
+	Copyright (C) 2015-25 CERBER TECH INC., https://wpcerber.com
 
     Licenced under the GNU GPL.
 
@@ -34,16 +34,14 @@ if ( ! defined( 'WPINC' ) ) { exit; }
 
 function nexus_init() {
 
-	if ( nexus_is_client() ) {
+	if ( nexus_is_client()
+	     && nexus_is_valid_request() ) {
 		require_once( __DIR__ . '/cerber-nexus-client.php' );
-		if ( nexus_is_valid_request() ) {
-			cerber_load_wp_constants();
-			nexus_client_process();
-		}
+		nexus_client_process();
 	}
-	elseif ( defined( 'WP_ADMIN' )
-	     || defined( 'WP_NETWORK_ADMIN' )
-	     || cerber_is_wp_cron() ) {
+	elseif ( is_admin()
+	         || defined( 'WP_NETWORK_ADMIN' )
+	         || cerber_is_wp_cron() ) {
 		if ( nexus_is_main() ) {
 			require_once( __DIR__ . '/cerber-nexus-manager.php' );
 			nexus_upgrade_db();
@@ -75,13 +73,9 @@ function nexus_admin_page() {
 		echo '<h2 style="margin-bottom: 2em;">' . __( 'To proceed, please select the mode for this website', 'wp-cerber' ) . '</h2>';
 
 		foreach ( $roles as $r => $d ) {
-			echo '<div style="padding-bottom: 1em;"><p><a href="' . wp_nonce_url( add_query_arg( array(
-					'cerber_admin_do' => 'nexus_set_role',
-					'nexus_set_role'  => $r,
-				) ), 'control', 'cerber_nonce' ) . '" class="button button-primary cerber-button">' . $d[0] . '</a></p>';
+			echo '<div style="padding-bottom: 1em;"><p><a href="' . cerber_admin_link_add( [ 'cerber_admin_do' => 'nexus_set_role', 'nexus_set_role' => $r ] ) . '" class="button button-primary cerber-button">' . $d[0] . '</a></p>';
 			echo '<p>' . $d[1] . '</p></div>';
 		}
-
 
 		echo '<p style="margin-top: 3rem">Know more: <a href="https://wpcerber.com/manage-multiple-websites/" target="_blank">Managing multiple WP Cerber instances from one dashboard</a></p></div>';
 
@@ -135,17 +129,15 @@ function nexus_site_manager() {
 
 		$token = nexus_the_token();
 
-		$no_client = wp_nonce_url( add_query_arg( array(
-			'cerber_admin_do' => 'nexus_set_role',
-			'nexus_set_role'  => 'none',
-		) ), 'control', 'cerber_nonce' );
+		$no_client = cerber_admin_link_add( [ 'cerber_admin_do' => 'nexus_set_role', 'nexus_set_role' => 'none' ] );
 
-		echo '<div class="crb-admin-form" style="padding-bottom: 1em; font-size: 2em;"><p style="font-weight: 600;">' . __( 'Secret Access Token', 'wp-cerber' ) . '</p>';
+		echo '<div class="crb-admin-form" style=""><p style="font-weight: 600;">' . __( 'Secret Access Token', 'wp-cerber' ) . '</p>';
 
-		echo '<p>' . __( 'The token is unique to this website. Keep it secret. Install the token on your main website to grant access to this website.', 'wp-cerber' ) . ' </p>';
-		echo '<p class="crb-monospace" style="padding:1em; background-color: #fff; border: solid 1px #d6d6d6; word-break: break-all;">' . $token . '</p>';
-		$confirm = ' onclick="return confirm(\'' . __( 'Are you sure? This permanently invalidates the token.', 'wp-cerber' ) . '\');"';
-		echo '<p>' . __( 'To disable remote management and revoke the token, click here:', 'wp-cerber' ) . ' <a href="' . $no_client . '" ' . $confirm . '>' . __( 'Disable managed mode', 'wp-cerber' ) . '</a>.</p>';
+		echo crb_generate_html_flex( array( __( 'To grant access to this website, install this token on the main website. Keep the token secret.', 'wp-cerber' ), crb_copy_to_clipboard('crb-secret-token') ) );
+
+		echo '<div class="crb-monospace crb-secret-token">' . $token . '</div>';
+
+		echo '<p>' . __( 'To disable remote management and revoke the token, click here:', 'wp-cerber' ) . ' ' . crb_confirmation_link( $no_client, __( 'Disable managed mode', 'wp-cerber' ), __( 'Are you sure? This permanently invalidates the token.', 'wp-cerber' ) ) . '.</p>';
 
 		echo '</div>';
 
@@ -276,6 +268,12 @@ function nexus_enable_role() {
 
 // Common functions
 
+/**
+ * Check if the request is coming from main website.
+ * Performs all checks and validates all main website credentials.
+ *
+ * @return bool True if this request is valid and originated from the main website.
+ */
 function nexus_is_valid_request() {
 	static $ret;
 
@@ -308,23 +306,23 @@ function nexus_is_valid_request() {
 	}
 
 	$field_names = nexus_get_fields();
-	$xn          = array_shift( $field_names );
+	$xn = array_shift( $field_names );
 
 	if ( ( ! $auth = cerber_get_post( $field_names[ $xn ] ) )
 	     || ( ! $payload = cerber_get_post( $field_names[0] ) )
 	     || ( array_diff_key( array_keys( $_POST ), $field_names ) ) ) {
 
 		$ret = false;
+
 		return false;
 	}
 
 	nexus_diag_log( 'Check for a valid main website request ...' );
 
-	// It seems this is a request from the master
-	// Check master credentials and payload checksum
+	// It seems this is a request from the main website
+	// Check main website credentials and payload checksum
 
 	$role = nexus_get_role_data();
-	//$payload = stripslashes( $payload );
 
 	if ( hash_equals( $auth, hash( 'sha512', $role['slave']['nx_pass'] . sha1( $payload ) ) ) ) {
 		nexus_diag_log( 'Main website credentials are valid' );
