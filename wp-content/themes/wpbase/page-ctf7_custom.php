@@ -79,6 +79,7 @@ get_header();
 </div>
 
 <script>
+    // style cho file upload
     document.querySelectorAll('.form_file').forEach(function(input) {
         var noteElement = input.closest('.form_file_label').querySelector('.form_note');
         noteElement.setAttribute('data-default-text', noteElement.innerHTML); // Lưu nội dung gốc
@@ -95,6 +96,43 @@ get_header();
                 noteElement.innerHTML = noteElement.getAttribute('data-default-text'); // Trả về nội dung gốc
             }
         });
+    });
+
+    // tắt validate khi dùng checkbox và select submit
+    document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener(
+            "change",
+            function(e) {
+                // Áp dụng cho tất cả checkbox và select
+                if (!e.target.matches('input[type="checkbox"], select')) return;
+
+                const form = e.target.closest("form.wpcf7-form");
+                if (!form) return;
+
+                // 1) Gỡ trạng thái "not valid" trên các field khác
+                form.querySelectorAll(".wpcf7-not-valid").forEach(function(el) {
+                    el.classList.remove("wpcf7-not-valid");
+                    el.removeAttribute("aria-invalid");
+                });
+
+                // 2) Xoá tooltip lỗi từng field
+                form.querySelectorAll(".wpcf7-form-control-wrap .wpcf7-not-valid-tip").forEach(function(tip) {
+                    tip.remove();
+                });
+
+                // 3) Xoá message tổng (response-output)
+                const resp = form.querySelector(".wpcf7-response-output");
+                if (resp) {
+                    resp.textContent = "";
+                    resp.className = "wpcf7-response-output";
+                    resp.style.display = "none";
+                }
+
+                // 4) (tuỳ chọn) tắt popup HTML5 lần sau
+                form.setAttribute("novalidate", "novalidate");
+            },
+            false
+        );
     });
 </script>
 <?php
