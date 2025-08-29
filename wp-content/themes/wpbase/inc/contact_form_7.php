@@ -2,7 +2,7 @@
 function add_custom_cf7_script()
 {
     if (!is_admin() && class_exists('WPCF7')) {
-        ?>
+?>
 
         <!-- contact form 7 custom -->
         <style>
@@ -12,14 +12,14 @@ function add_custom_cf7_script()
         </style>
 
         <script type="text/javascript">
-            jQuery(document).ready(function ($) {
-                $(".wpcf7-form").on("submit", function () {
+            jQuery(document).ready(function($) {
+                $(".wpcf7-form").on("submit", function() {
                     $('input[type="submit"]').addClass("wpcf7-pointer-events");
                 });
 
                 document.addEventListener(
                     "wpcf7submit",
-                    function (event) {
+                    function(event) {
                         // remove class block submit
                         $('input[type="submit"]').removeClass("wpcf7-pointer-events");
 
@@ -43,7 +43,7 @@ function add_custom_cf7_script()
             });
         </script>
         <!-- end -->
-        <?php
+<?php
     }
 }
 add_action('wp_footer', 'add_custom_cf7_script', 99);
@@ -175,4 +175,55 @@ function custom_registration_user_after_mail_sent($cf7)
             }
         }
     }
+}
+
+
+// CF7: bắt buộc plate_number nếu own_plate = Yes
+add_filter('wpcf7_validate_text*', 'cf7_conditional_plate_required', 20, 2);
+add_filter('wpcf7_validate_text',  'cf7_conditional_plate_required', 20, 2);
+function cf7_conditional_plate_required($result, $tag)
+{
+    // Lấy tên field an toàn cho mọi version CF7
+    $tag_name = '';
+    if (is_object($tag)) {
+        if (isset($tag->name)) {
+            $tag_name = $tag->name;
+        } elseif (method_exists($tag, 'get_name')) {
+            $tag_name = $tag->get_name();
+        }
+    }
+
+    // Chỉ xử lý field plate_number
+    if ($tag_name !== 'plate_number') {
+        return $result;
+    }
+
+    // Lấy dữ liệu submit
+    $submission = WPCF7_Submission::get_instance();
+    if (! $submission) {
+        return $result;
+    }
+
+    $data = $submission->get_posted_data();
+
+    // Giá trị select own_plate có thể là string hoặc array (nếu multiple)
+    $own_plate = $data['own_plate'] ?? '';
+    if (is_array($own_plate)) {
+        $own_plate = reset($own_plate);
+    }
+    $own_plate = strtolower(trim((string) $own_plate));
+
+    // Giá trị plate_number
+    $plate_number = $data['plate_number'] ?? '';
+    if (is_array($plate_number)) {
+        $plate_number = implode(' ', $plate_number);
+    }
+    $plate_number = trim((string) $plate_number);
+
+    // Nếu chọn Yes mà không nhập plate_number -> báo lỗi tại field
+    if ($own_plate === 'yes' && $plate_number === '') {
+        $result->invalidate($tag, 'Please fill out this field.');
+    }
+
+    return $result;
 }
