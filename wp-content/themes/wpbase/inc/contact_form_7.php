@@ -227,3 +227,14 @@ function cf7_conditional_plate_required($result, $tag)
 
     return $result;
 }
+
+
+add_filter('wpcf7_form_elements', function ($content) {
+    // Tìm và thay thế text gốc
+    $content = str_replace(
+        '<span class="wpcf7-list-item-label">accept_term',
+        '<span class="wpcf7-list-item-label">I accept the terms and conditions <a href="#">Read our T&Cs</a>',
+        $content
+    );
+    return $content;
+});

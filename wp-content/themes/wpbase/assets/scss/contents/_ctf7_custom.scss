@@ -31,6 +31,16 @@
         margin: 4px auto !important;
     }
 
+    .wpcf7-form-control-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .wpcf7-not-valid-tip~* {
+        display: none;
+    }
+
     .form_label {
         display: block;
         font-size: 14px;
@@ -87,7 +97,10 @@
         background-color: #0056b3;
     }
 
-
+    .wpcf7-submit.is-busy {
+        opacity: .5;
+        pointer-events: none;
+    }
 
     .wpcf7-not-valid-tip {
         font-size: 14px;
