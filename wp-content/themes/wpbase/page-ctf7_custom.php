@@ -240,6 +240,29 @@ get_header();
             });
         }
     });
+
+    // Kiểm tra xem trường date_of_travel có tồn tại không
+    if ($("input[name='date_of_travel']").length) {
+        // Khởi tạo flatpickr cho trường date_of_travel chỉ một lần
+        var datePicker = $("input[name='date_of_travel']").flatpickr({
+            dateFormat: "d-m-Y", // lưu giá trị
+            altInput: true,
+            altFormat: "d-m-Y", // hiển thị input
+            allowInput: false,
+            minDate: "today",
+            disableMobile: true, // cực kỳ quan trọng
+        });
+
+        // Lắng nghe sự kiện submit thành công của Contact Form 7
+        document.addEventListener(
+            "wpcf7mailsent",
+            function(event) {
+                datePicker.setDate(new Date(), true);
+                $("input[name='date_of_travel']").val("");
+            },
+            false
+        );
+    }
 </script>
 <?php
 get_footer();
