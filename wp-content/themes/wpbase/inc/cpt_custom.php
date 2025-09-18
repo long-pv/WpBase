@@ -59,6 +59,8 @@ function register_cpt($post_type, $data = [])
         'menu_icon'          => $icon,
         'archive_title'      => $data['labels'],
         'menu_position'      => $position,
+        'capability_type' => 'post',
+        'map_meta_cap' => true
     );
 
     if (!empty($data['tax'])) {
