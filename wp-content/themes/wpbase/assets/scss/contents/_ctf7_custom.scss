@@ -3,6 +3,16 @@
         // ...
     }
 
+    /* Hiệu ứng mờ + không click */
+    .wpcf7-submit.is-busy {
+        opacity: .5;
+        pointer-events: none;
+    }
+
+    .wpcf7-response-output {
+        margin: 8px 0px 0px 0px;
+    }
+
     .row {
         row-gap: 24px;
         --bs-gutter-x: 24px;
