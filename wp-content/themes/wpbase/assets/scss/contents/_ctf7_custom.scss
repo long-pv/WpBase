@@ -5,17 +5,47 @@
 
     /* Hiệu ứng mờ + không click */
     .wpcf7-submit.is-busy {
-        opacity: .5;
-        pointer-events: none;
+        opacity: .1 !important;
+        pointer-events: none !important;
+    }
+
+    .wpcf7-spinner {
+        display: none !important;
     }
 
     .wpcf7-response-output {
+        display: none !important;
         margin: 8px 0px 0px 0px;
     }
 
-    .row {
-        row-gap: 24px;
-        --bs-gutter-x: 24px;
+    .lv_row {
+        row-gap: 16px;
+        --bs-gutter-x: 16px;
+        --bs-gutter-y: 0;
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: calc(var(--bs-gutter-y) * -1);
+        margin-right: calc(var(--bs-gutter-x) * -.5);
+        margin-left: calc(var(--bs-gutter-x) * -.5);
+
+        &>* {
+            flex-shrink: 0;
+            width: 100%;
+            max-width: 100%;
+            padding-right: calc(var(--bs-gutter-x) * .5);
+            padding-left: calc(var(--bs-gutter-x) * .5);
+            margin-top: var(--bs-gutter-y);
+        }
+    }
+
+    .lv_col_6 {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+
+    .lv_col_12 {
+        flex: 0 0 auto;
+        width: 100%;
     }
 
     p {
