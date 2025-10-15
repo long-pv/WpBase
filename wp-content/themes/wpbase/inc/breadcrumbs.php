@@ -2,7 +2,9 @@
 
 /**
  * Breadcrumbs
+ * Shortcode: [lv_breadcrumbs]
  */
+add_shortcode('lv_breadcrumbs', 'wp_breadcrumbs');
 function wp_breadcrumbs()
 {
 	$delimiter = '
