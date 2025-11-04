@@ -20,44 +20,63 @@ get_header();
 <!-- 
 <div class="form_group">
     <div class="lv_row">
+
         <div class="lv_col_6">
-            <label for="full_name" class="form_label">Full Name <span class="req">*</span></label>
-            [text* full_name class:form_control placeholder "Your full name"]
-        </div>
-        <div class="lv_col_6">
-            <label for="job_position" class="form_label">Job Apply <span class="req">*</span></label>
-            [text* job_position class:form_control placeholder "Your job apply"]
+            <div class="form_group_input">
+                <label for="full_name" class="form_label">Full Name <span class="req">*</span></label>
+                [text* full_name class:form_control placeholder "Your full name"]
+            </div>
         </div>
 
         <div class="lv_col_6">
-            <label for="email" class="form_label">Email <span class="req">*</span></label>
-            [email* email class:form_control placeholder "Your email"]
+            <div class="form_group_input">
+                <label for="job_position" class="form_label">Job Apply <span class="req">*</span></label>
+                [text* job_position class:form_control placeholder "Your job apply"]
+            </div>
         </div>
+
         <div class="lv_col_6">
-            <label for="phone_number" class="form_label">Phone Number <span class="req">*</span></label>
-            [tel* phone_number class:form_control placeholder "Your phone number"]
+            <div class="form_group_input">
+                <label for="email" class="form_label">Email <span class="req">*</span></label>
+                [email* email class:form_control placeholder "Your email"]
+            </div>
+        </div>
+
+        <div class="lv_col_6">
+            <div class="form_group_input">
+                <label for="phone_number" class="form_label">Phone Number <span class="req">*</span></label>
+                [tel* phone_number class:form_control placeholder "Your phone number"]
+            </div>
         </div>
 
         <div class="lv_col_12">
-            <label for="work_location" class="form_label">Preferred Work Location </label>
-            [select work_location class:form_control form_select "Ho Chi Minh City" "Ha Noi City"]
-        </div>
-        <div class="lv_col_12">
-            <label for="start_date" class="form_label">When can you start?</label>
-            [date start_date class:form_control placeholder "Choose your start time"]
+            <div class="form_group_input">
+                <label for="work_location" class="form_label">Preferred Work Location</label>
+                [select work_location class:form_control form_select "Ho Chi Minh City" "Ha Noi City"]
+            </div>
         </div>
 
         <div class="lv_col_12">
-            <div for="cv_upload" class="form_label">Upload CV/Portfolio <span class="req">*</span></div>
-            <label class="form_file_label">
-                [file* cv_upload class:form_file filetypes:pdf|doc|docx limit:2mb]
-                <span class="form_note">Doc, Docx, PDF (<25MB) <span>Upload file</span></span>
-
-            </label>
+            <div class="form_group_input">
+                <label for="start_date" class="form_label">When can you start?</label>
+                [date start_date class:form_control placeholder "Choose your start time"]
+            </div>
         </div>
 
         <div class="lv_col_12">
-            [checkbox* agree_to_terms class:form_checkbox use_label_element "Tôi đồng ý"]
+            <div class="form_group_input">
+                <label for="cv_upload" class="form_label">Upload CV/Portfolio <span class="req">*</span></label>
+                <label class="form_file_label">
+                    [file* cv_upload class:form_file filetypes:pdf|doc|docx limit:2mb]
+                    <span class="form_note">Doc, Docx, PDF (<25MB) <span>Upload file</span></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="lv_col_12">
+            <div class="form_group_input">
+                [checkbox* agree_to_terms class:form_checkbox use_label_element "Tôi đồng ý"]
+            </div>
         </div>
 
         <div class="lv_col_12">
@@ -66,7 +85,7 @@ get_header();
             </div>
         </div>
     </div>
-</div> 
+</div>
 -->
 
 
