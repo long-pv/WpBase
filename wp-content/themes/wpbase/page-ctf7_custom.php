@@ -282,6 +282,16 @@ get_header();
             false
         );
     }
+
+    // [text page_title class:d_none] 
+    // [text page_url class:d_none]
+    setTimeout(function() {
+        var title = $('#page-data').data('title');
+        var url = $('#page-data').data('url');
+
+        $('[name="page_title"]').val(title);
+        $('[name="page_url"]').val(url);
+    }, 300);
 </script>
 <?php
 get_footer();
